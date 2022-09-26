@@ -1,0 +1,113 @@
+---
+title: "Kvalitetskontroll"
+author: "Vegard"
+date: "2022-09-12"
+output:
+  html_document: default
+---
+
+laste funksjoner fra GitHub
+```{r include = F}
+ source("https://raw.githubusercontent.com/vegardlysne/KHvalitet/main/R/setup.R")
+ source("https://raw.githubusercontent.com/vegardlysne/KHvalitet/main/R/functions.R")
+```
+
+## Input
+
+All inputs are provided in the code chunk below.
+
+[**Define:**]{.underline}
+
+-   **dfnew**: New KUBE to be checked
+-   **dfold**: Old KUBE for comparison
+
+In `ReadFile()`, specify KUBE name, bank ("KH" or "NH"), and FOLDER (4-digit year, or "DATERT"). The function locates the correct folder, and looks for the csv-file matching the KUBE name. If there are more than one KUBE with the same name, all potential matches are listed and the KUBE name must be further specified to read a specific file.
+
+-   **STANDARDdims**: All standard dimensions in KUBE
+
+-   **EXTRAdims** (If none, write `NULL`)
+
+-   **PRIKKval**: The target value column for PRIKKING
+
+-   **PRIKKlimit**: Threshold for PRIKKING
+
+-   **COMPAREval**: Which variable should be compared across LAND, FYLKE, KOMMUNE, BYDEL, etc.
+
+-   **GROUPdims**: Dimensions to group comparison output by
+
+[**Input types:**]{.underline} - `*dims` refer to dimension columns - `*val` refer to value columns - `*limit` refer to thresholds, e.g. limit for PRIKKING
+
+```{r include = false}
+#| include: false
+dfnew <- ReadFile("KUHR_2022-09-02", folder = "DATERT")
+dfold <- ReadFile("KUHR", bank = "KH", folder = 2022)
+
+STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER")
+EXTRAdims <- c("KODEGRUPPE") # If no additional dimensions ar present, this should be "EXTRAdims <- NULL"
+
+PRIKKval <- "sumTELLER"
+PRIKKlimit <- 8
+
+COMPAREval <- "TELLER"
+GROUPdims <-  c("KJONN", "ALDER") # If you only want total numbers, this should be "GROUPdims <- NULL"
+```
+
+## Inspect data manually
+
+-   Useful codes to initially inspect KUBE
+-   For interactive use only
+
+```{r include = F, eval = F}
+# Scroll through KUBE
+dfnew
+
+# List variable names
+names(dfnew)
+
+# General summary
+summary(dfnew)
+```
+
+# 1. Compare dimensions
+
+-   The function compares the levels within dimensions defined under INPUT as `STANDARDdims`and `EXTRAdims`.
+
+[**Output:**]{.underline}
+
+-   Number of levels in each dimension (new KUBE)
+-   New levels, which did not exist in previous KUBE
+-   Expired levels, which existed in previous KUBE, but not in the new KUBE. **NB: Should these be present?**
+
+```{r}
+#| column: screen-inset-right
+CompareDims()
+```
+
+# 2. Compare number of PRIKK
+
+-   Calculates the amount of cencored observations in new and old KUBE, grouped by type of SPVFLAGG and the `GROUPdims` as defined in `Input`. If `GROUPdims <- NULL`, output is only grouped by type of SPVFLAGG.
+-   Absolute (new - old KUBE) and relative (new/old cube) difference is calculated and given per group.
+
+```{r}
+ComparePrikk()
+```
+
+# 3. Are all values below the limit censored?
+
+-   Checks whether all values of `PRIKKval` \<= `PRIKKlimit`, as defined in `Input`
+-   If everything is ok, the function returns a confirmation.
+-   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection.
+
+```{r}
+CheckPrikk()
+```
+
+# 4. Does FYLKE sum to LAND?
+
+-   Summarise the column defined as `COMPAREval` for LAND and FYLKE, grouped by `GROUPdims`
+-   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
+-   Orders the input according to the relative difference.
+
+```{r}
+CompareLandFylke()
+```

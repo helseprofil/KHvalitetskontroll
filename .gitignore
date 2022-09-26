@@ -1,0 +1,30 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Output files
+*.html
+
+# History files
+.Rapp.history
+
+# Session Data files
+.RDataTmp
+
+# RStudio files
+.Rproj.user/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+# knitr, R markdown, and quarto default cache and files directories
+*_cache/
+/cache/
+*_files/
+.rmarkdown
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+# R Environment Variables
+.Renviron
