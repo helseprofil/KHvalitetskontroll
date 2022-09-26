@@ -6,9 +6,21 @@ Funksjoner for Kvalitetskontroll av KH/NH kuber.
 
 KOMMER...
 
+Kode som må kjøres for å hente siste versjon av Rmd-fil, setup og funksjoner.
+
 # Bruk
 
 Hele prosessen foregår i filen `Kvalitetskontroll.Rmd`. I øverste seksjon defineres alt som skal defineres, som sti til ny og gammel (for referanse) kube. 
+
+## Laste inn filer
+
+Hvordan laste filer...
+
+## Input
+
+Hva må defineres og hvordan
+
+
 
 UNDER ARBEID...
 
