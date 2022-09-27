@@ -54,6 +54,7 @@ ReadFile <- function(file = NULL,
   
   message(paste0("Loads file: ", BANK, "/", FOLDER, "/", basename(filepath)))
   fread(filepath)
+  show_msg("File correctly loaded", "mark")
 }
 
 #' CompareDim
@@ -180,11 +181,18 @@ CheckPrikk <- function(data1 = dfnew,
   
   filtered <- data1[data1[[dim]] <= limit]
   
-  ifelse(nrow(filtered) == 0,
-         result <- "No values < limit",
-         result <- as_tibble(filtered))
+  if(nrow(filtered) == 0) {
+    show_msg("No values < limit")
+  } else {
+    as_tibble(filtered)
+  }
   
-  result
+#  ifelse(nrow(filtered) == 0,
+#         result <- "No values < limit",
+#         result <- )
+#  
+#  
+#  result
 }
 
 #' CompareLandFylke
@@ -214,10 +222,16 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            relative = Land/Fylke) %>% 
     arrange(desc(relative)) 
   
-  alwayslarger <- case_when(nrow(output %>% filter(relative < 1)) == 0 ~ "LAND is always larger than FYLKE",
-                            TRUE ~ "In some rows, FYLKE is larger than LAND")
+  # alwayslarger <- case_when(nrow(output %>% filter(relative < 1)) == 0 ~ "LAND is always larger than FYLKE",
+                            # TRUE ~ "In some rows, FYLKE is larger than LAND")
   
-  message(alwayslarger)
+  if(nrow(output %>% filter(relative < 1)) == 0) {
+    show_msg("LAND is always larger than FYLKE") 
+  } else {
+    show_msg("In some rows, FYLKE is larger than LAND", "sad")
+  }
+  
+  # message(alwayslarger)
   output
 }
 
@@ -232,7 +246,7 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
 #'
 #' @examples
 CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval) {
-  data1 %>% 
+  output <- data1 %>% 
     mutate(geolevel = case_when(GEO == 0 ~ "Land",
                                 GEO < 100 ~ "Fylke",
                                 GEO < 10000 ~ "Kommune",
@@ -250,9 +264,17 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
     mutate(absolute = Kommune-Bydel,
            relative = Kommune/Bydel) %>% 
     arrange(desc(relative))
+  
+  if(nrow(output %>% filter(relative < 1)) == 0) {
+    show_msg("KOMMUNE is always larger than BYDEL") 
+  } else {
+    show_msg("In some rows, BYDEL is larger than KOMMUNE", "sad")
+  }
+  
+  output
 }
 
-#' Title
+#' CompareOslo
 #'
 #' @param data1 
 #' @param groupdim 

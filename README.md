@@ -21,6 +21,9 @@ Hvordan laste filer...
 Hva må defineres og hvordan
 
 
+## Oversikt
+- Funksjoner som starter med `Compare*` sammenligner elementer i den nye kuben med den gamle
+- Funksjoner som starter med `Check*` sjekker elementer i den nye kuben
 
 UNDER ARBEID...
 
