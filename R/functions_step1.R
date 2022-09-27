@@ -212,7 +212,7 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
                                 GEO < 100 ~ "Fylke",
                                 GEO < 10000 ~ "Kommune",
                                 TRUE ~ "Bydel")) %>% 
-    filter(geolevel %in% c("Land", "Fylke")) %>% 
+    dplyr::filter(geolevel %in% c("Land", "Fylke")) %>% 
     group_by(across(c(geolevel, all_of(groupdim)))) %>% 
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
@@ -221,16 +221,18 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            relative = Land/Fylke) %>% 
     arrange(desc(relative)) 
   
-  # alwayslarger <- case_when(nrow(output %>% filter(relative < 1)) == 0 ~ "LAND is always larger than FYLKE",
-                            # TRUE ~ "In some rows, FYLKE is larger than LAND")
+   alwayslarger <- case_when(nrow(output %>% 
+                                    dplyr::filter(relative < 1)) == 0 ~ "LAND is always larger than FYLKE",
+                            TRUE ~ "In some rows, FYLKE is larger than LAND")
   
-  if(nrow(output %>% filter(relative < 1)) == 0) {
-    show_msg("LAND is always larger than FYLKE") 
-  } else {
-    show_msg("In some rows, FYLKE is larger than LAND", "sad")
-  }
-  
-  # message(alwayslarger)
+  # if(nrow(output %>% filter(relative < 1)) == 0) {
+  #   msg <- "LAND is always larger than FYLKE"
+  # } else {
+  #   msg <- "In some rows, FYLKE is larger than LAND"
+  # }
+  # 
+  # message(msg)
+  message(alwayslarger)
   output
 }
 
@@ -250,7 +252,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
                                 GEO < 100 ~ "Fylke",
                                 GEO < 10000 ~ "Kommune",
                                 TRUE ~ "Bydel")) %>%  
-    filter(geolevel %in% c("Bydel", "Kommune"),
+    dplyr::filter(geolevel %in% c("Bydel", "Kommune"),
            str_detect(GEO, "^301|^1103|^4601|^5001")) %>% 
     mutate(KOMMUNE = case_when(str_detect(GEO, "^301") ~ "Oslo",
                                str_detect(GEO, "^1103") ~ "Stavanger",
@@ -264,7 +266,8 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
            relative = Kommune/Bydel) %>% 
     arrange(desc(relative))
   
-  if(nrow(output %>% filter(relative < 1)) == 0) {
+  if(nrow(output %>% 
+          dplyr::filter(relative < 1)) == 0) {
     show_msg("KOMMUNE is always larger than BYDEL") 
   } else {
     show_msg("In some rows, BYDEL is larger than KOMMUNE", "sad")
@@ -285,7 +288,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
 #' @examples
 CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
   data1 %>% 
-    filter(GEO %in% c("3", "301")) %>% 
+    dplyr::filter(GEO %in% c("3", "301")) %>% 
     mutate(geolevel = case_when(GEO == 3 ~ "Oslo Fylke",
                                 GEO == 301 ~ "Oslo Kommune")) %>% 
     group_by(across(c(geolevel, all_of(groupdim)))) %>% 
