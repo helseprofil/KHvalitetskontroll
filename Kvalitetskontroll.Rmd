@@ -8,8 +8,7 @@ output:
 
 laste funksjoner fra GitHub
 ```{r include = F}
- source("https://raw.githubusercontent.com/vegardlysne/KHvalitet/main/R/setup.R")
- source("https://raw.githubusercontent.com/vegardlysne/KHvalitet/main/R/functions.R")
+ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
 ## Input
