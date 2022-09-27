@@ -54,7 +54,6 @@ ReadFile <- function(file = NULL,
   
   message(paste0("Loads file: ", BANK, "/", FOLDER, "/", basename(filepath)))
   fread(filepath)
-  show_msg("File correctly loaded", "mark")
 }
 
 #' CompareDim

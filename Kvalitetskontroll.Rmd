@@ -5,10 +5,8 @@ date: "2022-09-12"
 output:
   html_document: default
 ---
-
-laste funksjoner fra GitHub
-```{r include = F}
- source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, echo = F)
 ```
 
 ## Input
@@ -78,7 +76,6 @@ summary(dfnew)
 -   Expired levels, which existed in previous KUBE, but not in the new KUBE. **NB: Should these be present?**
 
 ```{r}
-#| column: screen-inset-right
 CompareDims()
 ```
 
