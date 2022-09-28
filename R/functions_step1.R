@@ -175,23 +175,21 @@ ComparePrikk <- function(data1 = dfnew,
 #'
 #' @examples
 CheckPrikk <- function(data1 = dfnew,
-                       dim = PRIKKval, 
+                       val = PRIKKval, 
                        limit = PRIKKlimit){
   
-  filtered <- data1[data1[[dim]] <= limit]
+  filtered <- data1[data1[[val]] <= limit]
+  
+  show_msg(paste0("Value compared: ", val), "search")
+  show_msg(paste0("Limit: ", limit), "paper")
   
   if(nrow(filtered) == 0) {
     show_msg("No values < limit")
   } else {
+    show_msg(paste0("N values > limit: ", nrow(filtered)), "sad")
     as_tibble(filtered)
   }
-  
-#  ifelse(nrow(filtered) == 0,
-#         result <- "No values < limit",
-#         result <- )
-#  
-#  
-#  result
+
 }
 
 #' CompareLandFylke
