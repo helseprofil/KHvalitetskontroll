@@ -206,9 +206,9 @@ CheckPrikk <- function(data1 = dfnew,
 CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
   
   output <- data1 %>% 
+    dplyr::filter(!(GEO %in% 81:84)) %>% 
     mutate(geolevel = case_when(GEO == 0 ~ "Land",
                                 GEO < 100 ~ "Fylke",
-                                GEO %in% c(81:84) ~ "Helseregion",
                                 GEO < 10000 ~ "Kommune",
                                 TRUE ~ "Bydel")) %>% 
     dplyr::filter(geolevel %in% c("Land", "Fylke")) %>% 
@@ -220,18 +220,13 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            relative = Land/Fylke) %>% 
     arrange(desc(relative)) 
   
-   alwayslarger <- case_when(nrow(output %>% 
-                                    dplyr::filter(relative < 1)) == 0 ~ "LAND is always larger than FYLKE",
-                            TRUE ~ "In some rows, FYLKE is larger than LAND")
-  
-  # if(nrow(output %>% filter(relative < 1)) == 0) {
-  #   msg <- "LAND is always larger than FYLKE"
-  # } else {
-  #   msg <- "In some rows, FYLKE is larger than LAND"
-  # }
-  # 
-  # message(msg)
-  message(alwayslarger)
+   if(nrow(output %>% 
+           dplyr::filter(relative < 1)) == 0) {
+     show_msg("LAND is always larger than FYLKE") 
+   } else {
+     show_msg("In some rows, FYLKE is larger than LAND. See rows with relative < 1", "sad")
+   }
+   
   output
 }
 
@@ -269,7 +264,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
           dplyr::filter(relative < 1)) == 0) {
     show_msg("KOMMUNE is always larger than BYDEL") 
   } else {
-    show_msg("In some rows, BYDEL is larger than KOMMUNE", "sad")
+    show_msg("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1", "sad")
   }
   
   output
@@ -286,7 +281,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
 #'
 #' @examples
 CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
-  data1 %>% 
+  output <- data1 %>% 
     dplyr::filter(GEO %in% c("3", "301")) %>% 
     mutate(geolevel = case_when(GEO == 3 ~ "Oslo Fylke",
                                 GEO == 301 ~ "Oslo Kommune")) %>% 
@@ -296,4 +291,13 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
                 values_from = sum) %>% 
     mutate(absolute = `Oslo Fylke`-`Oslo Kommune`,
            relative = `Oslo Fylke`/`Oslo Kommune`)
+  
+  if(nrow(output %>% 
+          dplyr::filter(relative != 1)) == 0) {
+    show_msg("Oslo kommune is identical to Oslo fylke!") 
+  } else {
+    show_msg("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1", "sad")
+  }
+  
+  output
 }
