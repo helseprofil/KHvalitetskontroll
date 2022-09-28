@@ -1,7 +1,6 @@
 # Load packages 
-library(utils)
 source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")
-kh_load(dplyr, tidyr, stringr, purrr, data.table)
+kh_load(stats, dplyr, tidyr, stringr, purrr, data.table)
 
 # Remove redundant functions
 rm(list = ls()[grepl("^kh_", ls())])
