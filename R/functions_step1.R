@@ -180,8 +180,8 @@ CheckPrikk <- function(data1 = dfnew,
   
   filtered <- data1[data1[[val]] <= limit]
   
-  message(paste0("Value compared: ", val), "search")
-  message(paste0("Limit: ", limit), "paper")
+  message(paste0("Value compared: ", val))
+  message(paste0("Limit: ", limit))
   
   if(nrow(filtered) == 0) {
     message("No values < limit")
