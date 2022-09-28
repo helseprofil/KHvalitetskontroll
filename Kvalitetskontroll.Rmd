@@ -4,7 +4,9 @@ author: "Vegard"
 date: "2022-09-12"
 output:
   html_document: 
-    df_print: kable
+    df_print: paged
+    toc: true
+    toc_float: true
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache = TRUE, echo = F)
@@ -65,10 +67,6 @@ names(dfnew)
 
 # General summary
 summary(dfnew)
-```
-
-```{r}
-dfnew
 ```
 
 # 1. Compare dimensions

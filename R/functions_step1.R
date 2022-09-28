@@ -180,13 +180,13 @@ CheckPrikk <- function(data1 = dfnew,
   
   filtered <- data1[data1[[val]] <= limit]
   
-  show_msg(paste0("Value compared: ", val), "search")
-  show_msg(paste0("Limit: ", limit), "paper")
+  message(paste0("Value compared: ", val), "search")
+  message(paste0("Limit: ", limit), "paper")
   
   if(nrow(filtered) == 0) {
-    show_msg("No values < limit")
+    message("No values < limit")
   } else {
-    show_msg(paste0("N values > limit: ", nrow(filtered)), "sad")
+    message(paste0("N values > limit: ", nrow(filtered)))
     as_tibble(filtered)
   }
 
@@ -220,14 +220,14 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            relative = Land/Fylke) %>% 
     arrange(desc(relative)) 
   
- #  if(nrow(output %>% 
- #          dplyr::filter(relative < 1)) == 0) {
- #    show_msg("LAND is always larger than FYLKE") 
- #  } else {
- #    show_msg("In some rows, FYLKE is larger than LAND. See rows with relative < 1", "sad")
- #  }
+  if(nrow(output %>%
+          dplyr::filter(relative < 1)) == 0) {
+    message("LAND is always larger than FYLKE")
+  } else {
+    message("In some rows, FYLKE is larger than LAND. See rows with relative < 1")
+  }
    
-  knitr::kable(output)
+  output
 }
 
 #' CompareBydelKommune
@@ -262,9 +262,9 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
   
   if(nrow(output %>% 
           dplyr::filter(relative < 1)) == 0) {
-    show_msg("KOMMUNE is always larger than BYDEL") 
+    message("KOMMUNE is always larger than BYDEL") 
   } else {
-    show_msg("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1", "sad")
+    message("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
   }
   
   output
@@ -294,9 +294,9 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
   
   if(nrow(output %>% 
           dplyr::filter(relative != 1)) == 0) {
-    show_msg("Oslo kommune is identical to Oslo fylke!") 
+    message("Oslo kommune is identical to Oslo fylke!") 
   } else {
-    show_msg("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1", "sad")
+    message("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
   }
   
   output
