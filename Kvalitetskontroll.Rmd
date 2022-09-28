@@ -3,9 +3,8 @@ title: "Kvalitetskontroll"
 author: "Vegard"
 date: "2022-09-12"
 output:
-  html_document: default
-toc: true
-  toc_float: true
+  html_document: 
+    df_print: kable
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache = TRUE, echo = F)
@@ -38,8 +37,7 @@ In `ReadFile()`, specify KUBE name, bank ("KH" or "NH"), and FOLDER (4-digit yea
 
 - TODO: Print name of loaded files (for report)
 
-```{r include = false}
-#| include: false
+```{r include=FALSE}
 dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
 dfold <- ReadFile("HKR", bank = "KH", folder = 2022)
 
@@ -67,6 +65,10 @@ names(dfnew)
 
 # General summary
 summary(dfnew)
+```
+
+```{r}
+dfnew
 ```
 
 # 1. Compare dimensions
@@ -104,7 +106,7 @@ CheckPrikk()
 
 # 4. Does FYLKE sum to LAND?
 
--   Summarise the column defined as `r COMPAREval` for LAND and FYLKE, grouped by: `r str_c(GROUPdims, collapse = ", ")`
+-   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: **`r str_c(GROUPdims, collapse = ", ")`**
 -   HELSEREGION is excluded from the comparison
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
 -   Orders the input according to the relative difference.
@@ -115,7 +117,7 @@ CompareLandFylke()
 
 # 5. Does BYDEL sum to KOMMUNE?
 
--   Summarise the column `r COMPAREval` for KOMMUNE and BYDEL, grouped by: `r str_c(GROUPdims, collapse = ", ")`
+-   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: **`r str_c(GROUPdims, collapse = ", ")`**
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
 
@@ -125,7 +127,7 @@ CompareBydelKommune()
 
 # 6. Oslo KOMMUNE = Oslo FYLKE?
 
--   Summarise the column `r COMPAREval` for Oslo kommune and Oslo fylke, grouped by: `r str_c(GROUPdims, collapse = ", ")`
+-   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: **`r str_c(GROUPdims, collapse = ", ")`**
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
 

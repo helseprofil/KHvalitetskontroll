@@ -220,14 +220,14 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            relative = Land/Fylke) %>% 
     arrange(desc(relative)) 
   
-   if(nrow(output %>% 
-           dplyr::filter(relative < 1)) == 0) {
-     show_msg("LAND is always larger than FYLKE") 
-   } else {
-     show_msg("In some rows, FYLKE is larger than LAND. See rows with relative < 1", "sad")
-   }
+ #  if(nrow(output %>% 
+ #          dplyr::filter(relative < 1)) == 0) {
+ #    show_msg("LAND is always larger than FYLKE") 
+ #  } else {
+ #    show_msg("In some rows, FYLKE is larger than LAND. See rows with relative < 1", "sad")
+ #  }
    
-  output
+  knitr::kable(output)
 }
 
 #' CompareBydelKommune
