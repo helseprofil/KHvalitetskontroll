@@ -209,8 +209,8 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
   
   output <- data1 %>% 
     mutate(geolevel = case_when(GEO == 0 ~ "Land",
-                                GEO %in% c(81:84) ~ "Helseregion",
                                 GEO < 100 ~ "Fylke",
+                                GEO %in% c(81:84) ~ "Helseregion",
                                 GEO < 10000 ~ "Kommune",
                                 TRUE ~ "Bydel")) %>% 
     dplyr::filter(geolevel %in% c("Land", "Fylke")) %>% 
