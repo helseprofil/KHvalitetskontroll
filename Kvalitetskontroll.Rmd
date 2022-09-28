@@ -9,7 +9,7 @@ output:
     toc_float: true
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache = TRUE, echo = F)
+knitr::opts_chunk$set(cache = F, echo = F)
 ```
 
 ## Input
