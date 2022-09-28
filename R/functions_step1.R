@@ -180,13 +180,13 @@ CheckPrikk <- function(data1 = dfnew,
   
   filtered <- data1[data1[[val]] <= limit]
   
-  message(paste0("Value compared: ", val))
-  message(paste0("Limit: ", limit))
+  cat(paste0("Controlled column: ", val))
+  cat(paste0("Limit: ", limit))
   
   if(nrow(filtered) == 0) {
-    message("No values < limit")
+    cat("No values < limit")
   } else {
-    message(paste0("N values > limit: ", nrow(filtered)))
+    cat(paste0("N values > limit: ", nrow(filtered)))
     as_tibble(filtered)
   }
 
@@ -222,9 +222,9 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
   
   if(nrow(output %>%
           dplyr::filter(relative < 1)) == 0) {
-    message("LAND is always larger than FYLKE")
+    cat("LAND is always larger than FYLKE")
   } else {
-    message("In some rows, FYLKE is larger than LAND. See rows with relative < 1")
+    cat("In some rows, FYLKE is larger than LAND. See rows with relative < 1")
   }
    
   output
@@ -262,9 +262,9 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
   
   if(nrow(output %>% 
           dplyr::filter(relative < 1)) == 0) {
-    message("KOMMUNE is always larger than BYDEL") 
+    cat("KOMMUNE is always larger than BYDEL") 
   } else {
-    message("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
+    cat("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
   }
   
   output
@@ -294,9 +294,9 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
   
   if(nrow(output %>% 
           dplyr::filter(relative != 1)) == 0) {
-    message("Oslo kommune is identical to Oslo fylke!") 
+    cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
-    message("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
+    cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
   }
   
   output
