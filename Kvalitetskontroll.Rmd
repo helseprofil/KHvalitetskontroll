@@ -105,6 +105,7 @@ CheckPrikk()
 # 4. Does FYLKE sum to LAND?
 
 -   Summarise the column defined as `r COMPAREval` for LAND and FYLKE, grouped by: `r str_c(GROUPdims, collapse = ", ")`
+-   HELSEREGION is excluded from the comparison
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
 -   Orders the input according to the relative difference.
 
