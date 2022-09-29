@@ -1,4 +1,5 @@
 # Load packages 
+gert::git_branch_checkout("main")
 gert::git_pull()
 source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")
 kh_load(dplyr, tidyr, stringr, purrr, data.table)
