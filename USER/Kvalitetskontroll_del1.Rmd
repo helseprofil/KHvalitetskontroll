@@ -11,8 +11,6 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
 ```
 
 ## Input

@@ -1,11 +1,6 @@
 source("renv/activate.R")
 library(stats)
 
-cat("\nSer etter endringer\n")
-gert::git_branch_checkout("main")
-gert::git_pull()
-cat("\nAlle filer oppdatert\n")
-
 # Source setup file
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 
