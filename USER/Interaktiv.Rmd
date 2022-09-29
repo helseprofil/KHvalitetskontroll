@@ -4,7 +4,22 @@ author: "Vegard"
 date: "2022-09-29"
 output: html_document
 ---
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = F, echo = F)
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
+```
 # Collection of useful commands for interactive check of KUBE
 
-KODE KOMMER
+Load data file, if not already loaded in environment.
+
+```{r}
+dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
+```
+
+
+## Show full KUBE
+
+```{r include = F, eval = F}
+dfnew 
+```

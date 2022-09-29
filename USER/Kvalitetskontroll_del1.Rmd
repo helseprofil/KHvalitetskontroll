@@ -1,7 +1,7 @@
 ---
 title: "Kvalitetskontroll"
-author: "Vegard"
-date: "2022-09-12"
+author: ""
+date: "`r Sys.Date()`"
 output:
   html_document: 
     df_print: paged
@@ -10,6 +10,7 @@ output:
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache = F, echo = F)
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
 ## Input
@@ -37,11 +38,14 @@ In `ReadFile()`, specify KUBE name, bank ("KH" or "NH"), and FOLDER (4-digit yea
 
 [**Input types:**]{.underline} - `*dims` refer to dimension columns - `*val` refer to value columns - `*limit` refer to thresholds, e.g. limit for PRIKKING
 
-- TODO: Print name of loaded files (for report)
-
 ```{r include=FALSE}
 dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
 dfold <- ReadFile("HKR", bank = "KH", folder = 2022)
+
+####
+# To get a list of variable names in KUBE, run the following
+names(dfnew)
+###
 
 STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER")
 EXTRAdims <- c("KODEGRUPPE") # If no additional dimensions ar present, this should be "EXTRAdims <- NULL"
@@ -53,21 +57,6 @@ COMPAREval <- "sumTELLER"
 GROUPdims <- c("KODEGRUPPE", "AAR") # If you only want total numbers, this should be "GROUPdims <- NULL"
 ```
 
-## Inspect data manually
-
--   Useful codes to initially inspect KUBE
--   For interactive use only
-
-```{r include = F, eval = F}
-# Scroll through KUBE
-dfnew 
-
-# List variable names
-names(dfnew)
-
-# General summary
-summary(dfnew)
-```
 
 # 1. Compare dimensions
 
