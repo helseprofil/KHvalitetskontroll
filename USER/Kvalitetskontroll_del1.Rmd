@@ -9,11 +9,26 @@ output:
     toc_float: true
 ---
 ```{r setup, include=FALSE}
+# Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
+```{r}
+## Load data
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  bank = "KH", # KH or NH
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+
+dfold <- ReadRile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  bank = "KH",# KH or NH
+                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+```
+
+
 ## Input
+
+
 
 All inputs are provided in the code chunk below.
 
