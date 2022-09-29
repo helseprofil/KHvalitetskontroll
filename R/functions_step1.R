@@ -122,8 +122,8 @@ CheckPrikk <- function(data1 = dfnew,
   
   filtered <- data1[data1[[val]] <= limit]
   
-  cat(paste0("Controlled column: ", val))
-  cat(paste0("Limit: ", limit))
+  cat(paste0("Controlled column: ", val, "\n"))
+  cat(paste0("Limit: ", limit, "\n"))
   
   if(nrow(filtered) == 0) {
     cat("No values < limit")
