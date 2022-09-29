@@ -9,17 +9,18 @@ For å installere funksjonene, kjør:
 source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")
 kh_install(KHvalitetskontroll)
 ```
-RStudio restarter når prosessen er ferdig. Prosjekt for KHvalitetskontroll åpnes automatisk. Herfra skal du kjøre komando:
-
-```r
-renv::restore()
-```
+RStudio restarter når prosessen er ferdig, og prosjekt for KHvalitetskontroll åpnes automatisk. 
 
 Prosjektet lagres her: 
 C:/Users/dittBrukerNavn/helseprofil/KHvalitetskontroll.
 
-# Bruk
+# Oppstart
 
+- Når prosjektet åpnes, vil det automatisk lete etter eventuelle oppdateringer i GitHub og laste ned disse. 
+- Alle filer som skal brukes ligger i mappen `USER`.
+- Kvalitetskontroll del 1 (manuell sjekk) foregår i `Kvalitetskontroll_del1.Rmd`
+
+# Bruk (under arbeid)
 Hele prosessen foregår i filen `Kvalitetskontroll.Rmd`. I øverste seksjon defineres alt som skal defineres, som sti til ny og gammel (for referanse) kube. 
 
 Etter at all input er definert, gjennomføres kvalitetskontrollen stegvis nedover i filen. Output skal vises under funksjonen. 

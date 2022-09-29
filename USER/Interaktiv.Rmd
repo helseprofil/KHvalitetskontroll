@@ -1,0 +1,10 @@
+---
+title: "Interaktiv sjekk av fil"
+author: "Vegard"
+date: "2022-09-29"
+output: html_document
+---
+
+# Collection of useful commands for interactive check of KUBE
+
+KODE KOMMER
