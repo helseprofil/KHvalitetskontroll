@@ -12,3 +12,7 @@ kh_load(dplyr, tidyr, stringr, purrr, data.table)
 rm(list = ls()[grepl("^kh_", ls())])
 rm(list = ls()[grepl("^pkg_", ls())])
 rm(list = ls()[grepl("^git_", ls())])
+
+# Source internal scripts
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
