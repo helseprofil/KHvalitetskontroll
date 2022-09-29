@@ -1,4 +1,5 @@
 # Switch to main branch and pull any changes (add new files etc)
+gert::git_branch_checkout("main")
 gert::git_pull()
 
 # Load packages 
