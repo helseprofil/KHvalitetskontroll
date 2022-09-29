@@ -3,6 +3,8 @@ library(stats)
 
 # Source setup file
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
 
 # Just for fun
 cat("\nRandom Quote for the funz...:\n")

@@ -39,6 +39,7 @@ In `ReadFile()`, specify KUBE name, bank ("KH" or "NH"), and FOLDER (4-digit yea
 
 - TODO: Print name of loaded files (for report)
 
+
 ```{r include=FALSE}
 dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
 dfold <- ReadFile("HKR", bank = "KH", folder = 2022)
