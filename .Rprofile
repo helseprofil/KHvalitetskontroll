@@ -2,6 +2,7 @@ source("renv/activate.R")
 library(stats)
 
 # Source setup file
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/updateproject.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 
 # Just for fun
