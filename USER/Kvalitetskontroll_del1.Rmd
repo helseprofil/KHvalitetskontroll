@@ -17,6 +17,8 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 All inputs are provided in the code chunk below.
 
+TEST
+
 [**Define:**]{.underline}
 
 -   **dfnew**: New KUBE to be checked
