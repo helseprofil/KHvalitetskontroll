@@ -10,3 +10,5 @@ if (interactive())
   try(fortunes::fortune(), silent = TRUE)
 
 cat("\nWelcome to KHvalitetskontroll\n\nOpen 'Kvalitetskontroll.rmd' to start")
+
+# TEST OM DETTE AUTOMATISK HENTES
