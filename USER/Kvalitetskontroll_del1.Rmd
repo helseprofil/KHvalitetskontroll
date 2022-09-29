@@ -14,49 +14,19 @@ knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
-```{r}
+```{r echo = F}
 ## Load data
 dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   bank = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadRile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   bank = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 
 
-## Input
-
-
-
-All inputs are provided in the code chunk below.
-
-[**Define:**]{.underline}
-
--   **dfnew**: New KUBE to be checked
--   **dfold**: Old KUBE for comparison
-
-In `ReadFile()`, specify KUBE name, bank ("KH" or "NH"), and FOLDER (4-digit year, or "DATERT"). The function locates the correct folder, and looks for the csv-file matching the KUBE name. If there are more than one KUBE with the same name, all potential matches are listed and the KUBE name must be further specified to read a specific file.
-
--   **STANDARDdims**: All standard dimensions in KUBE
-
--   **EXTRAdims** (If none, write `NULL`)
-
--   **PRIKKval**: The target value column for PRIKKING
-
--   **PRIKKlimit**: Threshold for PRIKKING
-
--   **COMPAREval**: Which variable should be compared across LAND, FYLKE, KOMMUNE, BYDEL, etc.
-
--   **GROUPdims**: Dimensions to group comparison output by
-
-[**Input types:**]{.underline} - `*dims` refer to dimension columns - `*val` refer to value columns - `*limit` refer to thresholds, e.g. limit for PRIKKING
-
 ```{r include=FALSE}
-dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
-dfold <- ReadFile("HKR", bank = "KH", folder = 2022)
-
 ####
 # To get a list of variable names in KUBE, run the following
 names(dfnew)

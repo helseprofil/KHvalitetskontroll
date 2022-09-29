@@ -54,6 +54,8 @@ ReadFile <- function(file = NULL,
     filepath <- file.path(basepath, filename)
   }
   
-  message(paste0("Loads file: ", BANK, "/", FOLDER, "/", basename(filepath)))
+  cat(paste0("File loaded: PRODUKSJON/PRODUKTER/KUBER/", BANK, "/", FOLDER, "/", basename(filepath)))
   fread(filepath)
+  
+  
 }
