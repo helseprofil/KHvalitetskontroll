@@ -1,8 +1,10 @@
 source("renv/activate.R")
 library(stats)
 
-# Source setup file
+# Switch to main branch, look for updates:
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/updateproject.R")
+
+# Source setup file, loading functions:
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 
 # Just for fun
