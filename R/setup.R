@@ -1,5 +1,5 @@
 # Switch to main branch and pull any changes (add new files etc)
-cat("\nSer etter nye filer\n")
+cat("\nSer etter endringer\n")
 gert::git_branch_checkout("main")
 gert::git_pull()
 cat("\nAlle filer oppdatert\n")
