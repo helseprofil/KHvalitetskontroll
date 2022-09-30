@@ -1,0 +1,115 @@
+---
+title: "Kvalitetskontroll del 1: manuell"
+author: ""
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    df_print: paged
+    toc: true
+    toc_float: true
+---
+For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
+```{r setup, include=FALSE}
+# Global settings, do not change
+knitr::opts_chunk$set(cache = F, echo = F)
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+```
+**Data files loaded**
+```{r echo = F}
+## Load data
+dfnew <- ReadFile(file = "HKR_2022-09-27-16-27", # Matching, if >1 file found in folder, specify file name further
+                  bank = "KH", # KH or NH
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  bank = "KH",# KH or NH
+                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+```
+```{r include=FALSE}
+####
+# To get a list of variable names in KUBE, run the following code
+names(dfnew)
+###
+
+# Standard dimensions, entered as c("dim1", "dim2", etc).
+STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER") 
+
+# Extra dimensions, entered as c("dim1", "dim2", etc).
+# If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
+EXTRAdims <- c("KODEGRUPPE") 
+
+# Value column for censoring (PRIKKING), and the limit 
+PRIKKval <- "sumTELLER"
+PRIKKlimit <- 12
+
+# For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
+COMPAREval <- "sumTELLER" 
+
+# For grouping output, entered as c("dim1", "dim2", etc).
+# Applies to comparisons of censored observations, and between GEOlevels
+# If you only want total numbers, this should be "GROUPdims <- NULL"
+GROUPdims <- c("KODEGRUPPE", "AAR") 
+```
+
+# 1. Compare dimensions
+
+Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
+
+- Number of levels
+- New levels (not found in old KUBE)
+- Expired levels (not found in new KUBE)
+
+```{r}
+CompareDims()
+```
+
+# 2. Compare number of PRIKK
+
+- Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(GROUPdims)`
+-   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
+- **NB:** Compares the new and old KUBE directly, including all new or expired levels (e.g. new year, new age groups, etc, are included in the comparison).
+
+```{r}
+ComparePrikk()
+```
+
+# 3. Are all values below the limit censored?
+
+-   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
+-   If everything is ok, the function returns a confirmation.
+-   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection.
+
+```{r}
+CheckPrikk()
+```
+
+# 4. Does FYLKE sum to LAND?
+
+-   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
+-   HELSEREGION is excluded from the comparison
+-   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
+-   Orders the input according to the relative difference.
+
+```{r}
+CompareLandFylke()
+```
+
+# 5. Does BYDEL sum to KOMMUNE?
+
+-   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
+-   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
+-   Orders the input according to the relative difference.
+
+```{r}
+CompareBydelKommune() 
+```
+
+# 6. Oslo KOMMUNE = Oslo FYLKE?
+
+-   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
+-   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
+-   Orders the input according to the relative difference.
+
+```{r}
+CompareOslo()
+```
