@@ -59,3 +59,21 @@ ReadFile <- function(file = NULL,
 
 }
 
+#' Print dim
+#' 
+#' Wrapper around str_c for nice printing of variable names in .Rmd-reports
+#' 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+print_dim <- function(...){
+  
+  if(is.null(...)){
+    "(no grouping variables)"
+    } else {
+  stringr::str_c(..., collapse = ", ")
+    }
+}
