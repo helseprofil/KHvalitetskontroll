@@ -13,6 +13,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 Load data file, if not already loaded in environment.
 TEST
+TESTONLINE
 ```{r}
 dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
 ```
