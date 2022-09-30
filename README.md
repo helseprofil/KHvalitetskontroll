@@ -20,12 +20,15 @@ C:/Users/dittBrukerNavn/helseprofil/KHvalitetskontroll.
 - Alle filer som skal brukes ligger i mappen `USER`.
 - Kvalitetskontroll del 1 (manuell sjekk) foregår i `Kvalitetskontroll_del1.Rmd`
 
-# Bruk (under arbeid)
-Hele prosessen foregår i filen `Kvalitetskontroll.Rmd`. I øverste seksjon defineres alt som skal defineres, som sti til ny og gammel (for referanse) kube. 
+# Instruksjoner:
+## Kvalitetskontroll del 1 (manuell kontroll)
 
-Etter at all input er definert, gjennomføres kvalitetskontrollen stegvis nedover i filen. Output skal vises under funksjonen. 
-
-Når alle stegene er gjennomført, kan du generere en HTML-rapport ved å trykke på `Knit` (garnnøstet) i menyen øverst. Denne lagres som Kvalitetskontroll.html, og kan åpnes i nettleser. For å lagre denne til senere, gi filen nytt navn og flytt den til ønsket mappe, ellers vil den bli overskrevet neste gang du lager en rapport. 
+- Bruk filen `/USER/Kvalitetskontroll_del1.Rmd`
+- All input foregår i de to øverste kodechunkene. Her står det også instrukser om hvordan de ulike parametrene skal fylles inn. 
+- Kvalitetskontrollen kan gjennomføres stegvis nedover i dokumentet ved å trykke på "play" i hver kodechunk (evt ved å plassere pekeren inni kodechunken og trykke Ctrl + Shift + Enter)
+    - Output printes direkte under hver kodechunk
+- Når alle stegene er gjennomført, kan du generere en HTML-rapport ved å trykke på `Knit` (garnnøstet) i menyen øverst. Denne lagres som Kvalitetskontroll_del1.html, og kan åpnes i nettleser. 
+- For å lagre denne til senere, gi filen nytt navn og flytt/kopier den til ønsket mappe, ellers vil den bli overskrevet neste gang du lager en rapport. 
 
 
 
