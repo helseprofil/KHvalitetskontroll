@@ -17,6 +17,7 @@ Load data file, if not already loaded in environment.
 dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
 ```
 
+TEST
 
 ## Show full KUBE
 
