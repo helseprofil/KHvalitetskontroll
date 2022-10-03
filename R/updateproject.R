@@ -8,7 +8,7 @@ if(ask) {
   gert::git_pull()
   updatemsg <- "\nEverything up to date!\n"
 } else {
-  updatemsg <- "\nUser files not updated.\nCopy the files you want to keep and restart the project (Ctrl + Shift + F10) to get the latest updates.\n"
+  updatemsg <- "\nUser files not updated, new versions may be available.\nCopy the files you want to keep and restart the project (Ctrl + Shift + F10) to get the latest updates.\n"
 }
 
 rm(ask)
