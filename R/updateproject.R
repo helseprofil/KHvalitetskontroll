@@ -8,7 +8,7 @@ if(ask) {
   gert::git_pull()
   updatemsg <- "\nAlle filer oppdatert\n"
 } else {
-  updatemsg <- "\nBrukerfiler ikke oppdatert.\nKopier filer du vil beholde og restart prosjektet (Ctrl + Shift + F10) for å hente siste versjon\n"
+  updatemsg <- "\nBrukerfiler ikke oppdatert. Kopier filer du vil beholde og restart prosjektet (Ctrl + Shift + F10) for å hente siste versjon\n"
 }
 
 rm(ask)
