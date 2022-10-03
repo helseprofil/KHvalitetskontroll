@@ -11,11 +11,11 @@
 #'
 #' @examples
 ReadFile <- function(file = NULL, 
-                     bank = "KH", 
+                     modus = "KH", 
                      folder = "DATERT"){
   
-  if(!(bank %in% c("KH", "NH"))) {
-    stop("`bank` must be either 'KH' or 'NH'")
+  if(!(modus %in% c("KH", "NH"))) {
+    stop("`modus` must be either 'KH' or 'NH'")
   }
   
   if(!(str_detect(folder, "[:digit:]{4}") & str_length(folder) == 4| 
@@ -27,11 +27,11 @@ ReadFile <- function(file = NULL,
     stop("file not selected")
   }
   
-  BANK <- case_when(bank == "KH" ~ "KOMMUNEHELSA",
-                    bank == "NH" ~ "NORGESHELSA")
+  MODUS <- case_when(modus == "KH" ~ "KOMMUNEHELSA",
+                     modus == "NH" ~ "NORGESHELSA")
   
   FOLDER <- case_when(folder == "DATERT" ~ paste0(folder, "/csv"),
-                      TRUE ~ paste0(bank, folder, "NESSTAR"))
+                      TRUE ~ paste0(modus, folder, "NESSTAR"))
   
   basepath <- file.path("F:", 
                         "Forskningsprosjekter", 
@@ -39,7 +39,7 @@ ReadFile <- function(file = NULL,
                         "PRODUKSJON", 
                         "PRODUKTER", 
                         "KUBER", 
-                        BANK, 
+                        MODUS, 
                         FOLDER)
   
   filename <- list.files(basepath, pattern = file)
@@ -54,7 +54,7 @@ ReadFile <- function(file = NULL,
     filepath <- file.path(basepath, filename)
   }
   
-  cat(paste0("File loaded: PRODUKSJON/PRODUKTER/KUBER/", BANK, "/", FOLDER, "/", basename(filepath)))
+  cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
   fread(filepath)
 
 }

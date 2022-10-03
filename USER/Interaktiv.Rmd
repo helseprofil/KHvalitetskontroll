@@ -4,10 +4,14 @@ author: "Vegard"
 date: "2022-09-29"
 output: html_document
 ---
-```{r setup, include=FALSE}
+
+- This document contain useful functions for exploration of KUBE. 
+- 
+
+```{r setup, include=FALSE, message=FALSE}
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
+library(tidyverse)
 ```
 # Collection of useful commands for interactive check of KUBE
 

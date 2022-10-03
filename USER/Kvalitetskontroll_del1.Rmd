@@ -18,11 +18,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 ```{r echo = F}
 ## Load data
 dfnew <- ReadFile(file = "HKR_2022-09-27-16-27", # Matching, if >1 file found in folder, specify file name further
-                  bank = "KH", # KH or NH
+                  modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
-                  bank = "KH",# KH or NH
+                  modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 ```{r include=FALSE}
