@@ -1,4 +1,6 @@
-ask <- utils::askYesNo("Vil du oppdatere brukerfilene til siste versjon? Dette vil overskrive eksisterende filer. Dersom du har gjort endringer du vil beholde, velg nei og kopier filene til lokal mappe")
+ask <- utils::askYesNo("Vil du oppdatere brukerfilene til siste versjon? 
+                       Dette vil overskrive eksisterende filer. 
+                       Dersom du har gjort endringer du vil beholde, velg nei og kopier filene til lokal mappe")
 
 
 if(ask) {
@@ -8,7 +10,7 @@ if(ask) {
   gert::git_pull()
   updatemsg <- "\nAlle filer oppdatert\n"
 } else {
-  updatemsg <- "\nBrukerfiler ikke oppdatert. Kopier filer du vil beholde og restart prosjektet (Ctrl + Shift + F10) for å hente siste versjon\n"
+  updatemsg <- "\nBrukerfiler ikke oppdatert.\nKopier filer du vil beholde og restart prosjektet (Ctrl + Shift + F10) for å hente siste versjon.\n"
 }
 
 rm(ask)
