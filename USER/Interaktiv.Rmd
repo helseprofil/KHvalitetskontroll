@@ -21,3 +21,4 @@ dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
 ```{r include = F, eval = F}
 dfnew 
 ```
+TESTgithub
