@@ -15,10 +15,11 @@ if (interactive())
 
 cat("\nWelcome to KHvalitetskontroll\n", 
     "\n---\n", 
-    updatemsg, 
-    "\n---\n", 
     "\nAvailable user files:\n",
     "- Kvalitetskontroll.Rmd\n",
-    "- Interactive.Rmd")
+    "- Interactive.Rmd",
+    "\n---\n",
+    updatemsg, 
+    "\n---\n")
 
 rm(updatemsg)
