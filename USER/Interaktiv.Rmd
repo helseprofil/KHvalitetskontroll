@@ -6,18 +6,20 @@ output: html_document
 ---
 
 - This document contain useful functions for exploration of KUBE. 
-- 
+- Alternative to open the file in Excel
 
+Run this to load functions: 
 ```{r setup, include=FALSE, message=FALSE}
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
-library(tidyverse)
 ```
 # Collection of useful commands for interactive check of KUBE
 
-Load data file, if not already loaded in environment.
+If the data file is not loaded in the environment, 
 ```{r}
-dfnew <- ReadFile("HKR_2022-09-27-16-27", folder = "DATERT")
+dfnew <- ReadFile(file = "HKR_2022-09-27-16-27", # Matching, if >1 file found in folder, specify file name further
+                  modus = "KH", # KH or NH
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 
 ## Show full KUBE
