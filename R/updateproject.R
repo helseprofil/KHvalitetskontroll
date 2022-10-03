@@ -6,7 +6,9 @@ if(ask) {
   gert::git_branch_checkout("main")
   gert::git_reset_hard()
   gert::git_pull()
-  cat("\nAlle filer oppdatert\n")
+  updatemsg <- "\nAlle filer oppdatert\n"
 } else {
-  cat("\nBrukerfiler ikke oppdatert\n")
+  updatemsg <- "\nBrukerfiler ikke oppdatert\n"
 }
+
+rm(ask)
