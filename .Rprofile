@@ -8,7 +8,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 
 # Just for fun
-cat("\nRandom Quote for the funz...:\n")
+cat("\nRandom Quote just for fun...:\n")
 
 if (interactive())
   try(fortunes::fortune(), silent = TRUE)
