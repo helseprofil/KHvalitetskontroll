@@ -14,7 +14,61 @@ For more info about the quality control, see [here](https://github.com/helseprof
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+source("../R/functions_step2.R")
+```
+
+**Data files loaded**
+```{r echo = F}
+## Load data
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  modus = "KH", # KH or NH
+                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
+
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  modus = "KH",# KH or NH
+                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+```
+# 1. Initial comparison of new and old cube
+```{r}
+NewCols <- function(data1 = dfnew,
+                    data2 = dfold){
+  
+  new <- names(data1 %>% 
+                 select(!any_of(as.character(names(data2))))) 
+  
+  msg <- case_when(length(new == 0) ~ "No new columns",
+                   TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
+  
+  cat(msg)
+
+}
+
+
+new <- NewCols()
+
+dfnew %>% 
+  select(-all_of(new))
 ```
 
 
+
+
+```{r}
+# Find comparable rows and columns, merge to comparecube
+
+excludeyear <- function(data1 = dfnew,
+                        data2 = dfold){
+  
+}
+
+```
+
+```{r}
+compareNA_unequal <- function(v1,v2) {
+  notsame <- case_when(abs(v1-v2) < 0.05 ~ 0,
+                       is.na(v1) & is.na(v2) ~ 0,
+                       TRUE ~ 1)
+  return(notsame)
+}
+```
 
