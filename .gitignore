@@ -6,6 +6,10 @@
 # Output files
 *.html
 
+# Local files
+USER/Lokale filer, overskrives ikke/
+USER/Output
+
 # History files
 .Rapp.history
 
