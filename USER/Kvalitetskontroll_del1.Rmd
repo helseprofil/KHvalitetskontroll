@@ -97,8 +97,9 @@ CompareLandFylke()
 # 5. Does BYDEL sum to KOMMUNE?
 
 -   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
+-   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
--   Orders the input according to the relative difference.
+-   Orders the input according to the relative difference, within each KOMMUNE.
 
 ```{r}
 CompareBydelKommune() 

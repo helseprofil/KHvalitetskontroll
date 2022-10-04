@@ -183,24 +183,28 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
 #'
 #' @examples
 CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval) {
-  output <- data1 %>% 
-    mutate(geolevel = case_when(GEO == 0 ~ "Land",
-                                GEO < 100 ~ "Fylke",
-                                GEO < 10000 ~ "Kommune",
-                                TRUE ~ "Bydel")) %>%  
-    dplyr::filter(geolevel %in% c("Bydel", "Kommune"),
-           str_detect(GEO, "^301|^1103|^4601|^5001")) %>% 
+  
+  data <- data1 %>% 
+    filter(GEO > 100) %>% 
+    mutate(geolevel = case_when(GEO < 10000 ~ "Kommune",
+                                TRUE ~ "Bydel")) %>%
+    dplyr::filter(!(GEO %in% 3011:3019), # Deselect KOMMUNE in Viken, otherwise included in Oslo
+                  str_detect(GEO, "^301|^1103|^4601|^5001")) %>% 
     mutate(KOMMUNE = case_when(str_detect(GEO, "^301") ~ "Oslo",
                                str_detect(GEO, "^1103") ~ "Stavanger",
                                str_detect(GEO, "^4601") ~ "Bergen",
-                               str_detect(GEO, "^5001") ~ "Trondheim")) %>% 
+                               str_detect(GEO, "^5001") ~ "Trondheim"))
+  
+  output <- data %>%
     group_by(across(c(KOMMUNE, geolevel, all_of(groupdim)))) %>% 
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
     mutate(absolute = Kommune-Bydel,
-           relative = Kommune/Bydel) %>% 
+           relative = Kommune/Bydel) %>%  
     arrange(desc(relative))
+  
+  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>% 
           dplyr::filter(relative < 1)) == 0) {
