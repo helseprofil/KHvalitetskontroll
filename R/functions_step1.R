@@ -208,9 +208,9 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
   
   if(nrow(output %>% 
           dplyr::filter(relative < 1)) == 0) {
-    cat("KOMMUNE is always larger than BYDEL") 
+    cat("\nKOMMUNE is always larger than BYDEL") 
   } else {
-    cat("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
+    cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
   }
   
   output
