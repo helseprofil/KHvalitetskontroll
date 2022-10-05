@@ -201,7 +201,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
     mutate(absolute = Kommune-Bydel,
-           relative = Kommune/Bydel) %>%  
+           relative = round(Kommune/Bydel,3)) %>%  
     arrange(desc(relative))
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
