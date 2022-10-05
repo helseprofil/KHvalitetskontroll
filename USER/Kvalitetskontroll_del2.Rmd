@@ -29,6 +29,13 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 # 1. Initial comparison of new and old cube
+
+- List up the structural differences between the two files
+    - Number of cols 
+    - Number of rows
+    - Name of new cols
+    - Name of new levels in different dimensions (year, INNVKAT, UTDANN, LANDBAK, etc)
+    - Name of expired levels in different dimensions
 ```{r}
 NewCols <- function(data1 = dfnew,
                     data2 = dfold){
@@ -50,8 +57,12 @@ dfnew %>%
   select(-all_of(new))
 ```
 
+# Create data for comparison
 
-
+- dfnew_flagged (all rows flagged as new = 0/1), for further quality control
+    - For new columns, only levels != 0 (i.e. not total) are flagged 
+- dfnew_compare (all rows flagged as new = 1, and then all new columns, are removed
+- dfold_compare (all expired columns, and expired levels, are removed)
 
 ```{r}
 # Find comparable rows and columns, merge to comparecube
