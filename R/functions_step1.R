@@ -147,26 +147,30 @@ CheckPrikk <- function(data1 = dfnew,
 #' @examples
 CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
   
-  output <- data1 %>% 
-    dplyr::filter(!(GEO %in% 81:84)) %>% 
+  data <- data1 %>% 
+    dplyr::filter(GEO < 100) %>% 
+    dplyr::filter(!(GEO %in% 81:84)) %>% # Remove HELSEREGION
     mutate(geolevel = case_when(GEO == 0 ~ "Land",
-                                GEO < 100 ~ "Fylke",
-                                GEO < 10000 ~ "Kommune",
-                                TRUE ~ "Bydel")) %>% 
-    dplyr::filter(geolevel %in% c("Land", "Fylke")) %>% 
+                                GEO < 100 ~ "Fylke")) 
+  
+  output <- data %>% 
     group_by(across(c(geolevel, all_of(groupdim)))) %>% 
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
-    mutate(absolute = Land-Fylke,
-           relative = Land/Fylke) %>% 
-    arrange(desc(relative)) 
+    mutate(Absolute = Land-Fylke,
+           Relative = Land/Fylke) %>% 
+    arrange(desc(Relative)) %>% 
+    mutate(across(c(Land, Fylke, Absolute), ~round(.x, 0)),
+           across(Relative, ~round(.x, 3)))
+  
+  cat("\nGEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>%
-          dplyr::filter(relative < 1)) == 0) {
-    cat("LAND is always larger than FYLKE")
+          dplyr::filter(Relative < 1)) == 0) {
+    cat("\nLAND is always larger than FYLKE")
   } else {
-    cat("In some rows, FYLKE is larger than LAND. See rows with relative < 1")
+    cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with relative < 1")
   }
    
   output
@@ -200,11 +204,13 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
-    mutate(absolute = Kommune-Bydel,
-           relative = round(Kommune/Bydel,3)) %>%  
-    arrange(desc(relative))
+    mutate(Absolute = Kommune-Bydel,
+           Relative = Kommune/Bydel) %>%  
+    arrange(desc(Relative)) %>% 
+    mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
+           across(Relative, ~round(.x, 3)))
   
-  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  cat("\nGEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>% 
           dplyr::filter(relative < 1)) == 0) {
