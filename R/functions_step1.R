@@ -79,28 +79,29 @@ ComparePrikk <- function(data1 = dfnew,
                          data2 = dfold, 
                          groupdim = EXTRAdims){
   
-  full_join(
+  output <- full_join(
     data1 %>% 
       group_by(across(c(SPVFLAGG, all_of(groupdim)))) %>% 
-      summarise(n_new = n(), .groups = "drop"),
+      summarise(N_New = n(), .groups = "drop"),
     data2 %>% 
       group_by(across(c(SPVFLAGG, all_of(groupdim)))) %>% 
-      summarise(n_old = n(), .groups = "drop"),
+      summarise(N_Old = n(), .groups = "drop"),
     by = c("SPVFLAGG", all_of(groupdim))) %>% 
-    replace_na(list(n_new = 0,
-                    n_old = 0)) %>% 
+    replace_na(list(N_New = 0,
+                    N_Old = 0)) %>% 
     mutate(across(SPVFLAGG, as.character),
-           SPVFLAGG = case_when(SPVFLAGG == "0" ~ "No flag", 
-                                TRUE ~ SPVFLAGG),
-           absolute = n_new - n_old,
-           absolute = case_when(absolute == 0 ~ "Identical",
-                                absolute > 0 ~ paste0("+ ", absolute),
-                                absolute < 0 ~ paste0("- ", abs(absolute))),
-           relative = round((n_new/n_old - 1)*100,1),
-           relative = case_when(relative == Inf ~ "Cannot be estimated",
-                                relative == 0 ~ "Identical", 
-                                relative > 0 ~ paste0("+ ", relative, " %"),
-                                relative < 0 ~ paste0("- ", abs(relative), " %"))) 
+           SPVFLAGG = paste0("SPVFLAGG=", SPVFLAGG),
+           Absolute = N_New - N_Old,
+           Absolute = case_when(Absolute == 0 ~ "Identical",
+                                Absolute > 0 ~ paste0("+ ", Absolute),
+                                Absolute < 0 ~ paste0("- ", abs(Absolute))),
+           Relative = round((N_New/N_Old - 1)*100,1),
+           Relative = case_when(Relative == Inf ~ "Cannot be estimated",
+                                Relative == 0 ~ "Identical", 
+                                Relative > 0 ~ paste0("+ ", Relative, " %"),
+                                Relative < 0 ~ paste0("- ", abs(Relative), " %"))) 
+  
+  DT::datatable(output, rownames = F)
     
 }
 
@@ -164,7 +165,7 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
     mutate(across(c(Land, Fylke, Absolute), ~round(.x, 0)),
            across(Relative, ~round(.x, 3)))
   
-  cat("\nGEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>%
           dplyr::filter(Relative < 1)) == 0) {
@@ -173,7 +174,7 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
     cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with relative < 1")
   }
    
-  output
+  datatable(output, rownames = F)
 }
 
 #' CompareBydelKommune
@@ -210,7 +211,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
     mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
            across(Relative, ~round(.x, 3)))
   
-  cat("\nGEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>% 
           dplyr::filter(Relative < 1)) == 0) {
@@ -219,7 +220,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
   }
   
-  output
+  datatable(output, rownames = F)
 }
 
 #' CompareOslo
@@ -254,5 +255,5 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
     cat("\nOslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
   }
   
-  output
+  datatable(output, rownames = F)
 }
