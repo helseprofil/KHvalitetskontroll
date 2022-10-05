@@ -30,7 +30,7 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
-
+**Input parameters: **
 ```{r include=FALSE}
 ####
 # To get a list of variable names in the new KUBE, run the following code
@@ -86,6 +86,7 @@ CompareDims()
 - Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(EXTRAdims)`
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
 - **NB:** Compares the new and old KUBE directly, including all new or expired levels (e.g. new year, new age groups, new geolevels, etc, are included in the comparison).
+-   Use search bar to filter out rows of interest (e.g only show SPVFLAGG=3)
 
 ```{r}
 # Output stratified by EXTRAdims (input)
@@ -107,6 +108,7 @@ CheckPrikk()
 -   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
 -   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show specific year)
 
 ```{r}
 # Output grouped by GROUPdims
@@ -118,7 +120,8 @@ CompareLandFylke()
 -   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
--   Orders the input according to the relative difference, within each KOMMUNE.
+-   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show Oslo or specific year)
 
 ```{r}
 # Output grouped by GROUPdims
@@ -130,6 +133,7 @@ CompareBydelKommune()
 -   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show specific year)
 
 ```{r}
 # Output grouped by GROUPdims
