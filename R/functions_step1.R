@@ -114,7 +114,9 @@ ComparePrikk <- function(data1 = dfnew,
 #' @examples
 CheckPrikk <- function(data1 = dfnew,
                        val = PRIKKval, 
-                       limit = PRIKKlimit){
+                       limit = PRIKKlimit,
+                       standarddims = STANDARDdims,
+                       extradims = EXTRAdims){
   
   filtered <- data1[data1[[val]] <= limit]
   
@@ -125,7 +127,9 @@ CheckPrikk <- function(data1 = dfnew,
     cat("No values < limit")
   } else {
     cat(paste0("N values > limit: ", nrow(filtered)))
-    as_tibble(filtered)
+    output <- filtered %>% 
+      select(all_of(standarddims), all_of(extradims), all_of(val), everything()) 
+    DT::datatable(output, rownames = F)
   }
 
 }
