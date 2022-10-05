@@ -213,7 +213,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
   cat("\nGEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>% 
-          dplyr::filter(relative < 1)) == 0) {
+          dplyr::filter(Relative < 1)) == 0) {
     cat("\nKOMMUNE is always larger than BYDEL") 
   } else {
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
@@ -241,14 +241,17 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
-    mutate(absolute = `Oslo Fylke`-`Oslo Kommune`,
-           relative = `Oslo Fylke`/`Oslo Kommune`)
+    mutate(Absolute = `Oslo Fylke`-`Oslo Kommune`,
+           Relative = `Oslo Fylke`/`Oslo Kommune`) %>% 
+    mutate(across(c(`Oslo Fylke`, `Oslo Kommune`, Absolute), ~round(.x, 0)),
+           across(Relative, ~round(.x, 3)))
+           
   
   if(nrow(output %>% 
-          dplyr::filter(relative != 1)) == 0) {
-    cat("Oslo kommune is identical to Oslo fylke!") 
+          dplyr::filter(Relative != 1)) == 0) {
+    cat("\nOslo kommune is identical to Oslo fylke!") 
   } else {
-    cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
+    cat("\nOslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
   }
   
   output
