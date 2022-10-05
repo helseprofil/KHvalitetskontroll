@@ -92,14 +92,9 @@ ComparePrikk <- function(data1 = dfnew,
     mutate(across(SPVFLAGG, as.character),
            SPVFLAGG = paste0("SPVFLAGG=", SPVFLAGG),
            Absolute = N_New - N_Old,
-           Absolute = case_when(Absolute == 0 ~ "Identical",
-                                Absolute > 0 ~ paste0("+ ", Absolute),
-                                Absolute < 0 ~ paste0("- ", abs(Absolute))),
-           Relative = round((N_New/N_Old - 1)*100,1),
-           Relative = case_when(Relative == Inf ~ "Cannot be estimated",
-                                Relative == 0 ~ "Identical", 
-                                Relative > 0 ~ paste0("+ ", Relative, " %"),
-                                Relative < 0 ~ paste0("- ", abs(Relative), " %"))) 
+           Relative = round(N_New/N_Old, 3),
+           Relative = case_when(Relative == Inf ~ NA_real_,
+                                TRUE ~Relative))
   
   DT::datatable(output, rownames = F)
     
@@ -163,7 +158,8 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            Relative = Land/Fylke) %>% 
     arrange(desc(Relative)) %>% 
     mutate(across(c(Land, Fylke, Absolute), ~round(.x, 0)),
-           across(Relative, ~round(.x, 3))) %>% 
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                       TRUE ~ round(Relative, 3)))) %>% 
     select(all_of(groupdim), Land, Fylke, Absolute, Relative)
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
@@ -210,7 +206,8 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
            Relative = Kommune/Bydel) %>%  
     arrange(desc(Relative)) %>% 
     mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
-           across(Relative, ~round(.x, 3))) %>% 
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                      TRUE ~ round(Relative, 3)))) %>% 
     select(all_of(groupdim), Kommune, Bydel, Absolute, Relative)
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
@@ -247,7 +244,8 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
     mutate(Absolute = `Oslo Fylke`-`Oslo Kommune`,
            Relative = `Oslo Fylke`/`Oslo Kommune`) %>% 
     mutate(across(c(`Oslo Fylke`, `Oslo Kommune`, Absolute), ~round(.x, 0)),
-           across(Relative, ~round(.x, 3)))
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                       TRUE ~ round(Relative, 3))))
            
   
   if(nrow(output %>% 

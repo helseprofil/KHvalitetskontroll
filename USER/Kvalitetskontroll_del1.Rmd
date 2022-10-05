@@ -22,11 +22,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded: **
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "DAAR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "DAAR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
@@ -42,7 +42,7 @@ STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER")
 
 # Extra dimensions, entered as c("dim1", "dim2", etc).
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
-EXTRAdims <- c("KODEGRUPPE") 
+EXTRAdims <- c("AARSAK") 
 
 # Value column for censoring (PRIKKING), and the limit to check against
 PRIKKval <- "sumTELLER"
@@ -54,7 +54,7 @@ COMPAREval <- "sumTELLER"
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
-GROUPdims <- c("KODEGRUPPE", "AAR") 
+GROUPdims <- c("AARSAK", "AAR") 
 ```
 
 ```{r}
