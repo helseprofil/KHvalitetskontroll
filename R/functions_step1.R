@@ -120,13 +120,13 @@ CheckPrikk <- function(data1 = dfnew,
   
   filtered <- data1[data1[[val]] <= limit]
   
-  cat(paste0("Controlled column: ", val, "\n"))
-  cat(paste0("Limit: ", limit, "\n"))
+  cat(paste0("Controlled column: ", val))
+  cat(paste0("\nLimit: ", limit))
   
   if(nrow(filtered) == 0) {
-    cat("No values < limit")
+    cat("\nNo values < limit")
   } else {
-    cat(paste0("N values > limit: ", nrow(filtered)))
+    cat(paste0("\nN values > limit: ", nrow(filtered)))
     output <- filtered %>% 
       select(all_of(standarddims), all_of(extradims), all_of(val), everything()) 
     DT::datatable(output, rownames = F)
@@ -254,9 +254,9 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
   
   if(nrow(output %>% 
           dplyr::filter(Relative != 1)) == 0) {
-    cat("\nOslo kommune is identical to Oslo fylke!") 
+    cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
-    cat("\nOslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
+    cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
   }
   
   datatable(output, rownames = F)
