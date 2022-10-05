@@ -212,7 +212,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
     mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
            across(Relative, ~case_when(Relative == Inf ~ NA_real_,
                                       TRUE ~ round(Relative, 3)))) %>% 
-    select(all_of(groupdim), Kommune, Bydel, Absolute, Relative)
+    select(KOMMUNE, all_of(groupdim), Kommune, Bydel, Absolute, Relative)
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
