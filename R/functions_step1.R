@@ -163,7 +163,8 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
            Relative = Land/Fylke) %>% 
     arrange(desc(Relative)) %>% 
     mutate(across(c(Land, Fylke, Absolute), ~round(.x, 0)),
-           across(Relative, ~round(.x, 3)))
+           across(Relative, ~round(.x, 3))) %>% 
+    select(all_of(groupdim), Land, Fylke, Absolute, Relative)
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
@@ -209,7 +210,8 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
            Relative = Kommune/Bydel) %>%  
     arrange(desc(Relative)) %>% 
     mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
-           across(Relative, ~round(.x, 3)))
+           across(Relative, ~round(.x, 3))) %>% 
+    select(all_of(groupdim), Kommune, Bydel, Absolute, Relative)
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
