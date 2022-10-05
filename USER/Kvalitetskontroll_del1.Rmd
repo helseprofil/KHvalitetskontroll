@@ -46,7 +46,7 @@ EXTRAdims <- c("KODEGRUPPE")
 
 # Value column for censoring (PRIKKING), and the limit to check against
 PRIKKval <- "sumTELLER"
-PRIKKlimit <- 5
+PRIKKlimit <- 12
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
 COMPAREval <- "sumTELLER" 
