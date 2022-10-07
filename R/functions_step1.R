@@ -79,28 +79,24 @@ ComparePrikk <- function(data1 = dfnew,
                          data2 = dfold, 
                          groupdim = EXTRAdims){
   
-  full_join(
+  output <- full_join(
     data1 %>% 
       group_by(across(c(SPVFLAGG, all_of(groupdim)))) %>% 
-      summarise(n_new = n(), .groups = "drop"),
+      summarise(N_New = n(), .groups = "drop"),
     data2 %>% 
       group_by(across(c(SPVFLAGG, all_of(groupdim)))) %>% 
-      summarise(n_old = n(), .groups = "drop"),
+      summarise(N_Old = n(), .groups = "drop"),
     by = c("SPVFLAGG", all_of(groupdim))) %>% 
-    replace_na(list(n_new = 0,
-                    n_old = 0)) %>% 
+    replace_na(list(N_New = 0,
+                    N_Old = 0)) %>% 
     mutate(across(SPVFLAGG, as.character),
-           SPVFLAGG = case_when(SPVFLAGG == "0" ~ "No flag", 
-                                TRUE ~ SPVFLAGG),
-           absolute = n_new - n_old,
-           absolute = case_when(absolute == 0 ~ "Identical",
-                                absolute > 0 ~ paste0("+ ", absolute),
-                                absolute < 0 ~ paste0("- ", abs(absolute))),
-           relative = round((n_new/n_old - 1)*100,1),
-           relative = case_when(relative == Inf ~ "Cannot be estimated",
-                                relative == 0 ~ "Identical", 
-                                relative > 0 ~ paste0("+ ", relative, " %"),
-                                relative < 0 ~ paste0("- ", abs(relative), " %"))) 
+           SPVFLAGG = paste0("SPVFLAGG=", SPVFLAGG),
+           Absolute = N_New - N_Old,
+           Relative = round(N_New/N_Old, 3),
+           Relative = case_when(Relative == Inf ~ NA_real_,
+                                TRUE ~Relative))
+  
+  DT::datatable(output, rownames = F)
     
 }
 
@@ -118,18 +114,22 @@ ComparePrikk <- function(data1 = dfnew,
 #' @examples
 CheckPrikk <- function(data1 = dfnew,
                        val = PRIKKval, 
-                       limit = PRIKKlimit){
+                       limit = PRIKKlimit,
+                       standarddims = STANDARDdims,
+                       extradims = EXTRAdims){
   
   filtered <- data1[data1[[val]] <= limit]
   
-  cat(paste0("Controlled column: ", val, "\n"))
-  cat(paste0("Limit: ", limit, "\n"))
+  cat(paste0("Controlled column: ", val))
+  cat(paste0("\nLimit: ", limit))
   
   if(nrow(filtered) == 0) {
-    cat("No values < limit")
+    cat("\nNo values < limit")
   } else {
-    cat(paste0("N values > limit: ", nrow(filtered)))
-    as_tibble(filtered)
+    cat(paste0("\nN values > limit: ", nrow(filtered)))
+    output <- filtered %>% 
+      select(all_of(standarddims), all_of(extradims), all_of(val), everything()) 
+    DT::datatable(output, rownames = F)
   }
 
 }
@@ -147,29 +147,35 @@ CheckPrikk <- function(data1 = dfnew,
 #' @examples
 CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
   
-  output <- data1 %>% 
-    dplyr::filter(!(GEO %in% 81:84)) %>% 
+  data <- data1 %>% 
+    dplyr::filter(GEO < 100) %>% 
+    dplyr::filter(!(GEO %in% 81:84)) %>% # Remove HELSEREGION
     mutate(geolevel = case_when(GEO == 0 ~ "Land",
-                                GEO < 100 ~ "Fylke",
-                                GEO < 10000 ~ "Kommune",
-                                TRUE ~ "Bydel")) %>% 
-    dplyr::filter(geolevel %in% c("Land", "Fylke")) %>% 
+                                GEO < 100 ~ "Fylke")) 
+  
+  output <- data %>% 
     group_by(across(c(geolevel, all_of(groupdim)))) %>% 
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
-    mutate(absolute = Land-Fylke,
-           relative = Land/Fylke) %>% 
-    arrange(desc(relative)) 
+    mutate(Absolute = Land-Fylke,
+           Relative = Land/Fylke) %>% 
+    arrange(desc(Relative)) %>% 
+    mutate(across(c(Land, Fylke, Absolute), ~round(.x, 0)),
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                       TRUE ~ round(Relative, 3)))) %>% 
+    select(all_of(groupdim), Land, Fylke, Absolute, Relative)
+  
+  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>%
-          dplyr::filter(relative < 1)) == 0) {
-    cat("LAND is always larger than FYLKE")
+          dplyr::filter(Relative < 1)) == 0) {
+    cat("\nLAND is always larger than FYLKE")
   } else {
-    cat("In some rows, FYLKE is larger than LAND. See rows with relative < 1")
+    cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with relative < 1")
   }
    
-  output
+  datatable(output, rownames = F)
 }
 
 #' CompareBydelKommune
@@ -183,33 +189,41 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
 #'
 #' @examples
 CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval) {
-  output <- data1 %>% 
-    mutate(geolevel = case_when(GEO == 0 ~ "Land",
-                                GEO < 100 ~ "Fylke",
-                                GEO < 10000 ~ "Kommune",
-                                TRUE ~ "Bydel")) %>%  
-    dplyr::filter(geolevel %in% c("Bydel", "Kommune"),
-           str_detect(GEO, "^301|^1103|^4601|^5001")) %>% 
+  
+  data <- data1 %>% 
+    filter(GEO > 100) %>% 
+    mutate(geolevel = case_when(GEO < 10000 ~ "Kommune",
+                                TRUE ~ "Bydel")) %>%
+    dplyr::filter(!(GEO %in% 3011:3019), # Deselect KOMMUNE in Viken, otherwise included in Oslo
+                  str_detect(GEO, "^301|^1103|^4601|^5001")) %>% 
     mutate(KOMMUNE = case_when(str_detect(GEO, "^301") ~ "Oslo",
                                str_detect(GEO, "^1103") ~ "Stavanger",
                                str_detect(GEO, "^4601") ~ "Bergen",
-                               str_detect(GEO, "^5001") ~ "Trondheim")) %>% 
+                               str_detect(GEO, "^5001") ~ "Trondheim"))
+  
+  output <- data %>%
     group_by(across(c(KOMMUNE, geolevel, all_of(groupdim)))) %>% 
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
-    mutate(absolute = Kommune-Bydel,
-           relative = Kommune/Bydel) %>% 
-    arrange(desc(relative))
+    mutate(Absolute = Kommune-Bydel,
+           Relative = Kommune/Bydel) %>%  
+    arrange(desc(Relative)) %>% 
+    mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                      TRUE ~ round(Relative, 3)))) %>% 
+    select(KOMMUNE, all_of(groupdim), Kommune, Bydel, Absolute, Relative)
+  
+  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
   if(nrow(output %>% 
-          dplyr::filter(relative < 1)) == 0) {
-    cat("KOMMUNE is always larger than BYDEL") 
+          dplyr::filter(Relative < 1)) == 0) {
+    cat("\nKOMMUNE is always larger than BYDEL") 
   } else {
-    cat("In some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
+    cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
   }
   
-  output
+  datatable(output, rownames = F)
 }
 
 #' CompareOslo
@@ -231,15 +245,19 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
     summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
     pivot_wider(names_from = geolevel, 
                 values_from = sum) %>% 
-    mutate(absolute = `Oslo Fylke`-`Oslo Kommune`,
-           relative = `Oslo Fylke`/`Oslo Kommune`)
+    mutate(Absolute = `Oslo Fylke`-`Oslo Kommune`,
+           Relative = `Oslo Fylke`/`Oslo Kommune`) %>% 
+    mutate(across(c(`Oslo Fylke`, `Oslo Kommune`, Absolute), ~round(.x, 0)),
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                       TRUE ~ round(Relative, 3))))
+           
   
   if(nrow(output %>% 
-          dplyr::filter(relative != 1)) == 0) {
+          dplyr::filter(Relative != 1)) == 0) {
     cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
     cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
   }
   
-  output
+  datatable(output, rownames = F)
 }

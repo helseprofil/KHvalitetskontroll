@@ -14,20 +14,24 @@ For more info about the quality control, see [here](https://github.com/helseprof
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
-**Data files loaded**
+
+# INPUT
+
+**Data files loaded: **
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
+**Input parameters: **
 ```{r include=FALSE}
 ####
-# To get a list of variable names in KUBE, run the following code
+# To get a list of variable names in the new KUBE, run the following code
 names(dfnew)
 ###
 
@@ -38,7 +42,7 @@ STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER")
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
 EXTRAdims <- c("KODEGRUPPE") 
 
-# Value column for censoring (PRIKKING), and the limit 
+# Value column for censoring (PRIKKING), and the limit to check against
 PRIKKval <- "sumTELLER"
 PRIKKlimit <- 12
 
@@ -51,6 +55,15 @@ COMPAREval <- "sumTELLER"
 GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER") 
 ```
 
+```{r}
+# To print input, do not change:
+cat("Standard dimensions: ", print_dim(STANDARDdims), 
+    "\nExtra dimensions: ", print_dim(EXTRAdims),
+    "\nValue to check for prikking: ", print_dim(PRIKKval),
+    "\nLimit for prikking: ", PRIKKlimit,
+    "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
+    "\nDimensions to group output by: ", print_dim(GROUPdims))
+```
 # 1. Compare dimensions
 
 Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
@@ -67,9 +80,11 @@ CompareDims()
 
 - Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(EXTRAdims)`
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
-- **NB:** Compares the new and old KUBE directly, including all new or expired levels (e.g. new year, new age groups, etc, are included in the comparison).
+- **NB:** Compares the new and old KUBE directly, including all new or expired levels (e.g. new year, new age groups, new geolevels, etc, are included in the comparison).
+-   Use search bar to filter out rows of interest (e.g only show SPVFLAGG=3)
 
 ```{r}
+# Output stratified by EXTRAdims (input)
 ComparePrikk()
 ```
 
@@ -86,22 +101,30 @@ CheckPrikk()
 # 4. Does FYLKE sum to LAND?
 
 -   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
--   HELSEREGION is excluded from the comparison
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
 -   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show specific year)
 
 ```{r}
+# Output grouped by GROUPdims
 CompareLandFylke()
 ```
 
 # 5. Does BYDEL sum to KOMMUNE?
 
 -   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
+-   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show Oslo or specific year)
 
 ```{r}
+<<<<<<< HEAD
 CompareBydelKommune() %>% filter(KOMMUNE == "Oslo", KODEGRUPPE == "HjerteKarTotalt")
+=======
+# Output grouped by GROUPdims
+CompareBydelKommune()
+>>>>>>> main
 ```
 
 # 6. Oslo KOMMUNE = Oslo FYLKE?
@@ -109,7 +132,9 @@ CompareBydelKommune() %>% filter(KOMMUNE == "Oslo", KODEGRUPPE == "HjerteKarTota
 -   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show specific year)
 
 ```{r}
+# Output grouped by GROUPdims
 CompareOslo()
 ```
