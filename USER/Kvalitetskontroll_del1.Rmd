@@ -76,7 +76,6 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
 CompareCols()
 ```
 
-
 # 2. Compare dimensions
 
 Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
