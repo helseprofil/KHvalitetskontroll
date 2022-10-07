@@ -1,13 +1,15 @@
 ---
 title: "Kvalitetskontroll del 1: manuell"
 author: ""
-date: "`r Sys.Date()`"
+date: "Report generated: `r Sys.Date()`"
 output:
   html_document: 
     df_print: paged
     toc: true
     toc_float: true
 ---
+Version: 1.0 (07.10.2022). 
+
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
 # Global settings, do not change
