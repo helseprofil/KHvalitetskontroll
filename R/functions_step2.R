@@ -1,36 +1,6 @@
 
 
 
-
-#' Find new year
-#' 
-#' Extracts unique values of year in the new file (dfnew) which do not exist in the old file (ref).
-#'
-#' @param data1 new data file (new)
-#' @param data2 old data file (ref)
-#'
-#' @return
-#' @export
-#'
-#' @examples
-NewYear <- function(data1 = dfnew,
-                    data2 = dfold) {
-  
-  if (any(!unique(data1$AAR) %in% unique(data2$AAR))) {
-    res <- data1 %>% 
-      filter(!AAR %in% data2$AAR) %>% 
-      select(AAR) %>% 
-      unique()
-    return(as.vector(res$AAR)
-    )
-    
-  } else {
-    return("no exclude year")
-  }
-}
-
-
-
 #' NewRows
 #' 
 #' Flags rows in new KUBE which does not exist in old KUBE
@@ -81,5 +51,12 @@ ExpRows <- function(data1 = dfnew,
 }
 
 
-FlagNewRow <- function()
+FlagNewRows <- function(data1 = dfnew,
+                        data2 = dfold,
+                        dim = DIMENSIONS){
+  
+  # Use NewRows and Exprows to flag both new rows in new kube and expired rows in old cube
+  # Map over DIMENSIONS to update newrow/exprow, can use case_when for this.
+  
+}
 
