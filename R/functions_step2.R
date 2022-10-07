@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-FindNewyear <- function(data1 = dfnew,
+NewYear <- function(data1 = dfnew,
                         data2 = dfold) {
   
   if (any(!unique(data1$AAR) %in% unique(data2$AAR))) {
@@ -25,41 +25,47 @@ FindNewyear <- function(data1 = dfnew,
   }
 }
 
-new_year <- find_newyear()
-print(paste0("New year:", new_year))
-
-
-#' Find_newcols
-#' 
-#' Extracts names of columns found in the new file, but not in the old (ref) file
+#' CompareCols
 #'
-#' @param data1 
-#' @param data2
+#' Compare the columns across two KUBE files
+#' Report whether any new (not in old), or expired (not in new) columns are present, 
+#' 
+#' @param data1 New file, defaults to dfnew
+#' @param data2 Old file, defaults to dfold
 #'
 #' @return
 #' @export
 #'
 #' @examples
-find_newcols <- function(data1 = dfnew, data2 = dfold) {
+CompareCols <- function(data1 = dfnew,
+                         data2 = dfold){
   
-  names(data1 %>% 
-          select(!any_of(as.character(names(data2))))) 
+  new <- names(data1 %>% 
+                 select(!any_of(as.character(names(data2))))) 
+  
+  exp <- names(data2 %>% 
+                 select(!any_of(as.character(names(data1))))) 
+  
+  msgnew <- case_when(length(new) == 0 ~ "\nNo new columns.",
+                      TRUE ~ paste0("\nNew columns found: ", str_c(new, collapse = ", ")))
+  
+  msgold <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
+  
+  cat(msgnew)
+  cat(msgold)
+  
 }
 
-#' Print_newcols
-#' 
-#' Prints the results from find_newcols
-#'
-#' @param x 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-print_newcols <- function(x){
-  ifelse(length(x) > 0,
-         paste0("Newcols detected: ", str_c(x, collapse = ", ")),
-         paste0("No new columns in kube1, not found in kube2"))
+
+CompareRows <- function(data1 = dfnew,
+                        data2 = dfold){
+  
+  
 }
 
-find_newcols(newfile, oldfile) %>% print_newcols()
+
+
+
+
+

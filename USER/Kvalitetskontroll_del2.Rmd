@@ -14,17 +14,17 @@ For more info about the quality control, see [here](https://github.com/helseprof
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
-source("../R/functions_step2.R")
+#source("../R/functions_step2.R")
 ```
 
 **Data files loaded**
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "KUHR_2022-09-02-15-31", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
