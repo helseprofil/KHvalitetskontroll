@@ -17,17 +17,28 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 #source("../R/functions_step2.R")
 ```
 
+# INPUT
+
 **Data files loaded**
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "KUHR_2022-09-02-15-31", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
+```{r}
+# Columns representing dimensions
+DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
+
+# Columns representing values
+VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
+```
+
+
 # 1. Initial comparison of new and old cube
 
 - List up the structural differences between the two files
@@ -36,6 +47,20 @@ dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify
     - Name of new cols
     - Name of new levels in different dimensions (year, INNVKAT, UTDANN, LANDBAK, etc)
     - Name of expired levels in different dimensions
+
+```{r}
+CompareCrude <- function(data1 = dfnew,
+                         data2 = dfold){
+  NewCols(data1, data2)
+  NewYear
+}
+
+CompareCrude(dfnew, dfold)
+```
+
+
+
+
 ```{r}
 NewCols <- function(data1 = dfnew,
                     data2 = dfold){
@@ -43,7 +68,7 @@ NewCols <- function(data1 = dfnew,
   new <- names(data1 %>% 
                  select(!any_of(as.character(names(data2))))) 
   
-  msg <- case_when(length(new == 0) ~ "No new columns",
+  msg <- case_when(length(new) == 0 ~ "No new columns",
                    TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
   
   cat(msg)

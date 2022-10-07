@@ -64,6 +64,32 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
     "\nDimensions to group output by: ", print_dim(GROUPdims))
 ```
+# 0. Compare columns
+
+```{r}
+CompareCols <- function(data1 = dfnew,
+                         data2 = dfold){
+  
+  new <- names(data1 %>% 
+                 select(!any_of(as.character(names(data2))))) 
+  
+  exp <- names(data2 %>% 
+                 select(!any_of(as.character(names(data1))))) 
+  
+  msgnew <- case_when(length(new) == 0 ~ "\nNo new columns.",
+                      TRUE ~ paste0("\nNew columns found: ", str_c(new, collapse = ", ")))
+  
+  msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
+  
+  cat(msgnew)
+  cat(msgexp)
+  
+}
+CompareCols()
+```
+
+
 # 1. Compare dimensions
 
 Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
@@ -119,12 +145,8 @@ CompareLandFylke()
 -   Use search bar to filter out rows of interest (e.g. only show Oslo or specific year)
 
 ```{r}
-<<<<<<< HEAD
-CompareBydelKommune() %>% filter(KOMMUNE == "Oslo", KODEGRUPPE == "HjerteKarTotalt")
-=======
 # Output grouped by GROUPdims
 CompareBydelKommune()
->>>>>>> main
 ```
 
 # 6. Oslo KOMMUNE = Oslo FYLKE?

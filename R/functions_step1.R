@@ -1,3 +1,35 @@
+#' CompareCols
+#'
+#' Compare the columns across two KUBE files
+#' Report whether any new (not in old), or expired (not in new) columns are present.
+#' 
+#' @param data1 New file, defaults to dfnew
+#' @param data2 Old file, defaults to dfold
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CompareCols <- function(data1 = dfnew,
+                        data2 = dfold){
+  
+  new <- names(data1 %>% 
+                 select(!any_of(as.character(names(data2))))) 
+  
+  exp <- names(data2 %>% 
+                 select(!any_of(as.character(names(data1))))) 
+  
+  msgnew <- case_when(length(new) == 0 ~ "\nNo new columns.",
+                      TRUE ~ paste0("\nNew columns found: ", str_c(new, collapse = ", ")))
+  
+  msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
+  
+  cat(msgnew)
+  cat(msgexp)
+  
+}
+
 #' CompareDim
 #' 
 #' Detects all existing levels of selected dimension in the new KUBE, and compares towards a previous KUBE. The total number of levels, all new or expired levels, and a list of all existing levels in the new KUBE are listed in the output. 
