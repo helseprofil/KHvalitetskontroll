@@ -1,101 +1,4 @@
-# Useful objects
 
-valuecols <- c("TELLER", 
-               "RATE", 
-               "SMR", 
-               "MEIS", 
-               "RATE.n", 
-               "sumTELLER", 
-               "sumNEVNER")
-
-
-
-
-#' CompareCols
-#'
-#' Compare the columns across two KUBE files
-#' Report whether any new (not in old), or expired (not in new) columns are present.
-#' 
-#' @param data1 New file, defaults to dfnew
-#' @param data2 Old file, defaults to dfold
-#'
-#' @return
-#' @export
-#'
-#' @examples
-CompareCols <- function(data1 = dfnew,
-                         data2 = dfold){
-  
-  new <- names(data1 %>% 
-                 select(!any_of(as.character(names(data2))))) 
-  
-  exp <- names(data2 %>% 
-                 select(!any_of(as.character(names(data1))))) 
-  
-  msgnew <- case_when(length(new) == 0 ~ "\nNo new columns.",
-                      TRUE ~ paste0("\nNew columns found: ", str_c(new, collapse = ", ")))
-  
-  msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
-                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
-  
-  cat(msgnew)
-  cat(msgexp)
-  
-}
-
-
-#' CompareRows
-#' 
-#' Compare rows across the two KUBE files
-#' Report whether any new (not in old), or expired (not in new) columns are present.
-#'
-#' @param data1 
-#' @param data2 
-#' @param dims defaults to DIMcols
-#'
-#' @return
-#' @export
-#'
-#' @examples
-CompareRows <- function(data1 = dfnew,
-                        data2 = dfold,
-                        dims = DIMcols){
-  
-  newgeo
-  newyear
-  newsex
-  newage
-  
-  
-  expyear
-  expgeo
-  
-  
-
-  
-  
-  
-  
-  
-  
-  new <- function(data1, data2, dim){
-    
-    dimnew <- unique(data1[[dim]])
-    dimold <- unique(data2[[dim]])
-    
-    unique(dimnew) %in% unique(dimold)
-  
-  }
-  
-  data1 %>% 
-    filter(!"AAR" %in% unique(data2$AAR)) %>% 
-    select(AAR) %>% 
-    unique()
-  
-  
-  
-  
-}
 
 
 
@@ -127,4 +30,56 @@ NewYear <- function(data1 = dfnew,
 }
 
 
+
+#' NewRows
+#' 
+#' Flags rows in new KUBE which does not exist in old KUBE
+#'
+#' @param data1 defaults to dfnew
+#' @param data2 defaults to dfold
+#' @param dim dimensions to compare for flagging
+#'
+#' @return
+#' @export
+#'
+#' @examples
+NewRows <- function(data1 = dfnew,
+                   data2 = dfold,
+                   dim = NULL){
+  
+  data1[, newrow := 0]
+  
+}
+
+#' ExpRows
+#' 
+#' Flags rows in old KUBE which no longer exists in new KUBE
+#'
+#' @param data1 defaults to dfnew
+#' @param data2 defaults to dfold
+#' @param dim dimensions to compare for flagging
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ExpRows <- function(data1 = dfnew,
+                   data2 = dfold,
+                   dim = NULL){
+  
+  data2[, exprow := 0]
+  
+}
+
+
+  
+  dimold <- unique(data2[[dim]])
+  
+  data1 %>% 
+    mutate(newrow = case_when(!(.data[[dim]] %in% dimold) ~ 1,
+                              TRUE ~ 0))
+}
+
+
+FlagNewRow <- function()
 

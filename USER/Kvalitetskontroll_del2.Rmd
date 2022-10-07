@@ -39,24 +39,6 @@ VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
 ```
 
 
-# 1. Initial comparison of new and old cube
-
-- List up the structural differences between the two files
-    - Number of cols 
-    - Number of rows
-    - Name of new cols
-    - Name of new levels in different dimensions (year, INNVKAT, UTDANN, LANDBAK, etc)
-    - Name of expired levels in different dimensions
-
-```{r}
-CompareCrude <- function(data1 = dfnew,
-                         data2 = dfold){
-  NewCols(data1, data2)
-  NewYear
-}
-
-CompareCrude(dfnew, dfold)
-```
 
 
 
