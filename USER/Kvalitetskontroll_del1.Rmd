@@ -89,7 +89,7 @@ Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 CompareDims()
 ```
 
-# 3. Compare number of PRIKK
+# 3. Compare number of consored observations
 
 - Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(EXTRAdims)`
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
