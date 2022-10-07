@@ -1,13 +1,15 @@
 ---
 title: "Kvalitetskontroll del 1: manuell"
 author: ""
-date: "`r Sys.Date()`"
+date: "Report generated: `r Sys.Date()`"
 output:
   html_document: 
     df_print: paged
     toc: true
     toc_float: true
 ---
+Version: 1.0 (07.10.2022). 
+
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
 # Global settings, do not change
@@ -64,33 +66,17 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
     "\nDimensions to group output by: ", print_dim(GROUPdims))
 ```
-# 0. Compare columns
+
+# 1. Compare columns
+
+- Check whether there are any new columns (not present in the old kube)
+- Check if there are any expired columns (not present in the new kube)
 
 ```{r}
-CompareCols <- function(data1 = dfnew,
-                         data2 = dfold){
-  
-  new <- names(data1 %>% 
-                 select(!any_of(as.character(names(data2))))) 
-  
-  exp <- names(data2 %>% 
-                 select(!any_of(as.character(names(data1))))) 
-  
-  msgnew <- case_when(length(new) == 0 ~ "\nNo new columns.",
-                      TRUE ~ paste0("\nNew columns found: ", str_c(new, collapse = ", ")))
-  
-  msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
-                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
-  
-  cat(msgnew)
-  cat(msgexp)
-  
-}
 CompareCols()
 ```
 
-
-# 1. Compare dimensions
+# 2. Compare dimensions
 
 Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 
@@ -102,7 +88,7 @@ Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 CompareDims()
 ```
 
-# 2. Compare number of PRIKK
+# 3. Compare number of consored observations
 
 - Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(EXTRAdims)`
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
@@ -114,7 +100,7 @@ CompareDims()
 ComparePrikk()
 ```
 
-# 3. Are all values below the limit censored?
+# 4. Are all values below the limit censored?
 
 -   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
 -   If everything is ok, the function returns a confirmation.
@@ -124,7 +110,7 @@ ComparePrikk()
 CheckPrikk()
 ```
 
-# 4. Does FYLKE sum to LAND?
+# 5. Does FYLKE sum to LAND?
 
 -   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
@@ -136,7 +122,7 @@ CheckPrikk()
 CompareLandFylke()
 ```
 
-# 5. Does BYDEL sum to KOMMUNE?
+# 6. Does BYDEL sum to KOMMUNE?
 
 -   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
@@ -149,7 +135,7 @@ CompareLandFylke()
 CompareBydelKommune()
 ```
 
-# 6. Oslo KOMMUNE = Oslo FYLKE?
+# 7. Oslo KOMMUNE = Oslo FYLKE?
 
 -   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference

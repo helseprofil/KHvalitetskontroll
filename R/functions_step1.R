@@ -30,67 +30,56 @@ CompareCols <- function(data1 = dfnew,
   
 }
 
-#' CompareDim
-#' 
-#' Detects all existing levels of selected dimension in the new KUBE, and compares towards a previous KUBE. The total number of levels, all new or expired levels, and a list of all existing levels in the new KUBE are listed in the output. 
-#'
-#' @param data1 new KUBE, defaults to dfnew
-#' @param data2 old KUBE, defaults do dfold
-#' @param dim Dimension you want to check
-#'
-#' @return a list. If no new or expired columns are detected, these elements will return "none". 
-#' @export
-#'
-#' @examples
-#' CompareDim(dim = GEO)  
-#' CompareDim(dim = AAR)
-#' CompareDim(dim = KJONN)
-#' CompareDim(dim = ALDER)
-#' CompareDim(dim = YTELSE)
-CompareDim <- function(data1 = dfnew, 
-                       data2 = dfold, 
-                       dim = NULL){
-  
-  .levelsnew <- data1 %>% 
-    pull(dim) %>% 
-    unique()
-  
-  .levelsold <- data2 %>% 
-    pull(dim) %>% 
-    unique()
-  
-  .length <- length(.levelsnew)
-  
-  .newdims <- .levelsnew[!(.levelsnew %in% .levelsold)]
-  
-  .expdims <- .levelsold[!(.levelsold %in% .levelsnew)]
-  
-  all <- str_c(.levelsnew, collapse = ", ")
-  newlevels <- ifelse(length(.newdims) > 0,
-                      str_c(.newdims, collapse = ", "),
-                      "none")
-  explevels <- ifelse(length(.expdims) > 0,
-                      str_c(.expdims, collapse = ", "),
-                      "none")
-  
-  tibble("Dimension" = dim,
-         "N levels" = .length,
-         "New levels" = newlevels,
-         "Expired levels" = explevels)
-}
-
 #' CompareDims
 #' 
-#' Wrapper around `CompareDim`, to print results for several dims simultaneously
+#' Compare unique levels of selected dimension columns.
+#' Prints the number of levels, new levels (not in old KUBE), expired levels (not in new KUBE)
 #'
+#' @param data1 new KUBE, defaults to dfnew
+#' @param data2 old KUBE, defaults to dfold
 #' @param dims Character vector of dimensions to compare
 #'
-#' @return table with 4 columns: Dimension, N levels, New levels, Expired levels, with one row per input dimension
+#' @return table with 4 columns: Dimension name, N levels, New levels, Expired levels, with one row per input dimension
 #' @export
 #'
 #' @examples
-CompareDims <- function(dims = c(STANDARDdims, EXTRAdims)){
-  map_df(dims, ~CompareDim(dim = .x))
+CompareDims <- function(data1 = dfnew, 
+                        data2 = dfold,
+                        dims = c(STANDARDdims, EXTRAdims)){
+  
+  CompareDim <- function(data1, 
+                         data2, 
+                         dim = NULL){
+    
+    .levelsnew <- data1 %>% 
+      pull(dim) %>% 
+      unique()
+    
+    .levelsold <- data2 %>% 
+      pull(dim) %>% 
+      unique()
+    
+    .length <- length(.levelsnew)
+    
+    .newdims <- .levelsnew[!(.levelsnew %in% .levelsold)]
+    
+    .expdims <- .levelsold[!(.levelsold %in% .levelsnew)]
+    
+    all <- str_c(.levelsnew, collapse = ", ")
+    newlevels <- ifelse(length(.newdims) > 0,
+                        str_c(.newdims, collapse = ", "),
+                        "none")
+    explevels <- ifelse(length(.expdims) > 0,
+                        str_c(.expdims, collapse = ", "),
+                        "none")
+    
+    tibble("Dimension" = dim,
+           "N levels" = .length,
+           "New levels" = newlevels,
+           "Expired levels" = explevels)
+  }
+  
+  map_df(dims, ~CompareDim(data1, data2, dim = .x))
 }
 
 
