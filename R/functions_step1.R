@@ -1,64 +1,85 @@
-#' CompareDim
+#' CompareCols
+#'
+#' Compare the columns across two KUBE files
+#' Report whether any new (not in old), or expired (not in new) columns are present.
 #' 
-#' Detects all existing levels of selected dimension in the new KUBE, and compares towards a previous KUBE. The total number of levels, all new or expired levels, and a list of all existing levels in the new KUBE are listed in the output. 
+#' @param data1 New file, defaults to dfnew
+#' @param data2 Old file, defaults to dfold
 #'
-#' @param data1 new KUBE, defaults to dfnew
-#' @param data2 old KUBE, defaults do dfold
-#' @param dim Dimension you want to check
-#'
-#' @return a list. If no new or expired columns are detected, these elements will return "none". 
+#' @return
 #' @export
 #'
 #' @examples
-#' CompareDim(dim = GEO)  
-#' CompareDim(dim = AAR)
-#' CompareDim(dim = KJONN)
-#' CompareDim(dim = ALDER)
-#' CompareDim(dim = YTELSE)
-CompareDim <- function(data1 = dfnew, 
-                       data2 = dfold, 
-                       dim = NULL){
+CompareCols <- function(data1 = dfnew,
+                        data2 = dfold){
   
-  .levelsnew <- data1 %>% 
-    pull(dim) %>% 
-    unique()
+  new <- names(data1 %>% 
+                 select(!any_of(as.character(names(data2))))) 
   
-  .levelsold <- data2 %>% 
-    pull(dim) %>% 
-    unique()
+  exp <- names(data2 %>% 
+                 select(!any_of(as.character(names(data1))))) 
   
-  .length <- length(.levelsnew)
+  msgnew <- case_when(length(new) == 0 ~ "No new columns.",
+                      TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
   
-  .newdims <- .levelsnew[!(.levelsnew %in% .levelsold)]
+  msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
   
-  .expdims <- .levelsold[!(.levelsold %in% .levelsnew)]
+  cat(msgnew)
+  cat(msgexp)
   
-  all <- str_c(.levelsnew, collapse = ", ")
-  newlevels <- ifelse(length(.newdims) > 0,
-                      str_c(.newdims, collapse = ", "),
-                      "none")
-  explevels <- ifelse(length(.expdims) > 0,
-                      str_c(.expdims, collapse = ", "),
-                      "none")
-  
-  tibble("Dimension" = dim,
-         "N levels" = .length,
-         "New levels" = newlevels,
-         "Expired levels" = explevels)
 }
 
 #' CompareDims
 #' 
-#' Wrapper around `CompareDim`, to print results for several dims simultaneously
+#' Compare unique levels of selected dimension columns.
+#' Prints the number of levels, new levels (not in old KUBE), expired levels (not in new KUBE)
 #'
+#' @param data1 new KUBE, defaults to dfnew
+#' @param data2 old KUBE, defaults to dfold
 #' @param dims Character vector of dimensions to compare
 #'
-#' @return table with 4 columns: Dimension, N levels, New levels, Expired levels, with one row per input dimension
+#' @return table with 4 columns: Dimension name, N levels, New levels, Expired levels, with one row per input dimension
 #' @export
 #'
 #' @examples
-CompareDims <- function(dims = c(STANDARDdims, EXTRAdims)){
-  map_df(dims, ~CompareDim(dim = .x))
+CompareDims <- function(data1 = dfnew, 
+                        data2 = dfold,
+                        dims = c(STANDARDdims, EXTRAdims)){
+  
+  CompareDim <- function(data1, 
+                         data2, 
+                         dim = NULL){
+    
+    .levelsnew <- data1 %>% 
+      pull(dim) %>% 
+      unique()
+    
+    .levelsold <- data2 %>% 
+      pull(dim) %>% 
+      unique()
+    
+    .length <- length(.levelsnew)
+    
+    .newdims <- .levelsnew[!(.levelsnew %in% .levelsold)]
+    
+    .expdims <- .levelsold[!(.levelsold %in% .levelsnew)]
+    
+    all <- str_c(.levelsnew, collapse = ", ")
+    newlevels <- ifelse(length(.newdims) > 0,
+                        str_c(.newdims, collapse = ", "),
+                        "none")
+    explevels <- ifelse(length(.expdims) > 0,
+                        str_c(.expdims, collapse = ", "),
+                        "none")
+    
+    tibble("Dimension" = dim,
+           "N levels" = .length,
+           "New levels" = newlevels,
+           "Expired levels" = explevels)
+  }
+  
+  map_df(dims, ~CompareDim(data1, data2, dim = .x))
 }
 
 

@@ -64,7 +64,18 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
     "\nDimensions to group output by: ", print_dim(GROUPdims))
 ```
-# 1. Compare dimensions
+
+# 1. Compare columns
+
+- Check whether there are any new columns (not present in the old kube)
+- Check if there are any expired columns (not present in the new kube)
+
+```{r}
+CompareCols()
+```
+
+
+# 2. Compare dimensions
 
 Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 
@@ -76,7 +87,7 @@ Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 CompareDims()
 ```
 
-# 2. Compare number of PRIKK
+# 3. Compare number of PRIKK
 
 - Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(EXTRAdims)`
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
@@ -88,7 +99,7 @@ CompareDims()
 ComparePrikk()
 ```
 
-# 3. Are all values below the limit censored?
+# 4. Are all values below the limit censored?
 
 -   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
 -   If everything is ok, the function returns a confirmation.
@@ -98,7 +109,7 @@ ComparePrikk()
 CheckPrikk()
 ```
 
-# 4. Does FYLKE sum to LAND?
+# 5. Does FYLKE sum to LAND?
 
 -   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
@@ -110,7 +121,7 @@ CheckPrikk()
 CompareLandFylke()
 ```
 
-# 5. Does BYDEL sum to KOMMUNE?
+# 6. Does BYDEL sum to KOMMUNE?
 
 -   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
@@ -123,7 +134,7 @@ CompareLandFylke()
 CompareBydelKommune()
 ```
 
-# 6. Oslo KOMMUNE = Oslo FYLKE?
+# 7. Oslo KOMMUNE = Oslo FYLKE?
 
 -   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
