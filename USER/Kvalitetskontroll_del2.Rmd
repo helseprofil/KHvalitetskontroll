@@ -31,11 +31,13 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 ```{r}
-# Columns representing dimensions
-DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
+####
+# To get a list of variable names in the new KUBE, run the following code
+names(dfnew)
+###
 
-# Columns representing values
-VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
+# All dimensions used to identify new or expired rows in the two data files
+DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
 ```
 
 
