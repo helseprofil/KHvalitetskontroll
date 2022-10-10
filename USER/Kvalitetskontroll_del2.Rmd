@@ -37,48 +37,39 @@ names(dfnew)
 names(dfold)
 ###
 
-# Define all dimensions used to identify new or expired rows in the two KUBE's
+# Define all dimensions used to identify new or expired rows in the two KUBEs
 DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
 
-# Define all value columns to be compared between the two KUBE's
+# Define all value columns to be compared between the two KUBEs
 VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
+
+# If you want to save .csv-files of the flagged KUBEs, define 
+# Available options: "dfnew_flag", "dfold_flag"
+# For no dumps, replace with "DUMPS <- NULL"
+DUMPS <- c("dfnew_flag", "dfold_flag")
+DUMPname <- "HKR" # NAME of cube, for naming of files
 ```
+
+```{r}
+# To print input, do not change:
+cat("DIMENSION columns: ", print_dim(DIMENSIONS), 
+    "\nVALUE columns: ", print_dim(VALUES))
+```
+
 
 # Flag all new rows in new KUBE
 
-- Flags all **new** rows in the new KUBE, according to the following dimensions: `r print_dim(DIMENSIONS)`
+- According to strata defined by the following dimensions: `r print_dim(DIMENSIONS)`
+    - Flags all **new** rows in the new KUBE (strata not present in old KUBE)
+    - Flags all **expired** rows in the old KUBE (strata not present in the new KUBE)
+- Create flagged versions of KUBES
 
 ```{r}
-FlagNew()
+FlagKubes()
 ```
-
-# Flag all expired rows in old KUBE
-
-- Flags all **expired** rows in the old KUBE, according to the following dimensions: `r print_dim(DIMENSIONS)`
-
+# DUMPdata
 ```{r}
-FlagOld()
+write
 ```
-
-
-
-
-
-```{r}
-dimnew <- names(dfnew[, names(dfnew) %in% DIMENSIONS, with = F])
-  dimold <- names(dfold[, names(dfold) %in% DIMENSIONS, with = F])
-  commondims <- dimnew[dimnew %in% dimold]
-  newdims <- dimnew[!dimnew %in% dimold]
-  
-  length(newdims)
-```
-
-# Create data for comparison
-
-- dfnew_flagged (all rows flagged as new = 0/1), for further quality control
-    - For new columns, only levels != 0 (i.e. not total) are flagged 
-- dfnew_compare (all rows flagged as new = 1, and then all new columns, are removed
-- dfold_compare (all expired columns, and expired levels, are removed)
-
 
 
