@@ -1,59 +1,50 @@
-#' NewRows
+#' flag_new
 #' 
-#' Flags rows in new KUBE which does not exist in old KUBE
+#' Initiate flagged version of dfnew (dfnew_flag), saved to global environment
+#' Identifies common and new dimensions compared to old KUBE
+#' For common dimensions, all new rows are flagged (sets newrow = 1)
+#' For new dimensions, all rows != 0 (total numbers) are flagged as new
+#' 
 #'
-#' @param data1 defaults to dfnew
-#' @param data2 defaults to dfold
-#' @param dim dimensions to compare for flagging
+#' @param data1 new KUBE, defaults to dfnew
+#' @param data2 old KUBE, defaults to dfold
+#' @param dims character vector of dimensions columns, defaults to DIMENSIONS set in INPUT
 #'
 #' @return
 #' @export
 #'
 #' @examples
-NewRows <- function(data1 = dfnew,
-                    data2 = dfold,
-                    dim = NULL){
+FlagNew <- function(data1 = dfnew, 
+                    data2 = dfold, 
+                    dims = DIMENSIONS){
   
-  data1[, newrow := 0]
+  # Identify dimension columns present in new and old KUBE
+  # Separate into new and same dimensions for flagging
+  dimnew <- names(data1[, names(data1) %in% dims, with = F])
+  dimold <- names(data2[, names(data2) %in% dims, with = F])
+  newdims <- dimnew[!dimnew %in% dimold]
+  commondims <- dimnew[dimnew %in% dimold]
   
-}
-
-#' ExpRows
-#' 
-#' Flags rows in old KUBE which no longer exists in new KUBE
-#'
-#' @param data1 defaults to dfnew
-#' @param data2 defaults to dfold
-#' @param dim dimensions to compare for flagging
-#'
-#' @return
-#' @export
-#'
-#' @examples
-ExpRows <- function(data1 = dfnew,
-                   data2 = dfold,
-                   dim = NULL){
+  # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
+  # Sorts KUBE according to common and new dims
+  dfnew_flag <<- copy(data1)[, newrow := 0L]
+  setkeyv(dfnew_flag, c(commondims, newdims))
   
-  data2[, exprow := 0]
+  # For same dimensions, flag all rows with new levels 
+  # Loops over common dimensions. Flags previously unflagged rows for new levels 
+  walk(commondims, 
+       ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
+                   newrow := 1L])
   
-}
-
-
-  
-  dimold <- unique(data2[[dim]])
-  
-  data1 %>% 
-    mutate(newrow = case_when(!(.data[[dim]] %in% dimold) ~ 1,
-                              TRUE ~ 0))
+  # For new dimensions, flag any rows != 0 (i.e. not total numbers)
+  walk(newdims,
+       ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
+                   newrow := 1L])
 }
 
 
-FlagNewRows <- function(data1 = dfnew,
-                        data2 = dfold,
-                        dim = DIMENSIONS){
-  
-  # Use NewRows and Exprows to flag both new rows in new kube and expired rows in old cube
-  # Map over DIMENSIONS to update newrow/exprow, can use case_when for this.
-  
-}
+###########
+# -----
+###########
+
 
