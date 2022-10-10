@@ -19,8 +19,8 @@ CompareCols <- function(data1 = dfnew,
   exp <- names(data2 %>% 
                  select(!any_of(as.character(names(data1))))) 
   
-  msgnew <- case_when(length(new) == 0 ~ "No new columns.",
-                      TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
+  msgnew <- case_when(length(new) == 0 ~ "\nNo new columns.",
+                      TRUE ~ paste0("\nNew columns found: ", str_c(new, collapse = ", ")))
   
   msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
                       TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))

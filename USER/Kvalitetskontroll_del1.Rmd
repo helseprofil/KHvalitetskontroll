@@ -54,7 +54,7 @@ COMPAREval <- "sumTELLER"
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
-GROUPdims <- c("KODEGRUPPE", "AAR") 
+GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER") 
 ```
 
 ```{r}

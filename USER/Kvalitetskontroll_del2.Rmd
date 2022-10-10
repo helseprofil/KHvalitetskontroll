@@ -1,0 +1,80 @@
+---
+title: "Kvalitetskontroll del 2: compare"
+author: ""
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    df_print: paged
+    toc: true
+    toc_float: true
+---
+For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
+
+```{r setup, include=FALSE}
+# Global settings, do not change
+knitr::opts_chunk$set(cache = F, echo = F)
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+#source("../R/functions_step2.R")
+```
+
+# INPUT
+
+**Data files loaded**
+```{r echo = F}
+## Load data
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  modus = "KH", # KH or NH
+                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
+
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+                  modus = "KH",# KH or NH
+                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+```
+```{r}
+####
+# To get a list of variable names in the new and old KUBE, run the following code
+names(dfnew)
+names(dfold)
+###
+
+# Define all dimensions used to identify new or expired rows in the two KUBEs
+DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
+
+# Define all value columns to be compared between the two KUBEs
+VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
+
+# If you want to save .csv-files of the flagged KUBEs, define 
+# Available options: "dfnew_flag", "dfold_flag"
+# For no dumps, replace with "DUMPS <- NULL"
+DUMPS <- c("dfnew_flag")
+DUMPname <- "HKR" # NAME of KUBE, for naming of dumps
+```
+
+```{r}
+# To print input, do not change:
+cat("DIMENSION columns: ", print_dim(DIMENSIONS), 
+    "\nVALUE columns: ", print_dim(VALUES))
+```
+# Data formatting
+
+- Create flagged versions of new and old KUBE, according to strata defined by the following dimensions: `r print_dim(DIMENSIONS)`
+    - Flags all **new** rows in the new KUBE (strata not present in old KUBE)
+    - Flags all **expired** rows in the old KUBE (strata not present in the new KUBE)
+- Create combined data for comparisons, merged on the common dimensions in new and old KUBE
+    - Removes any new or expired row
+    - All value columns get the suffix "_new" or "_old"
+
+```{r}
+FormatData()
+```
+# Compare value columns
+
+- For value columns, print table showing absolute and relative diff.
+- Search along VALUES
+- Is it possible to generate headers and code chunk from VALUES? 
+    - Or generate table with one pane per value column?
+- Output in sortable table, showing absolute and relative difference 
+
+
+
+
