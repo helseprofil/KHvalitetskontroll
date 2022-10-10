@@ -22,8 +22,17 @@ FlagNew <- function(data1 = dfnew,
   # Separate into new and same dimensions for flagging
   dimnew <- names(data1[, names(data1) %in% dims, with = F])
   dimold <- names(data2[, names(data2) %in% dims, with = F])
-  newdims <- dimnew[!dimnew %in% dimold]
   commondims <- dimnew[dimnew %in% dimold]
+  newdims <- dimnew[!dimnew %in% dimold]
+  
+  msgcommon <- case_when(length(commondims) == 0 ~ "No common dimensions found",
+                      TRUE ~ paste0("Common columns found: ", str_c(commondims, collapse = ", ")))
+  
+  msgnew <- case_when(length(newdims) == 0 ~ "\nNo new dimensions.",
+                      TRUE ~ paste0("\nNew dimensions found: ", str_c(newdims, collapse = ", ")))
+  
+  cat(msgcommon)
+  cat(msgnew)
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
@@ -36,10 +45,15 @@ FlagNew <- function(data1 = dfnew,
        ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
                    newrow := 1L])
   
+  cat("\nFor common dimensions, all rows with new levels are flagged")
+  
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
-  walk(newdims,
-       ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
-                   newrow := 1L])
+  if(length(newdims) != 0) {
+    walk(newdims,
+         ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
+                     newrow := 1L])
+    cat("\nFor new dimensions, all rows not representing total numbers are flagged ")
+  } 
 }
 
 
