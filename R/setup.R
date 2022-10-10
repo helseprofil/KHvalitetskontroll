@@ -10,3 +10,4 @@ library(gert)
 # Load internal functions
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step2.R")
