@@ -46,8 +46,8 @@ VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
 # If you want to save .csv-files of the flagged KUBEs, define 
 # Available options: "dfnew_flag", "dfold_flag"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- c("dfnew_flag", "dfold_flag")
-DUMPname <- "HKR" # NAME of cube, for naming of files
+DUMPS <- c("dfnew_flag")
+DUMPname <- "HKR" # NAME of KUBE, for naming of dumps
 ```
 
 ```{r}
@@ -55,8 +55,6 @@ DUMPname <- "HKR" # NAME of cube, for naming of files
 cat("DIMENSION columns: ", print_dim(DIMENSIONS), 
     "\nVALUE columns: ", print_dim(VALUES))
 ```
-
-
 # Flag all new rows in new KUBE
 
 - According to strata defined by the following dimensions: `r print_dim(DIMENSIONS)`
@@ -65,11 +63,64 @@ cat("DIMENSION columns: ", print_dim(DIMENSIONS),
 - Create flagged versions of KUBES
 
 ```{r}
-FlagKubes()
+FormatData()
 ```
-# DUMPdata
+
 ```{r}
-write
+dfnew_flag[newrow == 0][dfold_flag[exprow == 0], on = VALUES]
+```
+
+```{r}
+
+  dimnew <- names(dfnew[, names(dfnew) %in% DIMENSIONS, with = F])
+  dimold <- names(dfold[, names(dfold) %in% DIMENSIONS, with = F])
+  commondims <- dimnew[dimnew %in% dimold]
+  newdims <- dimnew[!dimnew %in% dimold]
+  expdims <- dimold[!dimold %in% dimnew]
+  valnew <- names(dfnew[, names(dfnew) %in% VALUES, with = F])
+  valold <- names(dfold[, names(dfold) %in% VALUES, with = F])
+  commonvals <- valnew[valnew %in% valold]
+  newvals <- valnew[!valnew %in% valold]
+  expvals <- valold[!valold %in% valnew]
+
+
+
+comparedata <- function(data1 = dfnew_flag,
+                        data2 = dfold_flag,
+                        dims = commondims,
+                        vals = commonvals){
+  
+  
+  # Format new KUBE
+  cat("\n-Formats new KUBE")
+  cat("\n  -Remove new rows, select common dimensions and values")
+  comparenew <- copy(data1)
+  # Remove new rows, select common columns and values
+  comparenew <- comparenew[newrow == 0,
+                           c(commondims, commonvals), with = F]
+  # Add suffix to value columns
+  commonvals_new <- paste0(commonvals, "_new")
+  setnames(comparenew, commonvals, commonvals_new)
+  
+  # Format old KUBE
+  cat("\n-Formats old KUBE")
+  cat("\n  -Remove expired rows, select common dimensions and values")
+  compareold <- copy(data2)
+  # Remove new rows, select common columns and values
+  compareold <- compareold[exprow == 0,
+                           c(commondims, commonvals), with = F]
+  # Add suffix to value columns
+  commonvals_old <- paste0(commonvals, "_old")
+  setnames(compareold, commonvals, commonvals_old)
+  
+  # Create comparedata
+  compareKUBE <<- comparenew[compareold, on = commondims]
+  
+}
+  
+  
+comparedata()
+comparenew
 ```
 
 
