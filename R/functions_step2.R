@@ -1,6 +1,3 @@
-
-
-
 #' NewRows
 #' 
 #' Flags rows in new KUBE which does not exist in old KUBE
@@ -14,8 +11,8 @@
 #'
 #' @examples
 NewRows <- function(data1 = dfnew,
-                   data2 = dfold,
-                   dim = NULL){
+                    data2 = dfold,
+                    dim = NULL){
   
   data1[, newrow := 0]
   

@@ -34,36 +34,57 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 ####
 # To get a list of variable names in the new KUBE, run the following code
 names(dfnew)
+names(dfold)
 ###
 
 # All dimensions used to identify new or expired rows in the two data files
 DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
+VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
+```
+
+# Flag all new rows in new KUBE
+
+- All rows not existing in old cube should get newrow = 1
+- Rows also existing in old cube should get newrow = 0
+
+- Identify dimensions
+    - Separate new/old dimensions
+    - For new dimensions, all rows != 0 should be flagged
+    - Map across old dimensions, all new levels flagged
+
+1. 
+
+```{r}
+flag_new <- function(data1 = dfnew, 
+                     data2 = dfold, 
+                     dims = DIMENSIONS){
+  
+  # Identify dimensions present in new and old kube, separate into new and same dimensions
+  dimnew <- names(data1[, names(data1) %in% dims, with = F])
+  dimold <- names(data2[, names(data2) %in% dims, with = F])
+  newdims <- dimnew[!dimnew %in% dimold]
+  samedims <- dimnew[dimnew %in% dimold]
+  
+  # Initiate flagged version of new cube (newrow = 0/1) 
+  dfnew_flag <<- copy(data1)[, newrow := 0]
+  
+  # set key for same and new dimensions, sorts the data
+  setkeyv(dfnew_flag, c(samedims, newdims))
+  
+  # For same dimensions, flag any rows != 0 (i.e. not total numbers)
+  
+  
+  
+}
+
+
 ```
 
 
 
 
-
-
 ```{r}
-NewCols <- function(data1 = dfnew,
-                    data2 = dfold){
-  
-  new <- names(data1 %>% 
-                 select(!any_of(as.character(names(data2))))) 
-  
-  msg <- case_when(length(new) == 0 ~ "No new columns",
-                   TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
-  
-  cat(msg)
 
-}
-
-
-new <- NewCols()
-
-dfnew %>% 
-  select(-all_of(new))
 ```
 
 # Create data for comparison
