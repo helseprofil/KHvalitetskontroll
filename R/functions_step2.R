@@ -87,6 +87,43 @@
   cat("\n-Flagged version of old KUBE created: dfold_flag")
 }
 
+#' FixDecimals
+#' 
+#' Helper function to round value columns according to type
+#'
+#' @param data 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.FixDecimals <- function(data){
+  
+  round0 <- c("RATE.n", "SPVFLAGG")
+  round1 <- c("TELLER_", "NEVNER_", "sumTELLER", "sumNEVNER")
+  round2 <- c("RATE_", "MEIS_", "SMR_")
+  
+  
+  if(any(str_detect(names(data), 
+                    str_c(round0, collapse = "|")))) { 
+    data <- data %>% 
+      mutate(across(starts_with(round0), round, 0))
+  }
+  
+  if(any(str_detect(names(data), 
+                    str_c(round1, collapse = "|")))) { 
+    data <- data %>% 
+      mutate(across(starts_with(round1), round, 1))
+  }
+  
+  if(any(str_detect(names(data), 
+                    str_c(round2, collapse = "|")))) {
+    data <- data %>%
+      mutate(across(starts_with(round2), round, 2))
+  }
+  
+  data
+}
 
 #' CreateCompare
 #' 
@@ -133,9 +170,16 @@
   setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
-  compareKUBE <<- comparenew[compareold, on = commondims]
+  compareKUBE <<- comparenew[compareold, on = commondims] %>% 
+    select(all_of(DIMENSIONS), 
+           starts_with(paste0(VALUES, "_")),
+           everything()) %>% 
+    .FixDecimals()
+    
   
 }
+
+
 
 #' Format data
 #' 
