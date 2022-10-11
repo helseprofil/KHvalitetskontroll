@@ -14,6 +14,8 @@ if (interactive())
   try(fortunes::fortune(), silent = TRUE)
 
 # Syncronize project library with lockfile
+
+cat("\nSynchronize project library\n")
 renv::restore()
 
 # Welcome messages
