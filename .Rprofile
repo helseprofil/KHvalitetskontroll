@@ -13,6 +13,9 @@ cat("\nRandom Quote just for fun...:\n")
 if (interactive())
   try(fortunes::fortune(), silent = TRUE)
 
+# Syncronize project library with lockfile
+renv::restore()
+
 # Welcome messages
 
 cat("\nWelcome to KHvalitetskontroll\n", 

@@ -223,14 +223,14 @@ FormatData <- function(data1 = dfnew,
   
   if("dfnew_flag" %in% dumps){
     fwrite(dfnew_flag, 
-           file = paste0(dumpname, "_flagged.csv"),
+           file = paste0("Filedumps/", dumpname, "_new_flagged.csv"),
            sep = ";")
     cat(paste0("\nFILEDUMP: ", dumpname, "_flagged.csv"))
   }
   
   if("dfold_flag" %in% dumps){
     fwrite(dfold_flag, 
-           file = paste0(dumpname, "_old_flagged.csv"),
+           file = paste0("Filedumps/", dumpname, "_old_flagged.csv"),
            sep = ";")
     cat(paste0("\nFILEDUMP: ", dumpname, "_old_flagged.csv"))
   }
@@ -246,7 +246,7 @@ FormatData <- function(data1 = dfnew,
   
   if("compareKUBE" %in% dumps){
     fwrite(compareKUBE, 
-           file = paste0(dumpname, "_compareKUBE.csv"),
+           file = paste0("Filedumps/", dumpname, "_compareKUBE.csv"),
            sep = ";")
     cat(paste0("\nFILEDUMP: ", dumpname, "_compareKUBE.csv"))
   }
