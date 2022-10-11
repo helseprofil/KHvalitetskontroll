@@ -41,13 +41,15 @@ names(dfold)
 DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
 
 # Define all value columns to be compared between the two KUBEs
-VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "RATE.n", "sumTELLER", "sumNEVNER")
+VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "sumTELLER", "sumNEVNER")
 
-# If you want to save .csv-files of the flagged KUBEs, define 
-# Available options: "dfnew_flag", "dfold_flag"
+# To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
+# Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- c("dfnew_flag")
-DUMPname <- "HKR" # NAME of KUBE, for naming of dumps
+DUMPS <- c("dfnew_flag", "compareKUBE")
+
+# To name the file dumps, Insert the NAME of the KUBE here
+DUMPname <- "HKR" 
 ```
 
 ```{r}

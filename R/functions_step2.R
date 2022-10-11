@@ -14,10 +14,10 @@
 #' @export
 #'
 #' @examples
-.FlagNew <- function(data1, 
-                    data2, 
-                    commondims,
-                    newdims){
+.FlagNew <- function(data1 = data1, 
+                     data2 = data2, 
+                     commondims = commondims,
+                     newdims = newdims){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
@@ -58,10 +58,10 @@
 #' @export
 #'
 #' @examples
-.FlagOld <- function(data1,
-                    data2,
-                    commondims,
-                    expdims){
+.FlagOld <- function(data1 = data1,
+                     data2 = data2,
+                     commondims = commondims,
+                     expdims = expdims){
 
   # Initiate flagged version of old KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
@@ -88,10 +88,27 @@
 }
 
 
-.CreateCompare <- function(data1,
-                           data2,
-                           commondims,
-                           commonvals){
+#' CreateCompare
+#' 
+#' Create combined KUBE for comparison of value columns. 
+#' 
+#' -Removes new or expired rows
+#' -Merges on common dimensions
+#' -Select common value columns, with suffixes _new and _old
+#'
+#' @param data1 new flagged KUBE
+#' @param data2 old flagged KUBE
+#' @param commondims common dimensions
+#' @param commonvals common values
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.CreateCompare <- function(data1 = dfnew_flag,
+                           data2 = dfold_flag,
+                           commondims = commondims,
+                           commonvals = commonvals){
   
   # Format new KUBE
   cat("\n-Formats new KUBE")
@@ -145,11 +162,11 @@
 #'
 #' @examples
 FormatData <- function(data1 = dfnew,
-                      data2 = dfold,
-                      dims = DIMENSIONS,
-                      vals = VALUES,
-                      dumps = DUMPS,
-                      dumpname = DUMPname){
+                       data2 = dfold,
+                       dims = DIMENSIONS,
+                       vals = VALUES,
+                       dumps = DUMPS,
+                       dumpname = DUMPname){
   
   # Identify dimension columns present in new and old KUBE
   # Separate into common, new, and expired dimensions for flagging, write standard msg
@@ -190,18 +207,12 @@ FormatData <- function(data1 = dfnew,
   cat("STARTS flagging new kube:")
   cat(msg_commondims)
   cat(msg_newdims)
-  .FlagNew(data1 = data1,
-           data2 = data2,
-           commondims = commondims,
-           newdims = newdims)
+  .FlagNew()
 
   cat("\n\nSTARTS flagging old kube:")
   cat(msg_commondims)
   cat(msg_expdims)
-  .FlagOld(data1 = data1,
-          data2 = data2,
-          commondims = commondims,
-          expdims = expdims)
+  .FlagOld()
   cat("\n\nCOMPLETED flagging!\n")
   
   if("dfnew_flag" %in% dumps){
@@ -220,12 +231,16 @@ FormatData <- function(data1 = dfnew,
   
   cat("\n\nSTARTS create compareKUBE:")
   
-  .CreateCompare(data1 = dfnew_flag,
-                 data2 = dfold_flag,
-                 commondims = commondims,
-                 commonvals = commonvals)
+  .CreateCompare()
   
   cat("\n\n-COMPLETED creating compareKUBE")
+  
+  if("compareKUBE" %in% dumps){
+    fwrite(compareKUBE, 
+           file = paste0(dumpname, "_compareKUBE.csv"),
+           sep = ";")
+    cat(paste0("\nFILEDUMP: ", dumpname, "_compareKUBE.csv"))
+  }
 
 }
 
