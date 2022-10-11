@@ -14,10 +14,10 @@
 #' @export
 #'
 #' @examples
-.FlagNew <- function(data1 = data1, 
-                     data2 = data2, 
-                     commondims = commondims,
-                     newdims = newdims){
+.FlagNew <- function(data1, 
+                     data2, 
+                     commondims,
+                     newdims){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
@@ -58,10 +58,10 @@
 #' @export
 #'
 #' @examples
-.FlagOld <- function(data1 = data1,
-                     data2 = data2,
-                     commondims = commondims,
-                     expdims = expdims){
+.FlagOld <- function(data1,
+                     data2,
+                     commondims,
+                     expdims){
 
   # Initiate flagged version of old KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
@@ -105,10 +105,10 @@
 #' @export
 #'
 #' @examples
-.CreateCompare <- function(data1 = dfnew_flag,
-                           data2 = dfold_flag,
-                           commondims = commondims,
-                           commonvals = commonvals){
+.CreateCompare <- function(data1,
+                           data2,
+                           commondims,
+                           commonvals){
   
   # Format new KUBE
   cat("\n-Formats new KUBE")
@@ -207,12 +207,18 @@ FormatData <- function(data1 = dfnew,
   cat("STARTS flagging new kube:")
   cat(msg_commondims)
   cat(msg_newdims)
-  .FlagNew()
+  .FlagNew(data1 = data1, 
+           data2 = data2, 
+           commondims = commondims,
+           newdims = newdims)
 
   cat("\n\nSTARTS flagging old kube:")
   cat(msg_commondims)
   cat(msg_expdims)
-  .FlagOld()
+  .FlagOld(data1 = data1,
+           data2 = data2,
+           commondims = commondims,
+           expdims = expdims)
   cat("\n\nCOMPLETED flagging!\n")
   
   if("dfnew_flag" %in% dumps){
@@ -231,7 +237,10 @@ FormatData <- function(data1 = dfnew,
   
   cat("\n\nSTARTS create compareKUBE:")
   
-  .CreateCompare()
+  .CreateCompare(data1 = dfnew_flag,
+                 data2 = dfold_flag,
+                 commondims = commondims,
+                 commonvals = commonvals)
   
   cat("\n\n-COMPLETED creating compareKUBE")
   
