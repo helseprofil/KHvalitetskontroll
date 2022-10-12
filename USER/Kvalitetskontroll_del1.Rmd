@@ -45,6 +45,7 @@ STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER")
 EXTRAdims <- c("KODEGRUPPE") 
 
 # Value column for censoring (PRIKKING), and the limit to check against
+# If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
 PRIKKval <- "sumTELLER"
 PRIKKlimit <- 12
 
@@ -96,8 +97,14 @@ CompareDims()
 -   Use search bar to filter out rows of interest (e.g only show SPVFLAGG=3)
 
 ```{r}
-# Output stratified by EXTRAdims (input)
-ComparePrikk()
+# Default is to stratify the output by EXTRAdims (input)
+
+# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
+# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+
+# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
+
+ComparePrikk(groupdim = EXTRAdims)
 ```
 
 # 4. Are all values below the limit censored?
@@ -118,8 +125,14 @@ CheckPrikk()
 -   Use search bar to filter out rows of interest (e.g. only show specific year)
 
 ```{r}
-# Output grouped by GROUPdims
-CompareLandFylke()
+# Default is to stratify the output by GROUPdims (input)
+
+# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
+# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+
+# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
+
+CompareLandFylke(groupdim = GROUPdims)
 ```
 
 # 6. Does BYDEL sum to KOMMUNE?
@@ -131,8 +144,14 @@ CompareLandFylke()
 -   Use search bar to filter out rows of interest (e.g. only show Oslo or specific year)
 
 ```{r}
-# Output grouped by GROUPdims
-CompareBydelKommune()
+# Default is to stratify the output by GROUPdims (input)
+
+# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
+# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+
+# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
+
+CompareBydelKommune(groupdim = GROUPdims)
 ```
 
 # 7. Oslo KOMMUNE = Oslo FYLKE?
@@ -143,6 +162,12 @@ CompareBydelKommune()
 -   Use search bar to filter out rows of interest (e.g. only show specific year)
 
 ```{r}
-# Output grouped by GROUPdims
-CompareOslo()
+# Default is to stratify the output by GROUPdims (input)
+
+# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
+# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+
+# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
+
+CompareOslo(groupdim = GROUPdims)
 ```

@@ -144,6 +144,7 @@ CheckPrikk <- function(data1 = dfnew,
   cat(paste0("Controlled column: ", val))
   cat(paste0("\nLimit: ", limit))
   
+  if(!anyNA(c(val, limit))){
   if(nrow(filtered) == 0) {
     cat("\nNo values < limit")
   } else {
@@ -151,6 +152,7 @@ CheckPrikk <- function(data1 = dfnew,
     output <- filtered %>% 
       select(all_of(standarddims), all_of(extradims), all_of(val), everything()) 
     DT::datatable(output, rownames = F)
+  }
   }
 
 }
@@ -268,6 +270,7 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
                 values_from = sum) %>% 
     mutate(Absolute = `Oslo Fylke`-`Oslo Kommune`,
            Relative = `Oslo Fylke`/`Oslo Kommune`) %>% 
+    arrange(desc(Relative)) %>% 
     mutate(across(c(`Oslo Fylke`, `Oslo Kommune`, Absolute), ~round(.x, 0)),
            across(Relative, ~case_when(Relative == Inf ~ NA_real_,
                                        TRUE ~ round(Relative, 3))))
