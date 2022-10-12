@@ -298,3 +298,15 @@ FormatData <- function(data1 = dfnew,
 }
 
 
+
+# Show data with fixed columns
+# datatable(compareKUBE,
+#           extensions = "FixedColumns",
+#           options = list(scrollX = T,
+#                          fixedColumns = list(leftColumns = 5)))
+
+# Function to save HTML-report
+# Export filename from ReadFile, and use for creating file path to folder structure in F:/
+# rmarkdown::render("Kvalitetskontroll_del2.Rmd", 
+#                   output_file = "test", 
+#                   output_dir = "Output")
