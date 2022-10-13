@@ -191,7 +191,7 @@
 #' dimensions. All common value columns are given suffixes _new, and _old. 
 #' 
 #' The two flagged KUBEs and the CompareKUBE can be saved as .csv-files through 
-#' the dumps and dumpname parameter
+#' the dumps 
 #' 
 #'
 #' @param data1 New KUBE, defaults to dfnew
@@ -199,7 +199,6 @@
 #' @param dims Character vector of dimension columns, defaults to DIMENSIONS
 #' @param vals Character vector of value volumns, defaults to VALUES
 #' @param dumps List of dump points, defaults to DUMPS
-#' @param dumpname Name of KUBE, for naming of filedumps, defaults to DUMPname
 #' @param productionyear To save output in the correct folder
 #'
 #' @return
@@ -211,7 +210,6 @@ FormatData <- function(data1 = dfnew,
                        dims = DIMENSIONS,
                        vals = VALUES,
                        dumps = DUMPS,
-                       dumpname = DUMPname,
                        productionyear = PRODUCTIONYEAR){
   
   # Create folder structure, if not existing, and set file path for file dumps
