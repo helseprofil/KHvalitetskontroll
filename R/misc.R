@@ -79,3 +79,18 @@ print_dim <- function(...){
   stringr::str_c(..., collapse = ", ")
     }
 }
+
+
+#' SaveReport
+#' 
+#' Saves R Markdown-reports in correct folder
+#'
+#' @return
+#' @export
+#'
+#' @examples
+SaveReport <- function(){
+  
+  
+  
+}

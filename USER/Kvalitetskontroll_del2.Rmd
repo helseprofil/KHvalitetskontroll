@@ -46,7 +46,7 @@ VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "sumTELLER", "sumNEVNER", "RATE.n",
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- c("dfnew_flag", "compareKUBE")
+DUMPS <- c("dfnew_flag", "compareKUBE", "dfold_flag")
 
 # To name the file dumps, Insert the NAME of the KUBE here
 DUMPname <- "HKR" 

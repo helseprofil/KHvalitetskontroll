@@ -6,6 +6,8 @@ library(purrr)
 library(data.table)
 library(DT)
 library(gert)
+library(rmarkdown)
+library(tools)
 
 if(!dir.exists("USER/Output")){
   dir.create("USER/Output")
