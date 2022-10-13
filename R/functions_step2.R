@@ -200,6 +200,7 @@
 #' @param vals Character vector of value volumns, defaults to VALUES
 #' @param dumps List of dump points, defaults to DUMPS
 #' @param dumpname Name of KUBE, for naming of filedumps, defaults to DUMPname
+#' @param productionyear To save output in the correct folder
 #'
 #' @return
 #' @export
@@ -210,8 +211,26 @@ FormatData <- function(data1 = dfnew,
                        dims = DIMENSIONS,
                        vals = VALUES,
                        dumps = DUMPS,
-                       dumpname = DUMPname){
+                       dumpname = DUMPname,
+                       productionyear = PRODUCTIONYEAR){
   
+  # Create folder structure, if not existing, and set file path for file dumps
+  kubename <- .GetKubename(data1)
+  .CreateFolders(productionyear = productionyear,
+                 kubename = kubename)
+  
+  dumppath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        productionyear,
+                        "KVALITETSKONTROLL",
+                        kubename,
+                        "FILDUMPER",
+                        "/")
+
   # Identify dimension columns present in new and old KUBE
   # Separate into common, new, and expired dimensions for flagging, write standard msg
   dimnew <- names(data1[, names(data1) %in% dims, with = F])
@@ -251,6 +270,8 @@ FormatData <- function(data1 = dfnew,
   cat("STARTS flagging new kube:")
   cat(msg_commondims)
   cat(msg_newdims)
+  cat(msg_commonvals)
+  cat(msg_newvals)
   .FlagNew(data1 = data1, 
            data2 = data2, 
            commondims = commondims,
@@ -259,6 +280,8 @@ FormatData <- function(data1 = dfnew,
   cat("\n\nSTARTS flagging old kube:")
   cat(msg_commondims)
   cat(msg_expdims)
+  cat(msg_commonvals)
+  cat(msg_expvals)
   .FlagOld(data1 = data1,
            data2 = data2,
            commondims = commondims,
@@ -268,7 +291,7 @@ FormatData <- function(data1 = dfnew,
   if("dfnew_flag" %in% dumps){
     filename <- str_remove(attributes(dfnew)$Filename, ".csv")
     fwrite(dfnew_flag, 
-           file = paste0("Filedumps/", filename, "_(new)_FLAGGED.csv"),
+           file = paste0(dumppath, filename, "_(new)_FLAGGED.csv"),
            sep = ";")
     cat(paste0("\nFILEDUMP: ", filename, "_(new)_FLAGGED.csv"))
   }
@@ -276,7 +299,7 @@ FormatData <- function(data1 = dfnew,
   if("dfold_flag" %in% dumps){
     filename <- str_remove(attributes(dfold)$Filename, ".csv")
     fwrite(dfold_flag, 
-           file = paste0("Filedumps/", filename, "_(old)_FLAGGED.csv"),
+           file = paste0(dumppath, filename, "_(old)_FLAGGED.csv"),
            sep = ";")
     cat(paste0("\nFILEDUMP: ", filename, "_(old)_FLAGGED.csv"))
   }
@@ -294,7 +317,7 @@ FormatData <- function(data1 = dfnew,
     filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
     filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
     fwrite(compareKUBE, 
-           file = paste0("Filedumps/", filenamenew, "_vs_", filenameold,"_COMPARE.csv"),
+           file = paste0(dumppath, filenamenew, "_vs_", filenameold,"_COMPARE.csv"),
            sep = ";")
     cat(paste0("\nFILEDUMP: ", filenamenew, "_vs_", filenameold, "_COMPARE.csv"))
   }

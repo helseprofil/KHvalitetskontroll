@@ -81,8 +81,8 @@ print_dim <- function(...){
 }
 
 
-.GetKubename <- function(Data1){
-  filename <- attributes(Data1)$Filename
+.GetKubename <- function(df){
+  filename <- attributes(df)$Filename
   str_extract(filename, "^.*(?=_[:digit:]{4})")
 }
 

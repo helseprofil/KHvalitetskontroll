@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
 ---
+Version: 0.1 (13.10.2022). 
+
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
 ```{r setup, include=FALSE}
@@ -50,6 +52,9 @@ DUMPS <- c("dfnew_flag", "compareKUBE", "dfold_flag")
 
 # To name the file dumps, Insert the NAME of the KUBE here
 DUMPname <- "HKR" 
+
+# To save files
+PRODUCTIONYEAR <- 2023
 ```
 
 ```{r}
