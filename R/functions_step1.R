@@ -47,6 +47,16 @@ CompareDims <- function(data1 = dfnew,
                         data2 = dfold,
                         dims = c(STANDARDdims, EXTRAdims)){
   
+  dimnew <- names(data1[, names(data1) %in% dims, with = F])
+  dimold <- names(data2[, names(data2) %in% dims, with = F])
+  commondims <- dimnew[dimnew %in% dimold]
+  newdims <- dimnew[!dimnew %in% dimold]
+  expdims <- dimold[!dimold %in% dimnew]
+  
+  if(length(expdims) != 0 || length(newdims) != 0){
+  cat(c("The following dimensions are not present in both files: ", print_dim(c(newdims, expdims)), "\n"))
+  }
+  
   CompareDim <- function(data1, 
                          data2, 
                          dim = NULL){
@@ -79,7 +89,7 @@ CompareDims <- function(data1 = dfnew,
            "Expired levels" = explevels)
   }
   
-  map_df(dims, ~CompareDim(data1, data2, dim = .x))
+  map_df(commondims, ~CompareDim(data1, data2, dim = .x))
 }
 
 
