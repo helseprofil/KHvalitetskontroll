@@ -54,9 +54,11 @@ ReadFile <- function(file = NULL,
     filepath <- file.path(basepath, filename)
   }
   
+  outdata <- fread(filepath)
+  setattr(outdata, "Filename", basename(filepath))
   cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
-  fread(filepath)
-
+  
+  outdata
 }
 
 #' Print dim
