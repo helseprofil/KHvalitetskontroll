@@ -50,9 +50,6 @@ VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "sumTELLER", "sumNEVNER", "RATE.n",
 # For no dumps, replace with "DUMPS <- NULL"
 DUMPS <- c("dfnew_flag", "compareKUBE", "dfold_flag")
 
-# To name the file dumps, Insert the NAME of the KUBE here
-DUMPname <- "HKR" 
-
 # To save files
 PRODUCTIONYEAR <- 2023
 ```
