@@ -87,11 +87,9 @@ Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 - Expired levels (not found in new KUBE)
 
 ```{r}
-# If any dimensions is not present in both files, this function will crash
-# If any dimensions are identified as new or expired columns (i.e. not present in both files), the dims-argument can be specified manually
-# dims = c("GEO", "AAR", "KJONN", "ALDER", etc)
+# If any dimensions are identified as new or expired columns (i.e. not present in both files), they will not be evaluated
 
-CompareDims(dims = c(STANDARDdims, EXTRAdims))
+CompareDims()
 ```
 
 # 3. Compare number of consored observations
