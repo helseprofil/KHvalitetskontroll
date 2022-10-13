@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.1 (12.10.2022). 
+Version: 1.1 (13.10.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
@@ -33,8 +33,9 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 **Input parameters: **
 ```{r include=FALSE}
 ####
-# To get a list of variable names in the new KUBE, run the following code
+# To get a list of variable names in the new and old KUBE, run the following code
 names(dfnew)
+names(dfold)
 ###
 
 # Standard dimensions, entered as c("dim1", "dim2", etc).
@@ -86,7 +87,11 @@ Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 - Expired levels (not found in new KUBE)
 
 ```{r}
-CompareDims()
+# If any dimensions is not present in both files, this function will crash
+# If any dimensions are identified as new or expired columns (i.e. not present in both files), the dims-argument can be specified manually
+# dims = c("GEO", "AAR", "KJONN", "ALDER", etc)
+
+CompareDims(dims = c(STANDARDdims, EXTRAdims))
 ```
 
 # 3. Compare number of consored observations
