@@ -266,17 +266,19 @@ FormatData <- function(data1 = dfnew,
   cat("\n\nCOMPLETED flagging!\n")
   
   if("dfnew_flag" %in% dumps){
+    filename <- str_remove(attributes(dfnew)$Filename, ".csv")
     fwrite(dfnew_flag, 
-           file = paste0("Filedumps/", dumpname, "_new_flagged.csv"),
+           file = paste0("Filedumps/", filename, "_(new)_FLAGGED.csv"),
            sep = ";")
-    cat(paste0("\nFILEDUMP: ", dumpname, "_flagged.csv"))
+    cat(paste0("\nFILEDUMP: ", filename, "_(new)_FLAGGED.csv"))
   }
   
   if("dfold_flag" %in% dumps){
+    filename <- str_remove(attributes(dfold)$Filename, ".csv")
     fwrite(dfold_flag, 
-           file = paste0("Filedumps/", dumpname, "_old_flagged.csv"),
+           file = paste0("Filedumps/", filename, "_(old)_FLAGGED.csv"),
            sep = ";")
-    cat(paste0("\nFILEDUMP: ", dumpname, "_old_flagged.csv"))
+    cat(paste0("\nFILEDUMP: ", filename, "_(old)_FLAGGED.csv"))
   }
   
   cat("\n\nSTARTS create compareKUBE:")
@@ -289,10 +291,12 @@ FormatData <- function(data1 = dfnew,
   cat("\n\n-COMPLETED creating compareKUBE")
   
   if("compareKUBE" %in% dumps){
+    filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
+    filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
     fwrite(compareKUBE, 
-           file = paste0("Filedumps/", dumpname, "_compareKUBE.csv"),
+           file = paste0("Filedumps/", filenamenew, "_vs_", filenameold,"_COMPARE.csv"),
            sep = ";")
-    cat(paste0("\nFILEDUMP: ", dumpname, "_compareKUBE.csv"))
+    cat(paste0("\nFILEDUMP: ", filenamenew, "_vs_", filenameold, "_COMPARE.csv"))
   }
 
 }
