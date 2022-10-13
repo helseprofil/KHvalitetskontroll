@@ -174,3 +174,15 @@ CompareBydelKommune(groupdim = GROUPdims)
 
 CompareOslo(groupdim = GROUPdims)
 ```
+
+```{r eval = F}
+# Save report (instead of using the knit button)
+# Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
+# Make sure productionyear is correct
+# If savename = NULL, file name will default to the full cube name (incl date tag)
+
+SaveReport(productionyear = 2023,
+           inputfile = "Kvalitetskontroll_del1.Rmd",
+           savename = NULL)
+```
+

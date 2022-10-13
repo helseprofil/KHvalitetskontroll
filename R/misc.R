@@ -81,16 +81,85 @@ print_dim <- function(...){
 }
 
 
-#' SaveReport
+.GetKubename <- function(Data1){
+  filename <- attributes(Data1)$Filename
+  str_extract(filename, "^.*(?=_[:digit:]{4})")
+}
+
+#' CreateFolders
 #' 
-#' Saves R Markdown-reports in correct folder
+#' Create Folder structure according to production year and new data file
+#'
+#' @param productionyear 
+#' @param kubename 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-SaveReport <- function(){
+.CreateFolders <- function(productionyear = productionyear,
+                           kubename = kubename){
   
+  basepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER")
   
+  prodyeardir <- file.path(basepath, productionyear)
+  kvalkontrolldir <- file.path(prodyeardir, "KVALITETSKONTROLL")
+  kubedir <- file.path(kvalkontrolldir, kubename)
+  filedumpdir <- file.path(kubedir, "FILDUMPER")
   
+  if(!dir.exists(prodyeardir)){
+    dir.create(prodyeardir)
+  }
+  
+  if(!dir.exists(kvalkontrolldir)){
+    dir.create(kvalkontrolldir)
+  }
+  
+  if(!dir.exists(kubedir)){
+    dir.create(kubedir)
+  }
+  
+  if(!dir.exists(filedumpdir)){
+    dir.create(filedumpdir)
+  }
+}
+
+SaveReport <- function(productionyear = 2023,
+                       inputfile = "Kvalitetskontroll_del1.Rmd",
+                       savename = NULL){
+  
+  # Extract kubename
+  kubename <- .GetKubename(dfnew)
+  
+  # Create folder structure, if not existing
+  .CreateFolders(productionyear = productionyear,
+                 kubename = kubename)
+  
+  # define path to save file
+  filepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        productionyear,
+                        "KVALITETSKONTROLL",
+                        kubename)
+  
+  # Create file name
+  if(!is.null(savename)){
+    filename <- savename
+  } else {
+    filename <- str_remove(attributes(dfnew)$Filename, ".csv")
+  }
+  
+  # Save report
+  rmarkdown::render(input = inputfile,
+                    output_file = filename,
+                    output_dir = filepath)
 }
