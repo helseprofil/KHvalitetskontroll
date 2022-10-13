@@ -151,11 +151,14 @@ SaveReport <- function(productionyear = 2023,
                         "KVALITETSKONTROLL",
                         kubename)
   
+
   # Create file name
   if(!is.null(savename)){
     filename <- savename
   } else {
-    filename <- str_remove(attributes(dfnew)$Filename, ".csv")
+    filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"),
+                       "_",
+                       str_remove(inputfile, ".Rmd"))
   }
   
   # Save report
