@@ -29,5 +29,5 @@ cat("\nWelcome to KHvalitetskontroll\n",
     "\n---\n",
     updatemsg, 
     "\n---\n")
-
+cat("test"
 rm(updatemsg)
