@@ -48,7 +48,7 @@ VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "sumTELLER", "sumNEVNER", "RATE.n",
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- c("dfnew_flag", "compareKUBE", "dfold_flag")
+DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
 
 # To save files
 PRODUCTIONYEAR <- 2023
@@ -69,6 +69,32 @@ cat("DIMENSION columns: ", print_dim(DIMENSIONS),
     - All value columns get the suffix "_new" or "_old"
 
 ```{r}
+# No arguments needed, everything is defined in INPUT
 FormatData()
+```
+
+# Time-series across dimensions
+
+## KJONN
+```{r}
+library(ggplot2)
+
+timeseries_plot <- function(data = dfnew,
+                            dim = "KJONN"){
+data[[dim]] <- as.factor(data[[dim]])  
+  
+data %>% 
+  filter(GEO == 0) %>% 
+  group_by_("AAR", dim) %>% 
+  summarise(TELLER = sum(TELLER, na.rm = T), .groups = "drop")} %>% 
+  ggplot(aes(x = AAR,
+             y = TELLER,
+             group = dim,
+             color = dim)) +
+  geom_point() +
+  geom_line()
+}
+
+timeseries_plot()
 ```
 
