@@ -31,5 +31,3 @@ cat("\nWelcome to KHvalitetskontroll\n",
     "\n---\n")
 
 rm(updatemsg)
-
-# "test"
