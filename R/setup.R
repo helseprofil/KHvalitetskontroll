@@ -16,10 +16,10 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 
 # Checks folder structure
-if(!dir.exists("USER/Output")){
-  dir.create("USER/Output")
+if(!dir.exists("USER\\Output")){
+  dir.create("USER\\Output")
 }
 
-if(!dir.exists("USER/Filedumps")){
-  dir.create("USER/Filedumps")
+if(!dir.exists("USER\\Filedumps")){
+  dir.create("USER\\Filedumps")
 }
