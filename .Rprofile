@@ -18,8 +18,6 @@ if (interactive())
 cat("\nSynchronize project library\n")
 renv::restore()
 
-cat("testbeskjed")
-
 # Welcome messages
 
 cat("\nWelcome to KHvalitetskontroll\n", 
