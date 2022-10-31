@@ -2,9 +2,11 @@ ask <- utils::askYesNo("Vil du oppdatere brukerfilene til siste versjon?\n-Dette
 
 
 if(ask) {
-  cat("\nSer etter endringer\n")
+  cat("\nSer etter endringer\n",
+      "If this fails, run:\n",
+      'source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")\n',
+      "kh_install(KHvalitetskontroll)")
   gert::git_branch_checkout("main")
-  cat("test")
   gert::git_reset_hard()
   gert::git_pull()
   updatemsg <- "\nEverything up to date!\n"
