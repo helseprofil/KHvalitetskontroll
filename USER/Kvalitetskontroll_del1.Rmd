@@ -22,11 +22,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded: **
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "TRANGBODD", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "TRANGBODD", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
@@ -39,11 +39,11 @@ names(dfold)
 ###
 
 # Standard dimensions, entered as c("dim1", "dim2", etc).
-STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER") 
+STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT") 
 
 # Extra dimensions, entered as c("dim1", "dim2", etc).
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
-EXTRAdims <- c("KODEGRUPPE") 
+EXTRAdims <- c("BODD") 
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
@@ -56,7 +56,7 @@ COMPAREval <- "sumTELLER"
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
-GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER") 
+GROUPdims <- c("BODD", "AAR", "ALDER") 
 ```
 
 ```{r}
@@ -180,6 +180,8 @@ CompareOslo(groupdim = GROUPdims)
 # Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
 # Make sure productionyear is correct
 # If savename = NULL, file name will default to the full cube name (incl date tag)
+
+# NB: You must save the source file (Ctrl + S) before saving the report using this function!
 
 SaveReport(productionyear = 2023,
            inputfile = "Kvalitetskontroll_del1.Rmd",
