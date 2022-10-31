@@ -3,6 +3,7 @@ library(stats)
 
 # Switch to main branch, look for updates:
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/updateproject.R")
+message("test")
 
 # Source setup file to load functions:
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
