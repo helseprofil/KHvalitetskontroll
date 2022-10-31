@@ -13,6 +13,19 @@ cat("\nRandom Quote just for fun...:\n")
 if (interactive())
   try(fortunes::fortune(), silent = TRUE)
 
+# Checks folder structure
+if(!dir.exists("USER/Output")){
+  dir.create("USER/Output")
+}
+
+if(!dir.exists("USER/Filedumps")){
+  dir.create("USER/Filedumps")
+}
+
+if(!dir.exists("USER/Lokale filer, overskrives ikke")){
+  dir.create("USER/Lokale filer, overskrives ikke")
+}
+
 # Syncronize project library with lockfile
 
 cat("\nSynchronize project library\n")
