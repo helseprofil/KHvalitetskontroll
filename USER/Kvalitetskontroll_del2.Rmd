@@ -15,7 +15,20 @@ For more info about the quality control, see [here](https://github.com/helseprof
 ```{r setup, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+#source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+
+source("../R/setup.R")
+source("../R/functions_step2.R")
+source("../R/misc.R")
+library(ggplot2)
+theme_set(theme_bw())
+theme_update(legend.position = "bottom", 
+             panel.grid.minor = element_blank(),
+             text = element_text(color = "black"))
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = "viridis")
+options(ggplot2.discrete.fill = "viridis")
 ```
 
 # INPUT
@@ -52,6 +65,12 @@ DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
 
 # To save files
 PRODUCTIONYEAR <- 2023
+
+# Time series plots
+# Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
+# Currently accepts the following dimensions: "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK"
+PLOTTDIMS <- c("KJONN", "UTDANN", "INNVKAT")
+PLOTTVALS <- c("sumTELLER", "sumNEVNER")
 ```
 
 ```{r}
@@ -73,59 +92,10 @@ cat("DIMENSION columns: ", print_dim(DIMENSIONS),
 FormatData()
 ```
 
-# Time-series across dimensions
-
-## KJONN
-```{r}
-library(ggplot2)
-
-#' Title
-#'
-#' @param data defaults to dfnew
-#' @param dim the dimension to group plot by
-#' @param val values to plot at y-axis
-#'
-#' @return
-#' @export
-#'
-#' @examples
-timeseries_plot <- function(data = dfnew,
-                            dim = "UTDANN",
-                            val = c("sumTELLER", "sumNEVNER")) {
-  # Extract AARl from AAR for plotting, and filter out country-level data
-  plotdata <- copy(data)
-  plotdata <-
-    plotdata[, AARl := as.numeric(str_sub(AAR, 1L, 4L))][GEO == 0]
-  
-  # List of all dimensions that potentially should be checked, and the dimensions occurring in data
-  alldims <- c("KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")
-  dimexist <- alldims[alldims %in% names(plotdata)]
-  # list of dims where only total should be kept, and convert dimension of interest to factor
-  totaldims <- dimexist[!dimexist %in% dim]
-  plotdata[[dim]] <- as.factor(plotdata[[dim]])
-  
-  # Format data and create plot
-  plotdata %>%
-    filter(if_all(totaldims, ~ .x == 0)) %>%
-    pivot_longer(cols = all_of(val),
-                 names_to = "targetnumber",
-                 values_to = "yval") %>%
-    ggplot(aes(
-      x = AARl,
-      y = yval,
-      color = .data[[dim]],
-      group = .data[[dim]]
-    )) +
-    geom_point() +
-    geom_line() +
-    facet_grid(rows = vars(targetnumber),
-               scales = "free_y", 
-               switch = "y") + 
-    labs(x = "Year (start year for period data)",
-         y = NULL,
-         title = paste0("Time series according to ", dim))
-}
-  
-timeseries_plot() 
+# Time-series across selected dimensions
+```{r message = F}
+PlotTimeseries(dims = PLOTTDIMS,
+               vals = PLOTTVALS)
 ```
+
 

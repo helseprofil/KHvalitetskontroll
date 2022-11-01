@@ -324,24 +324,22 @@ FormatData <- function(data1 = dfnew,
 
 }
 
-
-#' Time series plot
+#' Plot time series for single dimension
 #'
 #' @param data defaults to dfnew
 #' @param dim the dimension to group plot by
-#' @param val values to plot at y-axis
+#' @param vals values to plot at y-axis
 #'
 #' @return
 #' @export
 #'
 #' @examples
-timeseries_plot <- function(data = dfnew,
-                            dim = "UTDANN",
-                            val = c("sumTELLER", "sumNEVNER")) {
+.plot_ts <- function(data,
+                     dim,
+                     vals) {
   # Extract AARl from AAR for plotting, and filter out country-level data
   plotdata <- copy(data)
-  plotdata <-
-    plotdata[, AARl := as.numeric(str_sub(AAR, 1L, 4L))][GEO == 0]
+  plotdata <- plotdata[, AARl := as.numeric(str_sub(AAR, 1L, 4L))][GEO == 0]
   
   # List of all dimensions that potentially should be checked, and the dimensions occurring in data
   alldims <- c("KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")
@@ -353,7 +351,7 @@ timeseries_plot <- function(data = dfnew,
   # Format data and create plot
   plotdata %>%
     filter(if_all(totaldims, ~ .x == 0)) %>%
-    pivot_longer(cols = all_of(val),
+    pivot_longer(cols = all_of(vals),
                  names_to = "targetnumber",
                  values_to = "yval") %>%
     ggplot(aes(
@@ -370,4 +368,13 @@ timeseries_plot <- function(data = dfnew,
     labs(x = "Year (start year for period data)",
          y = NULL,
          title = paste0("Time series according to ", dim))
+}
+
+PlotTimeseries <- function(dims = PLOTTDIMS,
+                           vals = PLOTTVALS){
+  
+  map(dims, ~.plot_ts(data = dfnew,
+                      dim = .x,
+                      vals = vals))
+  
 }
