@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 0.3 (01.11.2022). 
+Version: 0.4 (01.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
@@ -50,7 +50,7 @@ VALUES <- c("TELLER", "RATE", "SMR", "sumTELLER", "sumNEVNER", "RATE.n", "SPVFLA
 # For no dumps, replace with "DUMPS <- NULL"
 DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
 
-# To save files
+# To save files and report in correct folder
 PRODUCTIONYEAR <- 2023
 
 # Time series plots
@@ -85,4 +85,15 @@ PlotTimeseries(dims = PLOTTDIMS,
                vals = PLOTTVALS)
 ```
 
+```{r eval = F}
+# Save report (instead of using the knit button)
+# Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
+# Production year is defined in input
+# If savename = NULL, file name will default to the full cube name (incl date tag)
 
+# NB: You must save the source file (Ctrl + S) before saving the report using this function!
+
+SaveReport(productionyear = PRODUCTIONYEAR,
+           inputfile = "Kvalitetskontroll_del2.Rmd",
+           savename = NULL)
+```
