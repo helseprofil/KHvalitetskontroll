@@ -96,5 +96,18 @@ data %>%
 }
 
 timeseries_plot()
+
+totalsonly <- DIMENSIONS[!DIMENSIONS %in% c("GEO", "AAR")]
+
+
+dfnew[, Reduce('&', lapply)]
+
+
+dfnew %>% 
+  filter(if_all(all_of(totalsonly), ~ . == 0))
+
+
+dfnew %>% filter(KJONN == 0, ALDER == 0)
+
 ```
 

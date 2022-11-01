@@ -8,6 +8,7 @@ library(DT)
 library(gert)
 library(rmarkdown)
 library(tools)
+library(ggplot2)
 
 # Load internal functions
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
