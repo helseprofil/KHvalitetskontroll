@@ -79,35 +79,53 @@ FormatData()
 ```{r}
 library(ggplot2)
 
+#' Title
+#'
+#' @param data defaults to dfnew
+#' @param dim the dimension to group plot by
+#' @param val values to plot at y-axis
+#'
+#' @return
+#' @export
+#'
+#' @examples
 timeseries_plot <- function(data = dfnew,
-                            dim = "KJONN"){
-data[[dim]] <- as.factor(data[[dim]])  
+                            dim = "UTDANN",
+                            val = c("sumTELLER", "sumNEVNER")) {
+  # Extract AARl from AAR for plotting, and filter out country-level data
+  plotdata <- copy(data)
+  plotdata <-
+    plotdata[, AARl := as.numeric(str_sub(AAR, 1L, 4L))][GEO == 0]
   
-data %>% 
-  filter(GEO == 0) %>% 
-  group_by_("AAR", dim) %>% 
-  summarise(TELLER = sum(TELLER, na.rm = T), .groups = "drop")} %>% 
-  ggplot(aes(x = AAR,
-             y = TELLER,
-             group = dim,
-             color = dim)) +
-  geom_point() +
-  geom_line()
+  # List of all dimensions that potentially should be checked, and the dimensions occurring in data
+  alldims <- c("KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")
+  dimexist <- alldims[alldims %in% names(plotdata)]
+  # list of dims where only total should be kept, and convert dimension of interest to factor
+  totaldims <- dimexist[!dimexist %in% dim]
+  plotdata[[dim]] <- as.factor(plotdata[[dim]])
+  
+  # Format data and create plot
+  plotdata %>%
+    filter(if_all(totaldims, ~ .x == 0)) %>%
+    pivot_longer(cols = all_of(val),
+                 names_to = "targetnumber",
+                 values_to = "yval") %>%
+    ggplot(aes(
+      x = AARl,
+      y = yval,
+      color = .data[[dim]],
+      group = .data[[dim]]
+    )) +
+    geom_point() +
+    geom_line() +
+    facet_grid(rows = vars(targetnumber),
+               scales = "free_y", 
+               switch = "y") + 
+    labs(x = "Year (start year for period data)",
+         y = NULL,
+         title = paste0("Time series according to ", dim))
 }
-
-timeseries_plot()
-
-totalsonly <- DIMENSIONS[!DIMENSIONS %in% c("GEO", "AAR")]
-
-
-dfnew[, Reduce('&', lapply)]
-
-
-dfnew %>% 
-  filter(if_all(all_of(totalsonly), ~ . == 0))
-
-
-dfnew %>% filter(KJONN == 0, ALDER == 0)
-
+  
+timeseries_plot() 
 ```
 
