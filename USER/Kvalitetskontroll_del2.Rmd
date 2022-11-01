@@ -48,7 +48,7 @@ VALUES <- c("TELLER", "RATE", "SMR", "sumTELLER", "sumNEVNER", "RATE.n", "SPVFLA
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- c("dfnew_flag", "compareKUBE", "dfold_flag")
+DUMPS <- NULL#c("dfnew_flag", "compareKUBE", "dfold_flag")
 
 # To save files
 PRODUCTIONYEAR <- 2023
