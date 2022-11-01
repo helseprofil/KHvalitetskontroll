@@ -325,15 +325,49 @@ FormatData <- function(data1 = dfnew,
 }
 
 
-
-# Show data with fixed columns
-# datatable(compareKUBE,
-#           extensions = "FixedColumns",
-#           options = list(scrollX = T,
-#                          fixedColumns = list(leftColumns = 5)))
-
-# Function to save HTML-report
-# Export filename from ReadFile, and use for creating file path to folder structure in F:/
-# rmarkdown::render("Kvalitetskontroll_del2.Rmd", 
-#                   output_file = "test", 
-#                   output_dir = "Output")
+#' Time series plot
+#'
+#' @param data defaults to dfnew
+#' @param dim the dimension to group plot by
+#' @param val values to plot at y-axis
+#'
+#' @return
+#' @export
+#'
+#' @examples
+timeseries_plot <- function(data = dfnew,
+                            dim = "UTDANN",
+                            val = c("sumTELLER", "sumNEVNER")) {
+  # Extract AARl from AAR for plotting, and filter out country-level data
+  plotdata <- copy(data)
+  plotdata <-
+    plotdata[, AARl := as.numeric(str_sub(AAR, 1L, 4L))][GEO == 0]
+  
+  # List of all dimensions that potentially should be checked, and the dimensions occurring in data
+  alldims <- c("KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")
+  dimexist <- alldims[alldims %in% names(plotdata)]
+  # list of dims where only total should be kept, and convert dimension of interest to factor
+  totaldims <- dimexist[!dimexist %in% dim]
+  plotdata[[dim]] <- as.factor(plotdata[[dim]])
+  
+  # Format data and create plot
+  plotdata %>%
+    filter(if_all(totaldims, ~ .x == 0)) %>%
+    pivot_longer(cols = all_of(val),
+                 names_to = "targetnumber",
+                 values_to = "yval") %>%
+    ggplot(aes(
+      x = AARl,
+      y = yval,
+      color = .data[[dim]],
+      group = .data[[dim]]
+    )) +
+    geom_point() +
+    geom_line() +
+    facet_grid(rows = vars(targetnumber),
+               scales = "free_y", 
+               switch = "y") + 
+    labs(x = "Year (start year for period data)",
+         y = NULL,
+         title = paste0("Time series according to ", dim))
+}
