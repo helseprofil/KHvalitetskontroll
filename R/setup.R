@@ -34,8 +34,3 @@ theme_set(theme_bw())
 theme_update(legend.position = "bottom", 
              panel.grid.minor = element_blank(),
              text = element_text(color = "black"))
-
-# options(ggplot2.continuous.colour = "viridis")
-# options(ggplot2.continuous.fill = "viridis")
-# options(ggplot2.discrete.colour = "viridis")
-# options(ggplot2.discrete.fill = "viridis")
