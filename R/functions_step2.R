@@ -171,7 +171,7 @@
   
   # Create comparedata
   compareKUBE <<- comparenew[compareold, on = commondims] %>% 
-    select(all_of(DIMENSIONS), 
+    select(any_of(DIMENSIONS), 
            starts_with(paste0(VALUES, "_")),
            everything()) %>% 
     .FixDecimals()
