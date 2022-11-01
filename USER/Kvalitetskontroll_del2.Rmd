@@ -8,27 +8,14 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 0.2 (01.11.2022). 
+Version: 0.3 (01.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
 ```{r setup, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
-#source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
-
-source("../R/setup.R")
-source("../R/functions_step2.R")
-source("../R/misc.R")
-library(ggplot2)
-theme_set(theme_bw())
-theme_update(legend.position = "bottom", 
-             panel.grid.minor = element_blank(),
-             text = element_text(color = "black"))
-options(ggplot2.continuous.colour = "viridis")
-options(ggplot2.continuous.fill = "viridis")
-options(ggplot2.discrete.colour = "viridis")
-options(ggplot2.discrete.fill = "viridis")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
 # INPUT
