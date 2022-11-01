@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 0.1 (13.10.2022). 
+Version: 0.2 (01.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
@@ -23,11 +23,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded**
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "ENEFHIB_2022-10-20-12-45", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "ENEFHIB", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
@@ -40,10 +40,10 @@ names(dfold)
 ###
 
 # Define all dimensions used to identify new or expired rows in the two KUBEs
-DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER", "KODEGRUPPE")
+DIMENSIONS <- c("GEO", "AAR", "KJONN", "UTDANN", "INNVKAT")
 
 # Define all value columns to be compared between the two KUBEs
-VALUES <- c("TELLER", "RATE", "SMR", "MEIS", "sumTELLER", "sumNEVNER", "RATE.n", "SPVFLAGG")
+VALUES <- c("TELLER", "RATE", "SMR", "sumTELLER", "sumNEVNER", "RATE.n", "SPVFLAGG")
 
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
