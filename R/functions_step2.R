@@ -373,8 +373,9 @@ FormatData <- function(data1 = dfnew,
 PlotTimeseries <- function(dims = PLOTTDIMS,
                            vals = PLOTTVALS){
   
-  map(dims, ~.plot_ts(data = dfnew,
+  plots <- map(dims, ~.plot_ts(data = dfnew,
                       dim = .x,
                       vals = vals))
   
+  walk(plots, print)
 }
