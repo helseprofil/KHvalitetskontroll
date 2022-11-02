@@ -17,7 +17,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # Checks folder structure and create a folder for local files
 
-projectroot <- rprojroot::find_root("USER")
+projectroot <- rprojroot::find_root("KHvalitetskontroll.Rproj")
 
 if(!dir.exists(file.path(projectroot, "USER/Lokale filer, overskrives ikke"))){
   dir.create(file.path(projectroot, "USER/Lokale filer, overskrives ikke"))
