@@ -15,18 +15,15 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step2.R")
 
-# Checks folder structure
-if(!dir.exists("USER/Output")){
-  dir.create("USER/Output")
+# Checks folder structure and create a folder for local files
+
+projectroot <- rprojroot::find_root("USER")
+
+if(!dir.exists(file.path(projectroot, "USER/Lokale filer, overskrives ikke"))){
+  dir.create(file.path(projectroot, "USER/Lokale filer, overskrives ikke"))
 }
 
-if(!dir.exists("USER/Filedumps")){
-  dir.create("USER/Filedumps")
-}
-
-if(!dir.exists("USER/Lokale filer, overskrives ikke")){
-  dir.create("USER/Lokale filer, overskrives ikke")
-}
+rm(projectroot)
 
 # Set ggplot theme and color palette
 
