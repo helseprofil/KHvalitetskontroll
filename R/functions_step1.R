@@ -158,7 +158,7 @@ CheckPrikk <- function(data1 = dfnew,
   if(nrow(filtered) == 0) {
     cat("\nNo values < limit")
   } else {
-    cat(paste0("\nN values > limit: ", nrow(filtered)))
+    cat(paste0("\nN values <= limit: ", nrow(filtered)))
     output <- filtered %>% 
       select(any_of(standarddims), any_of(extradims), any_of(val), everything()) 
     DT::datatable(output, rownames = F)
