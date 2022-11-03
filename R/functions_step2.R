@@ -342,10 +342,10 @@ FormatData <- function(data1 = dfnew,
   plotdata <- plotdata[, AARl := as.numeric(str_sub(AAR, 1L, 4L))][GEO == 0]
   
   # List of all dimensions that potentially should be checked, and the dimensions occurring in data
-  alldims <- c("KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")
+  alldims <- c("KJONN", "UTDANN", "INNVKAT", "LANDBAK")
   dimexist <- alldims[alldims %in% names(plotdata)]
   # list of dims where only total should be kept, and convert dimension of interest to factor
-  totaldims <- dimexist[!dimexist %in% dim]
+  totaldims <- dimexist[!dimexist %in% c(dim, "ALDER")]
   plotdata[[dim]] <- as.factor(plotdata[[dim]])
   
   # Format data and create plot
