@@ -111,6 +111,7 @@ print_dim <- function(...){
   kvalkontrolldir <- file.path(prodyeardir, "KVALITETSKONTROLL")
   kubedir <- file.path(kvalkontrolldir, kubename)
   filedumpdir <- file.path(kubedir, "FILDUMPER")
+  plotdir <- file.path(kubedir, "PLOTT")
   
   if(!dir.exists(prodyeardir)){
     dir.create(prodyeardir)
@@ -126,6 +127,10 @@ print_dim <- function(...){
   
   if(!dir.exists(filedumpdir)){
     dir.create(filedumpdir)
+  }
+  
+  if(!dir.exists(plotdir)){
+    dir.create(plotdir)
   }
 }
 
