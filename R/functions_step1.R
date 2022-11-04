@@ -300,15 +300,15 @@ PlotTimeseries <- function(data = dfnew,
                            plotdim = PLOTDIMS,
                            plotval = PLOTVALS){
   
-  if(!exists(".ALL_DIMENSIONS")){
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R") 
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
     .ALL_DIMENSIONS <- ALL_DIMENSIONS
     rm(ALL_DIMENSIONS)
-  } 
+  }
   
   plotdata <- copy(data)
   
-  # Extract only country level data, 
+  # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
   plotdata <- plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotval), with = F]
@@ -317,12 +317,13 @@ PlotTimeseries <- function(data = dfnew,
   dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(plotdata)]
   
   # If ALDER is included, only keep total (minALDERl_maxALDERh)
-  if("ALDER" %in% dimexist){
-  plotdata[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
-                   ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
-  plotdata <- plotdata[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
-  plotdata[, ':=' (ALDERl = NULL,
-                   ALDERh = NULL)]
+  if ("ALDER" %in% dimexist) {
+    plotdata[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
+                     ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
+    plotdata <-
+      plotdata[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
+    plotdata[, ':=' (ALDERl = NULL,
+                     ALDERh = NULL)]
   }
   
   # Organize plotdata according to all dimensions
@@ -331,10 +332,10 @@ PlotTimeseries <- function(data = dfnew,
   # Identify extra dimensions, and aggregate plotval to totals if extra dimensions exists
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
-  if(length(dimextra) > 0){
+  if (length(dimextra) > 0) {
     groupcols <- dimexist[!dimexist %in% dimextra]
     # Identify value columns to average or sum
-    avgcols <- plotval[!str_detect(plotval, c("TELLER"))] 
+    avgcols <- plotval[!str_detect(plotval, c("TELLER"))]
     sumcols <- plotval[!plotval %in% avgcols]
     plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
@@ -345,8 +346,36 @@ PlotTimeseries <- function(data = dfnew,
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
+  # create plotting function
+  # .plot_ts <- function(){
+  #   plotdata %>%
+  #     filter(if_all(totaldims, ~ .x == 0)) %>%
+  #     pivot_longer(cols = all_of(vals),
+  #                  names_to = "targetnumber",
+  #                  values_to = "yval") %>%
+  #     ggplot(aes(
+  #       x = AARl,
+  #       y = yval,
+  #       color = .data[[dim]],
+  #       group = .data[[dim]]
+  #     )) +
+  #     geom_point() +
+  #     geom_line() +
+  #     facet_grid(rows = vars(targetnumber),
+  #                scales = "free_y", 
+  #                switch = "y") + 
+  #     labs(x = "Year (start year for period data)",
+  #          y = NULL,
+  #          title = paste0("Time series according to ", dim))
+  # }
+  # }
+  # 
   # Loop through plotdim, generate plots
-  
-    plotdata
+  #
+  # plots <- map(dims, ~.plot_ts(data = dfnew,
+  #                              dim = .x,
+  #                              vals = vals))
+  # 
+  # walk(plots, print)
 } 
 
