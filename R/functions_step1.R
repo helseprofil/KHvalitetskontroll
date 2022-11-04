@@ -311,7 +311,7 @@ PlotTimeseries <- function(data = dfnew,
   # Extract only country level data, 
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
-  plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotval), with = F]
+  plotdata <- plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotval), with = F]
   
   # Identify all dimensions in the file
   dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(plotdata)]
@@ -325,13 +325,27 @@ PlotTimeseries <- function(data = dfnew,
                    ALDERh = NULL)]
   }
   
-  # For extra dimensions, aggregate plotval to totals
+  # Organize plotdata according to all dimensions
+  setkeyv(plotdata, dimexist)
+  
+  # Identify extra dimensions, and aggregate plotval to totals if extra dimensions exists
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
-  #####....kode for å aggregere
+  if(length(dimextra) > 0){
+    groupcols <- dimexist[!dimexist %in% dimextra]
+    # Identify value columns to average or sum
+    avgcols <- plotval[!str_detect(plotval, c("TELLER"))] 
+    sumcols <- plotval[!plotval %in% avgcols]
+    plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
+    plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+  }
   
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
+  
   print(plotdata)
+  
+  
 } 
+
