@@ -295,3 +295,26 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
   
   datatable(output, rownames = F)
 }
+
+PlotTimeseries <- function(data = dfnew,
+                           plotdim = PLOTDIMS,
+                           plotval = PLOTVALS){
+  
+  plotdata <- copy(data)
+  
+  # Extract only country level data
+  plotdata <- plotdata[GEO == 0]   
+  
+  # If ALDER is included, only keep total (minALDERl_maxALDERh)
+  if("ALDER" %in% names(plotdata)){
+  plotdata[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
+                   ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
+  plotdata <- plotdata[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
+  plotdata[, ':=' (ALDERl = NULL,
+                   ALDERh = NULL)]
+  }
+  
+  
+  
+  print(plotdata)
+}
