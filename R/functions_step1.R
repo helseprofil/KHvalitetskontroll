@@ -338,14 +338,15 @@ PlotTimeseries <- function(data = dfnew,
     sumcols <- plotval[!plotval %in% avgcols]
     plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+    plotdata[, (dimextra) := NULL]
+    plotdata <- unique(plotdata)
   }
   
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
+  # Loop through plotdim, generate plots
   
-  print(plotdata)
-  
-  
+    plotdata
 } 
 
