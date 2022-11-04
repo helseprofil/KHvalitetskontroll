@@ -15,6 +15,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step2.R")
 
+# Load list of all dimensions, and make hidden object
+source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R") 
+.ALL_DIMENSIONS <- ALL_DIMENSIONS
+rm(ALL_DIMENSIONS)
+
 # Checks folder structure and create a folder for local files
 
 if(!dir.exists("USER/Lokale filer, overskrives ikke")){
