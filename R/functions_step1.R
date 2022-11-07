@@ -433,6 +433,7 @@ PlotTimeseries <- function(data = dfnew,
                        expand = c(0,0)) + 
     guides(color = guide_legend(title = NULL, nrow = nrow)) + 
     theme(axis.text.x = element_text(angle = 30, vjust = 0.5)) + 
-    force_panelsizes(rows = unit(8, "cm"))
+    force_panelsizes(rows = unit(6, "cm"),
+                     width = unit(12, "cm"))
 }
 
