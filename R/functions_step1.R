@@ -328,31 +328,22 @@ PlotTimeseries <- function(data = dfnew,
   
   # If ALDER is included, only keep total (minALDERl_maxALDERh)
   if ("ALDER" %in% dimexist) {
-    plotdata[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
-                     ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
-    plotdata <-
-      plotdata[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
-    plotdata[, ':=' (ALDERl = NULL,
-                     ALDERh = NULL)]
+    plotdata <- .AggregateAge(plotdata = plotdata)
   }
   
   # Organize plotdata according to all dimensions
   setkeyv(plotdata, dimexist)
   
-  # Identify extra dimensions, and aggregate plotvals to totals if extra dimensions exists
+  # Identify extra dimensions
+  # aggregate plotvals to totals, remove extra dimensions, remove duplicated rows
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
-  if (length(dimextra) > 0) {
-    # Group by all existing standard dimensions
-    groupcols <- dimexist[!dimexist %in% dimextra]
-    # Identify value columns to average or sum
-    sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
-    avgcols <- plotvals[!plotvals %in% sumcols]
-    # Aggregate plotvals, remove dimextra column, remove duplicated rows
-    plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
-    plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-    plotdata[, (dimextra) := NULL]
-    plotdata <- unique(plotdata)
+  if (length(dimextra) > 0 & !dimextra %in% plotdims) {
+    plotdata <- .AggregateExtradim(plotdata = plotdata,
+                                   dimexist = dimexist,
+                                   dimextra = dimextra,
+                                   plotvals = plotvals)
+    plotdata
   }
   
   # Create AARx for plotting on x-axis
@@ -365,7 +356,7 @@ PlotTimeseries <- function(data = dfnew,
   # create plotting function
   .plot_ts <- function(data,
                        dim,
-                       vals,
+                       plotvals,
                        alldims){
    
    totaldims <- alldims[!alldims %in% dim]
@@ -373,7 +364,7 @@ PlotTimeseries <- function(data = dfnew,
    data %>%
      mutate(across(all_of(dim), as.factor)) %>% 
      filter(if_all(all_of(totaldims), ~ .x == 0)) %>%
-     pivot_longer(cols = all_of(vals),
+     pivot_longer(cols = all_of(plotvals),
                   names_to = "targetnumber",
                   values_to = "yval") %>%
      ggplot(aes(
@@ -401,10 +392,30 @@ PlotTimeseries <- function(data = dfnew,
 
   plots <- map(plotdims, ~.plot_ts(data = plotdata,
                                dim = .x,
-                               vals = plotvals,
+                               plotvals = plotvals,
                                alldims = alldims))
 
   # Print plots without plotting message
   walk(plots, print)
 } 
+
+.AggregateExtradim <- function(plotdata, dimextra, dimexist, plotvals){
+  # Group by all existing standard dimensions
+  groupcols <- dimexist[!dimexist %in% dimextra]
+  # Identify value columns to average or sum
+  sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
+  avgcols <- plotvals[!plotvals %in% sumcols]
+  # Aggregate plotvals, remove dimextra column, remove duplicated rows
+  plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
+  plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+  plotdata[, (dimextra) := NULL]
+  plotdata <- unique(plotdata)
+}
+
+.AggregateAge <- function(plotdata){
+  plotdata[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
+                   ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
+  plotdata <- plotdata[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
+  plotdata[, ':=' (ALDERl = NULL, ALDERh = NULL)]
+}
 
