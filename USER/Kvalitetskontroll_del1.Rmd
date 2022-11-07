@@ -191,7 +191,7 @@ CompareOslo(groupdim = GROUPdims)
 - Plots country-level time-series data for `r print_dim(PLOTVALS)`, to check for misclassification across: `r print_dim(PLOTDIMS)`
 
 ```{r fig.height=2*length(PLOTVALS) + 2, out.width = "100%"}
-# Default is to use PLOTDIMS and PLOTVALS defined in input.
+# Default is to use PLOTDIMS and PLOTVALS defined in input. 
 PlotTimeseries()
 ```
 
