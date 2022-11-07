@@ -66,7 +66,7 @@ GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER")
 # Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
 # Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
 PLOTDIMS <- c("KJONN", "KODEGRUPPE")
-PLOTVALS <- c("sumTELLER", "sumNEVNER")
+PLOTVALS <- c("sumTELLER", "sumNEVNER", "TELLER")
 ```
 
 ```{r}
@@ -186,7 +186,7 @@ CompareOslo(groupdim = GROUPdims)
 ```
 
 # 8. Country level time-series plots
-```{r fig.height=6, out.width = "100%"}
+```{r fig.height=9, out.width = "100%"}
 PlotTimeseries()
 ```
 
