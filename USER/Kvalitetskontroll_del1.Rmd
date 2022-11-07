@@ -186,10 +186,9 @@ CompareOslo(groupdim = GROUPdims)
 ```
 
 # 8. Country level time-series plots
-```{r out.width="100%", out.height="100%"}
+```{r fig.height=6, out.width = "100%"}
 PlotTimeseries()
 ```
-
 
 ```{r eval = F}
 # Save report (instead of using the knit button)
