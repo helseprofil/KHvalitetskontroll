@@ -38,6 +38,9 @@ names(dfnew)
 names(dfold)
 ###
 
+# To save files and report in correct folder
+PRODUCTIONYEAR <- 2023
+
 # Standard dimensions, entered as c("dim1", "dim2", etc).
 STANDARDdims <- c("GEO", "AAR", "KJONN", "UTDANN", "INNVKAT") 
 
@@ -191,13 +194,13 @@ PlotTimeseries()
 ```{r eval = F}
 # Save report (instead of using the knit button)
 # Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
-# Make sure productionyear is correct
+# Make sure productionyear is correctly defined in INPUT section
 # If savename = NULL, file name will default to the full cube name (incl date tag)
 
 # NB: You must save the source file (Ctrl + S) before saving the report using this function!
 
-SaveReport(productionyear = 2023,
+SaveReport(productionyear = PRODUCTIONYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = "TEST_0711")
+           savename = NULL)
 ```
 
