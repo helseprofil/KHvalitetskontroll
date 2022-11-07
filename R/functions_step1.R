@@ -396,6 +396,12 @@ PlotTimeseries <- function(data = dfnew,
   
   data <- copy(data)
   
+  # ncol <- if (length(unique(data[[dim]])) > 6) {
+  #   3
+  # } else {
+  #   1
+  # }
+             
   if(!dimextra %in% dim){
     data <- .AggregateExtradim(data = data,
                                dimextra = dimextra,
@@ -429,7 +435,7 @@ PlotTimeseries <- function(data = dfnew,
                                     max(data$AARx),
                                     by = 1),
                        expand = c(0,0)) + 
-    guides(color = guide_legend(title = NULL)) + 
+    guides(color = guide_legend(title = NULL, nrow = 3)) + 
     theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
 }
 

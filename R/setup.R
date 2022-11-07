@@ -29,7 +29,7 @@ if(!dir.exists("USER/Lokale filer, overskrives ikke")){
 # Set ggplot theme and color palette
 
 theme_set(theme_bw())
-theme_update(legend.position = "bottom", 
+theme_update(legend.position = "top", 
              panel.grid.minor = element_blank(),
              text = element_text(color = "black"),
              plot.margin = margin(t = 1, b = 1, r = 1, unit = "cm"))
