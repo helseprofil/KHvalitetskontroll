@@ -435,9 +435,9 @@ PlotTimeseries <- function(data = dfnew,
                                     max(data$AARx),
                                     by = 1),
                        expand = c(0,0)) + 
-    guides(color = guide_legend(title = NULL, nrow = 3)) + 
+    guides(color = guide_legend(title = NULL)) + 
     theme(axis.text.x = element_text(angle = 30, vjust = 0.5)) + 
-    force_panelsizes(rows = unit(6, "cm"),
-                     cols = unit(10, "cm"))
+    force_panelsizes(rows = unit(4, "cm"),
+                     cols = unit(12, "cm"))
 }
 
