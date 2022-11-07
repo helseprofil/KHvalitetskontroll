@@ -197,7 +197,9 @@ PlotTimeseries()
 # Make sure productionyear is correctly defined in INPUT section
 # If savename = NULL, file name will default to the full cube name (incl date tag)
 
-# NB: You must save the source file (Ctrl + S) before saving the report using this function!
+# NB: 
+# You must run the INPUT section before saving the report, to generate all the objects
+# You must ALSO save the document (Ctrl + S) before saving the report using this function!
 
 SaveReport(productionyear = PRODUCTIONYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
