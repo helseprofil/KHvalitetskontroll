@@ -14,7 +14,9 @@ For more info about the quality control, see [here](https://github.com/helseprof
 ```{r setup, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+#source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+source("../R/setup.R")
+source("../R/functions_step1.R")
 ```
 
 # INPUT
@@ -198,6 +200,6 @@ PlotTimeseries()
 
 SaveReport(productionyear = 2023,
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = NULL)
+           savename = "TEST_0711")
 ```
 
