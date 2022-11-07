@@ -296,9 +296,19 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
   datatable(output, rownames = F)
 }
 
+#' Plot country-level time series across selected dimensions
+#'
+#' @param data 
+#' @param plotdims 
+#' @param plotvals 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 PlotTimeseries <- function(data = dfnew,
-                           plotdim = PLOTDIMS,
-                           plotval = PLOTVALS){
+                           plotdims = PLOTDIMS,
+                           plotvals = PLOTVALS){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -311,7 +321,7 @@ PlotTimeseries <- function(data = dfnew,
   # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
-  plotdata <- plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotval), with = F]
+  plotdata <- plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotvals), with = F]
   
   # Identify all dimensions in the file
   dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(plotdata)]
@@ -329,14 +339,16 @@ PlotTimeseries <- function(data = dfnew,
   # Organize plotdata according to all dimensions
   setkeyv(plotdata, dimexist)
   
-  # Identify extra dimensions, and aggregate plotval to totals if extra dimensions exists
+  # Identify extra dimensions, and aggregate plotvals to totals if extra dimensions exists
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
   if (length(dimextra) > 0) {
+    # Group by all existing standard dimensions
     groupcols <- dimexist[!dimexist %in% dimextra]
     # Identify value columns to average or sum
-    avgcols <- plotval[!str_detect(plotval, c("TELLER"))]
-    sumcols <- plotval[!plotval %in% avgcols]
+    sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
+    avgcols <- plotvals[!plotvals %in% sumcols]
+    # Aggregate plotvals, remove dimextra column, remove duplicated rows
     plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
     plotdata[, (dimextra) := NULL]
@@ -346,36 +358,53 @@ PlotTimeseries <- function(data = dfnew,
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
+  # Create vector of potential plotting dimensions
+  
+  alldims <- dimexist[!dimexist %in% c("GEO", "AAR", "ALDER", dimextra)]
+  
   # create plotting function
-  # .plot_ts <- function(){
-  #   plotdata %>%
-  #     filter(if_all(totaldims, ~ .x == 0)) %>%
-  #     pivot_longer(cols = all_of(vals),
-  #                  names_to = "targetnumber",
-  #                  values_to = "yval") %>%
-  #     ggplot(aes(
-  #       x = AARl,
-  #       y = yval,
-  #       color = .data[[dim]],
-  #       group = .data[[dim]]
-  #     )) +
-  #     geom_point() +
-  #     geom_line() +
-  #     facet_grid(rows = vars(targetnumber),
-  #                scales = "free_y", 
-  #                switch = "y") + 
-  #     labs(x = "Year (start year for period data)",
-  #          y = NULL,
-  #          title = paste0("Time series according to ", dim))
-  # }
-  # }
-  # 
-  # Loop through plotdim, generate plots
-  #
-  # plots <- map(dims, ~.plot_ts(data = dfnew,
-  #                              dim = .x,
-  #                              vals = vals))
-  # 
-  # walk(plots, print)
+  .plot_ts <- function(data,
+                       dim,
+                       vals,
+                       alldims){
+   
+   totaldims <- alldims[!alldims %in% dim]
+   
+   data %>%
+     mutate(across(all_of(dim), as.factor)) %>% 
+     filter(if_all(all_of(totaldims), ~ .x == 0)) %>%
+     pivot_longer(cols = all_of(vals),
+                  names_to = "targetnumber",
+                  values_to = "yval") %>%
+     ggplot(aes(
+       x = AARx,
+       y = yval,
+       color = .data[[dim]],
+       group = .data[[dim]]
+     )) +
+     geom_point() +
+     geom_line() +
+     facet_grid(rows = vars(targetnumber),
+                scales = "free_y", 
+                switch = "y") + 
+     labs(x = "Year",
+          y = NULL,
+          title = paste0("Time series according to ", dim)) + 
+     scale_x_continuous(breaks = seq(min(data$AARx), 
+                                     max(data$AARx),
+                                     by = 1),
+                        expand = c(0,0)) + 
+     theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
+  }
+  
+  # Loop through plotdims to generate the plots
+
+  plots <- map(plotdims, ~.plot_ts(data = plotdata,
+                               dim = .x,
+                               vals = plotvals,
+                               alldims = alldims))
+
+  # Print plots without plotting message
+  walk(plots, print)
 } 
 
