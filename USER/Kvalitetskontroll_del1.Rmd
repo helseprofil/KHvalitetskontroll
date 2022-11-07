@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.3 (07.11.2022). 
+Version: 1.4 (07.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
@@ -29,15 +29,15 @@ dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+
+####
+# To get a list of variable names in the new and old KUBE, uncomment and run the following code: 
+# names(dfnew)
+# names(dfold)
+###
 ```
 **Input parameters: **
 ```{r include=FALSE}
-####
-# To get a list of variable names in the new and old KUBE, run the following code
-names(dfnew)
-names(dfold)
-###
-
 # To save files and report in correct folder
 PRODUCTIONYEAR <- 2023
 
@@ -61,12 +61,12 @@ COMPAREval <- "sumTELLER"
 # If you only want total numbers, this should be "GROUPdims <- NULL"
 GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER") 
 
-# Time series plots
+# Country-level time series plots
 # Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
 # Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
 # Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
 PLOTDIMS <- c("KJONN", "KODEGRUPPE")
-PLOTVALS <- c("sumTELLER", "sumNEVNER", "TELLER")
+PLOTVALS <- c("sumTELLER", "sumNEVNER")
 ```
 
 ```{r}
@@ -76,7 +76,8 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
     "\nValue to check for prikking: ", print_dim(PRIKKval),
     "\nLimit for prikking: ", PRIKKlimit,
     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
-    "\nDimensions to group output by: ", print_dim(GROUPdims))
+    "\nDimensions to group output by: ", print_dim(GROUPdims),
+    "\nCountry-level time series plotted for: ", print_dim(PLOTVALS), ", across: ", print_dim(PLOTDIMS), sep = "")
 ```
 
 # 1. Compare columns
@@ -186,7 +187,7 @@ CompareOslo(groupdim = GROUPdims)
 ```
 
 # 8. Country level time-series plots
-```{r fig.height=8, out.width = "100%"}
+```{r fig.height=2*length(PLOTVALS) + 2, out.width = "100%"}
 PlotTimeseries()
 ```
 
