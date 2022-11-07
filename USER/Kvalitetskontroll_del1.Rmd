@@ -42,7 +42,7 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 PRODUCTIONYEAR <- 2023
 
 # Standard dimensions, entered as c("dim1", "dim2", etc).
-STANDARDdims <- c("GEO", "AAR", "KJONN", "UTDANN", "INNVKAT") 
+STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER") 
 
 # Extra dimensions, entered as c("dim1", "dim2", etc).
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
@@ -187,7 +187,11 @@ CompareOslo(groupdim = GROUPdims)
 ```
 
 # 8. Country level time-series plots
+
+- Plots country-level time-series data for `r print_dim(PLOTVALS)`, to check for misclassification across: `r print_dim(PLOTDIMS)`
+
 ```{r fig.height=2*length(PLOTVALS) + 2, out.width = "100%"}
+# Default is to use PLOTDIMS and PLOTVALS defined in input.
 PlotTimeseries()
 ```
 
