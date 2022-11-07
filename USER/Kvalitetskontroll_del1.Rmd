@@ -8,13 +8,15 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.2 (13.10.2022). 
+Version: 1.3 (07.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+#source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+source("../R/setup.R")
+source("../R/functions_step1.R")
 ```
 
 # INPUT
@@ -22,11 +24,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded: **
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "TRANGBODD", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "TRANGBODD", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
@@ -39,11 +41,11 @@ names(dfold)
 ###
 
 # Standard dimensions, entered as c("dim1", "dim2", etc).
-STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT") 
+STANDARDdims <- c("GEO", "AAR", "KJONN", "UTDANN", "INNVKAT") 
 
 # Extra dimensions, entered as c("dim1", "dim2", etc).
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
-EXTRAdims <- c("BODD") 
+EXTRAdims <- "KODEGRUPPE"
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
@@ -56,7 +58,14 @@ COMPAREval <- "sumTELLER"
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
-GROUPdims <- c("BODD", "AAR", "ALDER") 
+GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER") 
+
+# Time series plots
+# Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
+# Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
+# Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
+PLOTDIMS <- c("KJONN", "KODEGRUPPE")
+PLOTVALS <- c("sumTELLER", "sumNEVNER")
 ```
 
 ```{r}
@@ -175,6 +184,12 @@ CompareBydelKommune(groupdim = GROUPdims)
 CompareOslo(groupdim = GROUPdims)
 ```
 
+# 8. Country level time-series plots
+```{r}
+PlotTimeseries()
+```
+
+
 ```{r eval = F}
 # Save report (instead of using the knit button)
 # Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
@@ -185,6 +200,6 @@ CompareOslo(groupdim = GROUPdims)
 
 SaveReport(productionyear = 2023,
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = NULL)
+           savename = "TEST_0711")
 ```
 
