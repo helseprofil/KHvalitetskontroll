@@ -9,6 +9,7 @@ library(gert)
 library(rmarkdown)
 library(tools)
 library(ggplot2)
+library(ggh4x)
 
 # Load internal functions
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")

@@ -287,6 +287,22 @@
         "zip"
       ]
     },
+    "ggh4x": {
+      "Package": "ggh4x",
+      "Version": "0.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "fb5b8e93007b61655d641cb8f806b240",
+      "Requirements": [
+        "cli",
+        "ggplot2",
+        "gtable",
+        "lifecycle",
+        "rlang",
+        "scales",
+        "vctrs"
+      ]
+    },
     "ggplot2": {
       "Package": "ggplot2",
       "Version": "3.3.6",
