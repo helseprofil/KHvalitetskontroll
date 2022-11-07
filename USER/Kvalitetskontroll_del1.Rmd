@@ -186,7 +186,7 @@ CompareOslo(groupdim = GROUPdims)
 ```
 
 # 8. Country level time-series plots
-```{r}
+```{r fig.width=12}
 PlotTimeseries()
 ```
 
@@ -203,6 +203,6 @@ PlotTimeseries()
 
 SaveReport(productionyear = PRODUCTIONYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = NULL)
+           savename = "TEST0711_2")
 ```
 

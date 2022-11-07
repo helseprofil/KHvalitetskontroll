@@ -29,6 +29,6 @@ if(!dir.exists("USER/Lokale filer, overskrives ikke")){
 # Set ggplot theme and color palette
 
 theme_set(theme_bw())
-theme_update(legend.position = "right", 
+theme_update(legend.position = "bottom", 
              panel.grid.minor = element_blank(),
              text = element_text(color = "black"))
