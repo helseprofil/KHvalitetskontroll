@@ -259,6 +259,8 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
   datatable(output, rownames = F)
 }
 
+
+
 #' CompareOslo
 #'
 #' @param data1 
@@ -328,7 +330,7 @@ PlotTimeseries <- function(data = dfnew,
   
   # If ALDER is included, only keep total (minALDERl_maxALDERh)
   if ("ALDER" %in% dimexist) {
-    plotdata <- .AggregateAge(plotdata = plotdata)
+    plotdata <- .AggregateAge(data = plotdata)
   }
   
   # Organize plotdata according to all dimensions
@@ -339,83 +341,94 @@ PlotTimeseries <- function(data = dfnew,
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
   if (length(dimextra) > 0 & !dimextra %in% plotdims) {
-    plotdata <- .AggregateExtradim(plotdata = plotdata,
+    plotdata <- .AggregateExtradim(data = plotdata,
                                    dimexist = dimexist,
                                    dimextra = dimextra,
                                    plotvals = plotvals)
-    plotdata
   }
   
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
-  # Create vector of potential plotting dimensions
   
-  alldims <- dimexist[!dimexist %in% c("GEO", "AAR", "ALDER", dimextra)]
-  
-  # create plotting function
-  .plot_ts <- function(data,
-                       dim,
-                       plotvals,
-                       alldims){
-   
-   totaldims <- alldims[!alldims %in% dim]
-   
-   data %>%
-     mutate(across(all_of(dim), as.factor)) %>% 
-     filter(if_all(all_of(totaldims), ~ .x == 0)) %>%
-     pivot_longer(cols = all_of(plotvals),
-                  names_to = "targetnumber",
-                  values_to = "yval") %>%
-     ggplot(aes(
-       x = AARx,
-       y = yval,
-       color = .data[[dim]],
-       group = .data[[dim]]
-     )) +
-     geom_point() +
-     geom_line() +
-     facet_grid(rows = vars(targetnumber),
-                scales = "free_y", 
-                switch = "y") + 
-     labs(x = "Year",
-          y = NULL,
-          title = paste0("Time series according to ", dim)) + 
-     scale_x_continuous(breaks = seq(min(data$AARx), 
-                                     max(data$AARx),
-                                     by = 1),
-                        expand = c(0,0)) + 
-     theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
-  }
+  totaldims <- dimexist[!dimexist %in% c("GEO", "AAR", "ALDER", dimextra)]
   
   # Loop through plotdims to generate the plots
 
   plots <- map(plotdims, ~.plot_ts(data = plotdata,
-                               dim = .x,
-                               plotvals = plotvals,
-                               alldims = alldims))
+                                   dim = .x,
+                                   plotvals = plotvals,
+                                   totaldims = totaldims,
+                                   dimextra = dimextra,
+                                   dimexist = dimexist))
 
   # Print plots without plotting message
   walk(plots, print)
 } 
 
-.AggregateExtradim <- function(plotdata, dimextra, dimexist, plotvals){
+.AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
   # Group by all existing standard dimensions
   groupcols <- dimexist[!dimexist %in% dimextra]
   # Identify value columns to average or sum
   sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
   avgcols <- plotvals[!plotvals %in% sumcols]
   # Aggregate plotvals, remove dimextra column, remove duplicated rows
-  plotdata[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
-  plotdata[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-  plotdata[, (dimextra) := NULL]
-  plotdata <- unique(plotdata)
+  data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
+  data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+  data[, (dimextra) := NULL]
+  data <- unique(data)
 }
 
-.AggregateAge <- function(plotdata){
-  plotdata[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
-                   ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
-  plotdata <- plotdata[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
-  plotdata[, ':=' (ALDERl = NULL, ALDERh = NULL)]
+.AggregateAge <- function(data){
+  data[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
+               ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
+  data <- data[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
+  data[, ':=' (ALDERl = NULL, ALDERh = NULL)]
+}
+
+# create plotting function
+.plot_ts <- function(data = plotdata, 
+                     dim,
+                     plotvals = plotvals,
+                     totaldims = totaldims,
+                     dimextra = dimextra,
+                     dimexist = dimexist){
+  
+  data <- copy(data)
+  
+  if(!dimextra %in% dim){
+    data <- .AggregateExtradim(data = data,
+                               dimextra = dimextra,
+                               dimexist = dimexist,
+                               plotvals = plotvals)
+  }
+  
+  totaldims <- totaldims[!totaldims %in% dim]
+  
+  data %>%
+    mutate(across(all_of(dim), as.factor)) %>% 
+    filter(if_all(all_of(totaldims), ~ .x == 0)) %>%
+    pivot_longer(cols = all_of(plotvals),
+                 names_to = "targetnumber",
+                 values_to = "yval") %>%
+    ggplot(aes(
+      x = AARx,
+      y = yval,
+      color = .data[[dim]],
+      group = .data[[dim]]
+    )) +
+    geom_point() +
+    geom_line() +
+    facet_grid(rows = vars(targetnumber),
+               scales = "free_y", 
+               switch = "y") + 
+    labs(x = "Year",
+         y = NULL,
+         title = paste0("Time series according to ", dim)) + 
+    scale_x_continuous(breaks = seq(min(data$AARx), 
+                                    max(data$AARx),
+                                    by = 1),
+                       expand = c(0,0)) + 
+    theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
 }
 
