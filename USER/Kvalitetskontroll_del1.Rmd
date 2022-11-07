@@ -203,6 +203,6 @@ PlotTimeseries()
 
 SaveReport(productionyear = PRODUCTIONYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = "TEST0711_2")
+           savename = NULL)
 ```
 
