@@ -182,6 +182,12 @@ CompareBydelKommune(groupdim = GROUPdims)
 CompareOslo(groupdim = GROUPdims)
 ```
 
+# 8. Country level time-series plots
+```{r}
+
+```
+
+
 ```{r eval = F}
 # Save report (instead of using the knit button)
 # Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
