@@ -340,7 +340,7 @@ PlotTimeseries <- function(data = dfnew,
   # aggregate plotvals to totals, remove extra dimensions, remove duplicated rows
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
-  if (length(dimextra) > 0 & !dimextra %in% plotdims) {
+  if (length(dimextra) > 0 && !dimextra %in% plotdims) {
     plotdata <- .AggregateExtradim(data = plotdata,
                                    dimexist = dimexist,
                                    dimextra = dimextra,
