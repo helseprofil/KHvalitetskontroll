@@ -398,7 +398,7 @@ PlotTimeseries <- function(data = dfnew,
   
   nrow <- ceiling(length(unique(data[[dim]]))/3)
              
-  if(!dimextra %in% dim){
+  if(length(dimextra) > 0 && !dimextra %in% dim){
     data <- .AggregateExtradim(data = data,
                                dimextra = dimextra,
                                dimexist = dimexist,
