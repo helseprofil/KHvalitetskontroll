@@ -199,7 +199,7 @@
 #' @param dims Character vector of dimension columns, defaults to DIMENSIONS
 #' @param vals Character vector of value volumns, defaults to VALUES
 #' @param dumps List of dump points, defaults to DUMPS
-#' @param productionyear To save output in the correct folder
+#' @param profileyear To save output in the correct folder
 #'
 #' @return
 #' @export
@@ -210,11 +210,11 @@ FormatData <- function(data1 = dfnew,
                        dims = DIMENSIONS,
                        vals = VALUES,
                        dumps = DUMPS,
-                       productionyear = PRODUCTIONYEAR){
+                       profileyear = PROFILEYEAR){
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
-  .CreateFolders(productionyear = productionyear,
+  .CreateFolders(profileyear = profileyear,
                  kubename = kubename)
   
   dumppath <- file.path("F:", 
@@ -223,7 +223,7 @@ FormatData <- function(data1 = dfnew,
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "NESSTAR_KUBER",
-                        productionyear,
+                        profileyear,
                         "KVALITETSKONTROLL",
                         kubename,
                         "FILDUMPER",

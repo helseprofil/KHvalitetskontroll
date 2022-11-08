@@ -4,7 +4,7 @@
 #'
 #' @param file File name. Locates file by partial matching. 
 #' #' @param bank Either "NH" or "KH", defaults to "KH"
-#' @param year Either a 4-digit number corresponding to production year, or "DATERT". Defaults to DATERT
+#' @param year Either a 4-digit number corresponding to profile year, or "DATERT". Defaults to DATERT
 #'
 #' @return
 #' @export
@@ -88,16 +88,16 @@ print_dim <- function(...){
 
 #' CreateFolders
 #' 
-#' Create Folder structure according to production year and new data file
+#' Create Folder structure according to profile year and new data file
 #'
-#' @param productionyear 
+#' @param profileyear 
 #' @param kubename 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-.CreateFolders <- function(productionyear = productionyear,
+.CreateFolders <- function(profileyear = profileyear,
                            kubename = kubename){
   
   basepath <- file.path("F:", 
@@ -107,14 +107,14 @@ print_dim <- function(...){
                         "VALIDERING", 
                         "NESSTAR_KUBER")
   
-  prodyeardir <- file.path(basepath, productionyear)
-  kvalkontrolldir <- file.path(prodyeardir, "KVALITETSKONTROLL")
+  profileyeardir <- file.path(basepath, profileyear)
+  kvalkontrolldir <- file.path(profileyeardir, "KVALITETSKONTROLL")
   kubedir <- file.path(kvalkontrolldir, kubename)
   filedumpdir <- file.path(kubedir, "FILDUMPER")
   plotdir <- file.path(kubedir, "PLOTT")
   
-  if(!dir.exists(prodyeardir)){
-    dir.create(prodyeardir)
+  if(!dir.exists(profileyeardir)){
+    dir.create(profileyeardir)
   }
   
   if(!dir.exists(kvalkontrolldir)){
@@ -134,7 +134,7 @@ print_dim <- function(...){
   }
 }
 
-SaveReport <- function(productionyear = 2023,
+SaveReport <- function(profileyear = 2023,
                        inputfile = "Kvalitetskontroll_del1.Rmd",
                        savename = NULL){
   
@@ -142,7 +142,7 @@ SaveReport <- function(productionyear = 2023,
   kubename <- .GetKubename(dfnew)
   
   # Create folder structure, if not existing
-  .CreateFolders(productionyear = productionyear,
+  .CreateFolders(profileyear = profileyear,
                  kubename = kubename)
   
   # define path to save file
@@ -152,7 +152,7 @@ SaveReport <- function(productionyear = 2023,
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "NESSTAR_KUBER",
-                        productionyear,
+                        profileyear,
                         "KVALITETSKONTROLL",
                         kubename)
   

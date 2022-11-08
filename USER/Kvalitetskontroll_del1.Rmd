@@ -22,13 +22,13 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded: **
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "BEFOLK_GK_2022-11", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "BEFOLK_GK", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
-                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = 2023) # DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new and old KUBE, uncomment and run the following code: 
@@ -39,34 +39,34 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 **Input parameters: **
 ```{r include=FALSE}
 # To save files and report in correct folder
-PRODUCTIONYEAR <- 2023
+PROFILEYEAR <- 2023
 
 # Standard dimensions, entered as c("dim1", "dim2", etc).
 STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER") 
 
 # Extra dimensions, entered as c("dim1", "dim2", etc).
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
-EXTRAdims <- "KODEGRUPPE"
+EXTRAdims <- NULL
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
-PRIKKval <- "sumTELLER"
-PRIKKlimit <- 12
+PRIKKval <- NA
+PRIKKlimit <- NA
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
-COMPAREval <- "sumTELLER" 
+COMPAREval <- "TELLER" 
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
-GROUPdims <- c("KODEGRUPPE", "AAR", "ALDER") 
+GROUPdims <- c("AAR", "ALDER") 
 
 # Country-level time series plots
 # Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
 # Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
 # Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
-PLOTDIMS <- c("KJONN", "KODEGRUPPE")
-PLOTVALS <- c("sumTELLER", "sumNEVNER")
+PLOTDIMS <- c("KJONN")
+PLOTVALS <- c("TELLER", "RATE", "SMR")
 ```
 
 ```{r}
@@ -197,15 +197,15 @@ PlotTimeseries()
 
 ```{r eval = F}
 # Save report (instead of using the knit button)
-# Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(production year)/KVALITETSKONTROLL/KUBENAVN/
-# Make sure productionyear is correctly defined in INPUT section
+# Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(profile year)/KVALITETSKONTROLL/KUBENAVN/
+# Make sure PROFILEYEAR is correctly defined in INPUT section
 # If savename = NULL, file name will default to the full cube name (incl date tag)
 
 # NB: 
 # You must run the INPUT section before saving the report, to generate all the objects
 # You must ALSO save the document (Ctrl + S) before saving the report using this function!
 
-SaveReport(productionyear = PRODUCTIONYEAR, 
+SaveReport(profileyear = PROFILEYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
            savename = NULL)
 ```
