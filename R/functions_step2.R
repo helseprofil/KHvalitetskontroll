@@ -342,19 +342,18 @@ CompareNewOld <- function(data = compareKUBE,
   for(i in valexist){
     
     tab <- .CompareValueTab(data = data,
-                            val = i,
+                            val = "TELLER",
                             dims = dimexist)
     
     cat("\n")
     cat("##", i, "\n")
     
-    if(nrow(tab) == 0) {
+    print(
+    if(nrow(tab) == 0){
       cat("\n", i, "is identical")
-    }
-    
-    if(nrow(tab) != 0) {
-      print(tab)
-    }
+    } else {
+      tab
+    })
     
     cat("\n")
   
