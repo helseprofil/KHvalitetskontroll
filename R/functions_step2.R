@@ -349,7 +349,7 @@ CompareNewOld <- function(data = compareKUBE,
     if(nrow(.y) == 0){
       cat("\n", .x, "is identical\n")
     } else {
-      print(datatable(.y))
+      print(.y)
     }
   }
   )
