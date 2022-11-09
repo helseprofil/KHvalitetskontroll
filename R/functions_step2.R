@@ -352,7 +352,7 @@ CompareNewOld <- function(data = compareKUBE,
     if(nrow(tab) == 0){
       cat("\n", i, "is identical")
     } else {
-      tab
+      datatable(tab, rownames = F)
     })
     
     cat("\n")
@@ -378,8 +378,16 @@ CompareNewOld <- function(data = compareKUBE,
 }
 
 .CompareValueTab <- function(data = data,
-                             val = val,
-                             dims = dimexist){
+                             val = val){
+  
+  # Identify existing dimensions
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
+  
+  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(data)]
   
   new <- paste0(val, "_new")
   old <- paste0(val, "_old")
@@ -391,8 +399,9 @@ CompareNewOld <- function(data = compareKUBE,
   
   data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
                        Relative = round(data[[new]]/data[[old]], 3))]
-  setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
+  setcolorder(data, c(dimexist, new, old, "Absolute", "Relative"))
   
   data[]
   
 }
+
