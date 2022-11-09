@@ -339,20 +339,42 @@ CompareNewOld <- function(data = compareKUBE,
     str_replace("_new", "")
   
   
-  tables <- map(valexist, ~.CompareValueTab(data = data,
-                                           val = .x,
-                                           dims = dimexist))
-  
-  walk2(valexist, tables, function(.x, .y){
-    cat("\n##", .x, "\n")
+  for(i in valexist){
     
-    if(nrow(.y) == 0){
-      cat("\n", .x, "is identical\n")
-    } else {
-      print(.y)
+    tab <- .CompareValueTab(data = data,
+                            val = i,
+                            dims = dimexist)
+    
+    cat("\n")
+    cat("##", i, "\n")
+    
+    if(nrow(tab) == 0) {
+      cat("\n", i, "is identical")
     }
-  }
-  )
+    
+    if(nrow(tab) != 0) {
+      print(tab)
+    }
+    
+    cat("\n")
+  
+}
+  
+  
+  # tables <- map(valexist, ~.CompareValueTab(data = data,
+  #                                          val = .x,
+  #                                          dims = dimexist))
+  # 
+  # walk2(valexist, tables, function(.x, .y){
+  #   cat("\n##", .x, "\n")
+  #   
+  #   if(nrow(.y) == 0){
+  #     cat("\n", .x, "is identical\n")
+  #   } else {
+  #     print(.y)
+  #   }
+  # }
+  # )
 
 }
 
