@@ -5,25 +5,60 @@ date: "2022-09-29"
 output: html_document
 ---
 
-- This document contain useful functions for exploration of KUBE. 
+- This document contain useful functions for exploration of data files
 - Alternative to open the file in Excel
+- This document should only be used interactively when needed, not saved as report.
+- Code chunks may contain several alternative functions. 
+    - Run individual functions by placing cursor within function and press Ctrl + Enter . 
 
 Run this to load functions: 
+
 ```{r setup, include=FALSE, message=FALSE}
 knitr::opts_chunk$set(cache = F, echo = F)
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
-# Collection of useful commands for interactive check of KUBE
 
-If the data file is not loaded in the environment, 
+
+# Load data
+
+* Load data file into environment
+* For KUBE files in DATERT or NESSTAR-folders, the ReadFile function may be used. 
+* For other files (.csv or .rds), use the other functions
+
 ```{r}
-dfnew <- ReadFile(file = "HKR_2022-09-27-16-27", # Matching, if >1 file found in folder, specify file name further
+# KUBE files in DATERT or NESSTAR-folders
+data <- ReadFile(file = "BEFOLK_GK", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "2023") # "DATERT" or 4-digit year if file in NESSTAR-folder
+
+# Other CSV files
+data <- fread("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/ORGDATA/SSB/ENEFHIB/ORG/2023/ENEFHIB.csv")
+
+# .Rda-files
+
+data <- readRDS("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/MELLOMPROD/R/STABLAORG/DATERT/TRANGBODDHET_2022-11-07-18-38.rds")
+
+
 ```
 
-## Show full KUBE
+# Show full data
+
+* Scrollable table
 
 ```{r include = F, eval = F}
-dfnew 
+data 
+
+# To show in separate (larger) window 
+View(data)
 ```
+
+# Check if two objects are identical
+
+* Check if two objects (e.g. data files) are identical
+* Insert name of the objects to be compared
+* Returns TRUE or FALSE
+
+```{r}
+identical(object1, object2)
+```
+
