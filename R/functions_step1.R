@@ -160,7 +160,8 @@ CheckPrikk <- function(data1 = dfnew,
   } else {
     cat(paste0("\nN values <= limit: ", nrow(filtered)))
     output <- filtered %>% 
-      select(any_of(standarddims), any_of(extradims), any_of(val), everything()) 
+      select(any_of(standarddims), any_of(extradims), any_of(val), everything()) %>% 
+      mutate(across(where(is.numeric), ~round(.x, 2)))
     DT::datatable(output, rownames = F)
   }
   }
