@@ -323,3 +323,55 @@ FormatData <- function(data1 = dfnew,
   cat("\nDONE!")
 
 }
+
+CompareNewOld <- function(data = compareKUBE,
+                          vals = VALUES){
+  
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
+  
+  # Identify existing dimensions
+  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(data)]
+  valexist <- names(data)[str_detect(names(data), "_new")] %>%
+    str_replace("_new", "")
+  
+  
+  tables <- map(valexist, ~.CompareValueTab(data = data,
+                                           val = .x,
+                                           dims = dimexist))
+  
+  walk2(valexist, tables, function(.x, .y){
+    cat("\n##", .x, "\n")
+    
+    if(nrow(.y) == 0){
+      cat("\n", .x, "is identical\n")
+    } else {
+      print(datatable(.y))
+    }
+  }
+  )
+
+}
+
+.CompareValueTab <- function(data = data,
+                             val = val,
+                             dims = dimexist){
+  
+  new <- paste0(val, "_new")
+  old <- paste0(val, "_old")
+  
+  # Filter out rows where *_new != *_old
+  data <- data[data[[new]] != data[[old]]]
+  
+  # Create Absolute and Relative difference
+  
+  data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
+                       Relative = round(data[[new]]/data[[old]], 3))]
+  setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
+  
+  data[]
+  
+}
