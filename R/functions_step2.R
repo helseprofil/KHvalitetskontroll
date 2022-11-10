@@ -175,7 +175,7 @@
            starts_with(paste0(commonvals, "_")),
            everything()) %>% 
     .FixDecimals()
-    
+  setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
   
 }
 
