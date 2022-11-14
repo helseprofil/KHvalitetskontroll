@@ -131,6 +131,57 @@ ComparePrikk <- function(data1 = dfnew,
     
 }
 
+#' Compare censored observations across strata
+#'
+#' @param data1 
+#' @param data2 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ComparePrikkTS <- function(data1 = dfnew,
+                           data2 = dfold){
+  
+  # Identify common columns, and extract dimensions
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
+  commoncols <- names(data1)[names(data1) %in% names(data2)]
+  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% commoncols]
+  groupdims <- dimexist[str_detect(dimexist, "AAR", negate = T)]
+  
+  # combine data, calculate n strata
+  data <- rbindlist(list(copy(data1)[, KUBE := "New"], 
+                         copy(data2)[, KUBE := "Old"]))
+  n_strata <- data[, list(dt=list(.SD)), by = groupdims][, .N]
+  
+  # Order data by dimensions
+  data[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
+  setkeyv(data, c(dimexist[str_detect(dimexist, "AAR", negate = T)], "AARx"))
+  data[, AARx := NULL]
+  
+  # Calculate n censored observations, 
+  # Aggregate to N prikk per strata
+  # Calculate proportions of time series with n prikk
+  data <- data[, .(N_PRIKK = sum(SPVFLAGG != 0, na.rm = T)), by = c(groupdims, "KUBE")]
+  data <- data[, .(PRIKK = .N), by = .(KUBE, N_PRIKK)]
+  data[, ANDEL := paste(round(100*PRIKK/n_strata, 1), "%")]
+  
+  # Create output table
+  out <- dcast(data, 
+               N_PRIKK~KUBE,
+               value.var = c("PRIKK", "ANDEL"))
+  outnames <- names(out)
+  setcolorder(out, c("N_PRIKK",
+                     outnames[str_detect(outnames, "New")],
+                     outnames[str_detect(outnames, "Old")]))
+  
+  DT::datatable(out, rownames = F)
+}
+
 #' CheckPrikk
 #' 
 #' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. If any number below the limit is detected, all rows containing unacceptable values are returned for inspection. 
