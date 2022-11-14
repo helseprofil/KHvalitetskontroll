@@ -153,22 +153,19 @@ ComparePrikkTS <- function(data1 = dfnew,
   dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% commoncols]
   groupdims <- dimexist[str_detect(dimexist, "AAR", negate = T)]
   
-  # combine data, calculate n strata
+  # combine data
   data <- rbindlist(list(copy(data1)[, KUBE := "New"], 
                          copy(data2)[, KUBE := "Old"]))
-  n_strata <- data[, list(dt=list(.SD)), by = groupdims][, .N]
-  
-  # Order data by dimensions
-  data[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
-  setkeyv(data, c(dimexist[str_detect(dimexist, "AAR", negate = T)], "AARx"))
-  data[, AARx := NULL]
   
   # Calculate n censored observations, 
   # Aggregate to N prikk per strata
   # Calculate proportions of time series with n prikk
-  data <- data[, .(N_PRIKK = sum(SPVFLAGG != 0, na.rm = T)), by = c(groupdims, "KUBE")]
+
+  data <- data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
+  data <- data[, .(N_PRIKK = sum(FLAGG)), by = c(groupdims, "KUBE")]
   data <- data[, .(PRIKK = .N), by = .(KUBE, N_PRIKK)]
-  data[, ANDEL := paste(round(100*PRIKK/n_strata, 1), "%")]
+  data[, ANDEL := paste(round(100*PRIKK/sum(PRIKK), 1), "%"), by = KUBE]
+
   
   # Create output table
   out <- dcast(data, 
