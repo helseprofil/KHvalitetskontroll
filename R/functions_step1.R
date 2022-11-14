@@ -164,7 +164,7 @@ ComparePrikkTS <- function(data1 = dfnew,
   data <- data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
   data <- data[, .(N_PRIKK = sum(FLAGG)), by = c(groupdims, "KUBE")]
   data <- data[, .(PRIKK = .N), by = .(KUBE, N_PRIKK)]
-  data[, ANDEL := paste(round(100*PRIKK/sum(PRIKK), 1), "%"), by = KUBE]
+  data[, ANDEL := round(PRIKK/sum(PRIKK), 3), by = KUBE]
 
   
   # Create output table
