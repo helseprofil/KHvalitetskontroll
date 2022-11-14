@@ -131,7 +131,7 @@ CheckPrikk()
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-ComparePrikk(groupdim = NULL)
+ComparePrikk(groupdim = EXTRAdims)
 ```
 
 ## 2C. Check censoring within each time series
@@ -221,6 +221,6 @@ PlotTimeseries()
 
 SaveReport(profileyear = PROFILEYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = "TEST")
+           savename = NULL)
 ```
 
