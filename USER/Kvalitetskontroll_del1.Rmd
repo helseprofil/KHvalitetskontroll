@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.4 (07.11.2022). 
+Version: 1.5 (14.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
@@ -22,13 +22,13 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded: **
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "BEFOLK_GK_2022-11", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "KUHR_2022-11-10", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "BEFOLK_GK", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
-                  folder = 2023) # DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new and old KUBE, uncomment and run the following code: 
@@ -46,12 +46,12 @@ STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER")
 
 # Extra dimensions, entered as c("dim1", "dim2", etc).
 # If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
-EXTRAdims <- NULL
+EXTRAdims <- "KODEGRUPPE"
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
-PRIKKval <- NA
-PRIKKlimit <- NA
+PRIKKval <- "sumTELLER"
+PRIKKlimit <- 12
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
 COMPAREval <- "TELLER" 
@@ -65,7 +65,7 @@ GROUPdims <- c("AAR", "ALDER")
 # Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
 # Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
 # Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
-PLOTDIMS <- c("KJONN")
+PLOTDIMS <- c("KJONN", "KODEGRUPPE")
 PLOTVALS <- c("TELLER", "RATE", "SMR")
 ```
 
@@ -80,8 +80,9 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
     "\nCountry-level time series plotted for: ", print_dim(PLOTVALS), ", across: ", print_dim(PLOTDIMS), sep = "")
 ```
 
-# 1. Compare columns
+# 1. Compare columns and dimensions
 
+## 1A. Compare columns
 - Check whether there are any new columns (not present in the old kube)
 - Check if there are any expired columns (not present in the new kube)
 
@@ -89,7 +90,7 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
 CompareCols()
 ```
 
-# 2. Compare dimensions
+## 1B. Compare dimensions
 
 Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 
@@ -103,7 +104,19 @@ Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 CompareDims()
 ```
 
-# 3. Compare number of consored observations
+# 2. Check censoring
+
+## 2A. Are all values below the limit censored?
+
+-   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
+-   If everything is ok, the function returns a confirmation.
+-   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection.
+
+```{r}
+CheckPrikk()
+```
+
+## 2B. Compare number of censored observations
 
 - Summarises number of censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE, grouped by: `r print_dim(EXTRAdims)`
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
@@ -118,20 +131,21 @@ CompareDims()
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-ComparePrikk(groupdim = EXTRAdims)
+ComparePrikk(groupdim = NULL)
 ```
 
-# 4. Are all values below the limit censored?
+## 2C. Check censoring within each time series
 
--   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
--   If everything is ok, the function returns a confirmation.
--   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection.
+- Across all strata, summarizes number and proportion of time series with 0 (complete), 1, 2, ..., max (all cencored), etc censored observations
 
 ```{r}
-CheckPrikk()
+ComparePrikkTS()
 ```
 
-# 5. Does FYLKE sum to LAND?
+
+# 3. Lower sums up to higher geographical level 
+
+## 3A. Does FYLKE sum to LAND?
 
 -   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
@@ -149,7 +163,7 @@ CheckPrikk()
 CompareLandFylke(groupdim = GROUPdims)
 ```
 
-# 6. Does BYDEL sum to KOMMUNE?
+## 3B. Does BYDEL sum to KOMMUNE?
 
 -   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
@@ -168,7 +182,7 @@ CompareLandFylke(groupdim = GROUPdims)
 CompareBydelKommune(groupdim = GROUPdims)
 ```
 
-# 7. Oslo KOMMUNE = Oslo FYLKE?
+## 3C. Oslo KOMMUNE = Oslo FYLKE?
 
 -   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
@@ -186,7 +200,7 @@ CompareBydelKommune(groupdim = GROUPdims)
 CompareOslo(groupdim = GROUPdims)
 ```
 
-# 8. Country level time-series plots
+# 4. Country level time-series plots
 
 - Plots country-level time-series data for `r print_dim(PLOTVALS)`, to check for misclassification across: `r print_dim(PLOTDIMS)`
 
@@ -207,6 +221,6 @@ PlotTimeseries()
 
 SaveReport(profileyear = PROFILEYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
-           savename = NULL)
+           savename = "TEST")
 ```
 
