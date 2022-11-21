@@ -207,10 +207,14 @@
 #' @examples
 FormatData <- function(data1 = dfnew,
                        data2 = dfold,
-                       dims = DIMENSIONS,
-                       vals = VALUES,
                        dumps = DUMPS,
                        profileyear = PROFILEYEAR){
+  
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
@@ -231,8 +235,8 @@ FormatData <- function(data1 = dfnew,
 
   # Identify dimension columns present in new and old KUBE
   # Separate into common, new, and expired dimensions for flagging, write standard msg
-  dimnew <- names(data1[, names(data1) %in% dims, with = F])
-  dimold <- names(data2[, names(data2) %in% dims, with = F])
+  dimnew <- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
+  dimold <- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
   commondims <- dimnew[dimnew %in% dimold]
   newdims <- dimnew[!dimnew %in% dimold]
   expdims <- dimold[!dimold %in% dimnew]
@@ -248,8 +252,8 @@ FormatData <- function(data1 = dfnew,
   
   # Identify value columns present in new and old KUBE
   # Separate into common, new, and expired values, write standard msg
-  valnew <- names(data1[, names(data1) %in% vals, with = F])
-  valold <- names(data2[, names(data2) %in% vals, with = F])
+  valnew <- names(data1)[!names(data1) %in% .ALL_DIMENSIONS]
+  valold <- names(data2)[!names(data2) %in% .ALL_DIMENSIONS]
   commonvals <- valnew[valnew %in% valold]
   newvals <- valnew[!valnew %in% valold]
   expvals <- valold[!valold %in% valnew]
@@ -262,7 +266,6 @@ FormatData <- function(data1 = dfnew,
   
   msg_expvals <- case_when(length(expvals) == 0 ~ "\n-No expired value columns.",
                       TRUE ~ paste0("\n-Expired value columns found: ", str_c(expvals, collapse = ", ")))
-  
   
   # Flag new KUBE
   cat("STARTS flagging new kube:")
