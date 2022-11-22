@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.5 (14.11.2022). 
+Version: 1.5.1 (17.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r setup, include=FALSE}
@@ -19,23 +19,34 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # INPUT
 
-**Data files loaded: **
+**Data files loaded**
+
+*New file:* 
 ```{r echo = F}
-## Load data
-dfnew <- ReadFile(file = "KUHR_2022-11-10", # Matching, if >1 file found in folder, specify file name further
+## Load new data file
+dfnew <- ReadFile(file = "HKR_2022-11-21", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
+####
+# To get a list of variable names in the new KUBE, uncomment and run the following code: 
+# names(dfnew)
+###
+```
+
+*Old file for comparison:*
+```{r}
+# Load old data file
 dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
-# To get a list of variable names in the new and old KUBE, uncomment and run the following code: 
-# names(dfnew)
+# To get a list of variable names in the old KUBE, uncomment and run the following code: 
 # names(dfold)
 ###
 ```
+
 **Input parameters: **
 ```{r include=FALSE}
 # To save files and report in correct folder
@@ -66,7 +77,7 @@ GROUPdims <- c("AAR", "ALDER")
 # Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
 # Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
 PLOTDIMS <- c("KJONN", "KODEGRUPPE")
-PLOTVALS <- c("TELLER", "RATE", "SMR")
+PLOTVALS <- c("TELLER", "RATE", "SMR", "MEIS")
 ```
 
 ```{r}
