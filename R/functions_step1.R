@@ -147,10 +147,9 @@ ComparePrikkTS <- function(data1 = dfnew,
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
     .ALL_DIMENSIONS <- ALL_DIMENSIONS
-    rm(ALL_DIMENSIONS)
   }
   commoncols <- names(data1)[names(data1) %in% names(data2)]
-  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% commoncols]
+  dimexist <- commoncols[commoncols %in% .ALL_DIMENSIONS]
   groupdims <- dimexist[str_detect(dimexist, "AAR", negate = T)]
   
   # combine data
@@ -364,7 +363,6 @@ PlotTimeseries <- function(data = dfnew,
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
     .ALL_DIMENSIONS <- ALL_DIMENSIONS
-    rm(ALL_DIMENSIONS)
   }
   
   plotdata <- copy(data)
@@ -375,7 +373,7 @@ PlotTimeseries <- function(data = dfnew,
   plotdata <- plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotvals), with = F]
   
   # Identify all dimensions in the file
-  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(plotdata)]
+  dimexist <- names(plotdata)[names(plotdata) %in% .ALL_DIMENSIONS]
   
   # If ALDER is included, only keep total (minALDERl_maxALDERh)
   if ("ALDER" %in% dimexist) {
