@@ -154,8 +154,8 @@ ComparePrikkTS <- function(data1 = dfnew,
   groupdims <- dimexist[str_detect(dimexist, "AAR", negate = T)]
   
   # combine data
-  data <- rbindlist(list(copy(data1)[, KUBE := "New"], 
-                         copy(data2)[, KUBE := "Old"]))
+  data <- rbindlist(list(copy(data1)[, ..commoncols][, KUBE := "New"], 
+                         copy(data2)[, ..commoncols][, KUBE := "Old"]))
   
   # Calculate n censored observations, 
   # Aggregate to N prikk per strata
