@@ -327,6 +327,38 @@ FormatData <- function(data1 = dfnew,
 
 }
 
+CompareDiffRowsN <- function(data = compareKUBE){
+  
+  # Identify existing dimensions
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+  }
+  
+  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
+  
+  .RowDiffN <- function(data,
+                        val){
+    
+    new <- paste0(val, "_new")
+    old <- paste0(val, "_old")
+    
+    nrow <- nrow(data[data[[new]] != data[[old]]])
+    
+    tibble(Value = val,
+           `N row diff` = nrow)
+  }
+  
+  map_df(vals,
+         ~.RowDiffN(data = data, 
+                    val = .x))
+}
+
+
+
+
+
 CompareNewOld <- function(data = compareKUBE,
                           vals = VALUES){
   
@@ -381,16 +413,8 @@ CompareNewOld <- function(data = compareKUBE,
 }
 
 .CompareValueTab <- function(data = data,
+                             dims = dims,
                              val = val){
-  
-  # Identify existing dimensions
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-    rm(ALL_DIMENSIONS)
-  }
-  
-  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(data)]
   
   new <- paste0(val, "_new")
   old <- paste0(val, "_old")
