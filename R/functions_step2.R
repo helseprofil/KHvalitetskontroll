@@ -327,6 +327,14 @@ FormatData <- function(data1 = dfnew,
 
 }
 
+#' How many rows differs for each value column
+#'
+#' @param data defaults to compareKUBE
+#'
+#' @return
+#' @export
+#'
+#' @examples
 CompareDiffRowsN <- function(data = compareKUBE){
   
   # Identify existing dimensions
@@ -355,12 +363,18 @@ CompareDiffRowsN <- function(data = compareKUBE){
                     val = .x))
 }
 
-
-
-
-
-CompareNewOld <- function(data = compareKUBE,
-                          vals = VALUES){
+#' Compare new and old value
+#' 
+#' Prints one table per value column, highlighting the absolute and relative 
+#' difference between the new and the old file
+#'
+#' @param data defaults to compareKUBE
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CompareNewOld <- function(data = compareKUBE){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -369,66 +383,31 @@ CompareNewOld <- function(data = compareKUBE,
   }
   
   # Identify existing dimensions
-  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(data)]
-  valexist <- names(data)[str_detect(names(data), "_new")] %>%
-    str_replace("_new", "")
+  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
   
+  .CompareValue <- function(data,
+                            dims,
+                            val){
+    
+    new <- paste0(val, "_new")
+    old <- paste0(val, "_old")
+    
+    # Filter out rows where *_new != *_old
+    data <- data[data[[new]] != data[[old]]]
+    
+    # Create Absolute and Relative difference
+    
+    data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
+                         Relative = round(data[[new]]/data[[old]], 3))]
+    setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
+    
+  }
   
-  for(i in valexist){
-    
-    tab <- .CompareValueTab(data = data,
-                            val = "TELLER",
-                            dims = dimexist)
-    
-    cat("\n")
-    cat("##", i, "\n")
-    
-    print(
-    if(nrow(tab) == 0){
-      cat("\n", i, "is identical")
-    } else {
-      datatable(tab, rownames = F)
-    })
-    
-    cat("\n")
+  tables <- map(vals, 
+                ~.CompareValue(data = data,
+                              dims = dims,
+                              val = .x))
   
+  walk(tables, print)
 }
-  
-  
-  # tables <- map(valexist, ~.CompareValueTab(data = data,
-  #                                          val = .x,
-  #                                          dims = dimexist))
-  # 
-  # walk2(valexist, tables, function(.x, .y){
-  #   cat("\n##", .x, "\n")
-  #   
-  #   if(nrow(.y) == 0){
-  #     cat("\n", .x, "is identical\n")
-  #   } else {
-  #     print(.y)
-  #   }
-  # }
-  # )
-
-}
-
-.CompareValueTab <- function(data = data,
-                             dims = dims,
-                             val = val){
-  
-  new <- paste0(val, "_new")
-  old <- paste0(val, "_old")
-  
-  # Filter out rows where *_new != *_old
-  data <- data[data[[new]] != data[[old]]]
-  
-  # Create Absolute and Relative difference
-  
-  data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
-                       Relative = round(data[[new]]/data[[old]], 3))]
-  setcolorder(data, c(dimexist, new, old, "Absolute", "Relative"))
-  
-  data[]
-  
-}
-
