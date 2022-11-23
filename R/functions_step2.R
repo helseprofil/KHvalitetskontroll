@@ -369,12 +369,14 @@ CompareDiffRowsN <- function(data = compareKUBE){
 #' difference between the new and the old file
 #'
 #' @param data defaults to compareKUBE
+#' @param profileyear 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-CompareNewOld <- function(data = compareKUBE){
+CompareNewOld <- function(data = compareKUBE,
+                          profileyear = PROFILEYEAR){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -386,9 +388,27 @@ CompareNewOld <- function(data = compareKUBE){
   dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
   vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
   
+  # Get filepath for filedumps
+  kubename <- .GetKubename(data1)
+  .CreateFolders(profileyear = profileyear,
+                 kubename = kubename)
+  
+  dumppath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        profileyear,
+                        "KVALITETSKONTROLL",
+                        kubename,
+                        "FILDUMPER",
+                        "/")
+  
   .CompareValue <- function(data,
                             dims,
-                            val){
+                            val,
+                            dumppath = dumppath){
     
     new <- paste0(val, "_new")
     old <- paste0(val, "_old")
