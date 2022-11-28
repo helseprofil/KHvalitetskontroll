@@ -8,7 +8,9 @@
 #'
 #' @param data1 new KUBE, defaults to dfnew
 #' @param data2 old KUBE, defaults to dfold
-#' @param dims character vector of dimensions columns, defaults to DIMENSIONS set in INPUT
+#' @param commondims common dimensions for dfnew and old, for flagging of new rows
+#' @param newdims new dimensions, for flagging of new rows (not totals)
+#' @param vals value columns in dfnew, for outlier detection
 #'
 #' @return
 #' @export
@@ -17,11 +19,12 @@
 .FlagNew <- function(data1, 
                      data2, 
                      commondims,
-                     newdims){
+                     newdims,
+                     vals){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
-  # Sorts KUBE according to common and new dims
-  dfnew_flag <<- copy(data1)[, newrow := 0L]
+  # Sorts KUBE according to common and new dimensions
+  dfnew_flag <<- copy(data1)[, `:=` (newrow = 0L)]
   setkeyv(dfnew_flag, c(commondims, newdims))
   
   # For common dimensions, flag all rows with new levels 
@@ -30,15 +33,20 @@
        ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
                    newrow := 1L])
   
-  cat("\n-For common dimensions, flagged all rows with new levels")
+  cat("\n-For common dimensions, flagged all rows with new levels as new rows")
   
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(newdims) != 0) {
     walk(newdims,
          ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
                      newrow := 1L])
-    cat("\n-For new dimensions, flagged all rows not representing total numbers")
+    cat("\n-For new dimensions, flagged all rows not representing total numbers as new rows")
   } 
+  
+  # Outlier detection
+  # Loop through all value columns except SPVFLAGG and .n-columns
+  outliervals <- vals[!vals %in% c("SPVFLAGG", 
+                                   grep(".n", vals, value = T))]
   
   cat("\n-Flagged version of new KUBE created: dfnew_flag")
 }
@@ -276,7 +284,8 @@ FormatData <- function(data1 = dfnew,
   .FlagNew(data1 = data1, 
            data2 = data2, 
            commondims = commondims,
-           newdims = newdims)
+           newdims = newdims,
+           vals = valnew)
 
   cat("\n\nSTARTS flagging old kube:")
   cat(msg_commondims)
@@ -366,7 +375,9 @@ CompareDiffRowsN <- function(data = compareKUBE){
 #' Compare new and old value
 #' 
 #' Prints one table per value column, highlighting the absolute and relative 
-#' difference between the new and the old file
+#' difference between the new and the old file. 
+#' 
+#' Produces an R object per value column for differing rows
 #'
 #' @param data defaults to compareKUBE
 #' @param profileyear 
