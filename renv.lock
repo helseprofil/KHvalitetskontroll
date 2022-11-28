@@ -289,10 +289,10 @@
     },
     "ggh4x": {
       "Package": "ggh4x",
-      "Version": "0.2.2",
+      "Version": "0.2.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "fb5b8e93007b61655d641cb8f806b240",
+      "Hash": "12a9567dfa0194970dde0a3089bd7efe",
       "Requirements": [
         "cli",
         "ggplot2",
