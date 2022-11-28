@@ -48,3 +48,5 @@ cat("\nWelcome to KHvalitetskontroll\n",
     "\n---\n")
 
 rm(updatemsg)
+
+renv::status()
