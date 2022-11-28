@@ -22,13 +22,11 @@ source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R"
 rm(ALL_DIMENSIONS)
 
 # Checks folder structure and create a folder for local files
-
 if(!dir.exists("USER/Lokale filer, overskrives ikke")){
   dir.create("USER/Lokale filer, overskrives ikke")
 }
 
 # Set ggplot theme and color palette
-
 theme_set(theme_bw())
 theme_update(legend.position = "top", 
              panel.grid.minor = element_blank(),
@@ -36,7 +34,6 @@ theme_update(legend.position = "top",
              plot.margin = margin(t = 1, b = 1, r = 1, unit = "cm"))
 
 # Welcome messages
-
 cat("\nWelcome to KHvalitetskontroll\n", 
     "\n---\n", 
     "\nAvailable user files:\n",
@@ -49,4 +46,5 @@ cat("\nWelcome to KHvalitetskontroll\n",
 
 rm(updatemsg)
 
+cat("\n Controlling package versions:\n")
 renv::status()
