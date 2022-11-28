@@ -41,7 +41,9 @@ cat("\nWelcome to KHvalitetskontroll\n",
     "- Kvalitetskontroll_del2.Rmd\n",
     "- Interactive.Rmd (not active)",
     "\n---\n",
-    updatemsg, 
+    if(exists("updatemsg")) {
+      updatemsg
+      },
     "\n---\n")
 
 rm(updatemsg)
