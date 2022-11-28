@@ -23,29 +23,19 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded**
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "BEFOLK_GK_2022-11", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR_2022-11-21", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "BEFOLK_GK", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
-                  folder = 2023) # DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 
 ```{r}
 # To save files and report in correct folder
 PROFILEYEAR <- 2023
 ####
-# To get a list of variable names in the new and old KUBE, run the following code
-names(dfnew)
-names(dfold)
-###
-
-# Define all dimensions used to identify new or expired rows in the two KUBEs
-DIMENSIONS <- c("GEO", "AAR", "KJONN", "ALDER")
-
-# Define all value columns to be compared between the two KUBEs
-VALUES <- c("TELLER", "RATE", "SMR")
 
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
@@ -72,11 +62,16 @@ cat("DIMENSION columns: ", print_dim(DIMENSIONS),
 FormatData()
 ```
 
-# Time-series across selected dimensions
-```{r message = F}
-PlotTimeseries(dims = "BODD",
-               vals = PLOTTVALS)
+# Compare
+
+## Number of different rows
+
+- In the compareKUBE, how many rows are different for each value column
+```{r}
+CompareDiffRowsN(data = compareKUBE)
 ```
+
+
 
 ```{r eval = F}
 # Save report (instead of using the knit button)

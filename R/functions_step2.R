@@ -8,7 +8,9 @@
 #'
 #' @param data1 new KUBE, defaults to dfnew
 #' @param data2 old KUBE, defaults to dfold
-#' @param dims character vector of dimensions columns, defaults to DIMENSIONS set in INPUT
+#' @param commondims common dimensions for dfnew and old, for flagging of new rows
+#' @param newdims new dimensions, for flagging of new rows (not totals)
+#' @param vals value columns in dfnew, for outlier detection
 #'
 #' @return
 #' @export
@@ -17,11 +19,12 @@
 .FlagNew <- function(data1, 
                      data2, 
                      commondims,
-                     newdims){
+                     newdims,
+                     vals){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
-  # Sorts KUBE according to common and new dims
-  dfnew_flag <<- copy(data1)[, newrow := 0L]
+  # Sorts KUBE according to common and new dimensions
+  dfnew_flag <<- copy(data1)[, `:=` (newrow = 0L)]
   setkeyv(dfnew_flag, c(commondims, newdims))
   
   # For common dimensions, flag all rows with new levels 
@@ -30,15 +33,20 @@
        ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
                    newrow := 1L])
   
-  cat("\n-For common dimensions, flagged all rows with new levels")
+  cat("\n-For common dimensions, flagged all rows with new levels as new rows")
   
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(newdims) != 0) {
     walk(newdims,
          ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
                      newrow := 1L])
-    cat("\n-For new dimensions, flagged all rows not representing total numbers")
+    cat("\n-For new dimensions, flagged all rows not representing total numbers as new rows")
   } 
+  
+  # Outlier detection
+  # Loop through all value columns except SPVFLAGG and .n-columns
+  outliervals <- vals[!vals %in% c("SPVFLAGG", 
+                                   grep(".n", vals, value = T))]
   
   cat("\n-Flagged version of new KUBE created: dfnew_flag")
 }
@@ -170,12 +178,22 @@
   setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
-  compareKUBE <<- comparenew[compareold, on = commondims] %>% 
-    select(all_of(commondims), 
+  compareKUBE <- comparenew[compareold, on = commondims]  %>% 
+    select(all_of(commondims),
            starts_with(paste0(commonvals, "_")),
-           everything()) %>% 
-    .FixDecimals()
+           everything()) 
   setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
+  
+  # Create diff columns
+  
+  for(i in commonvals){
+    
+    compareKUBE[, paste0(i, "_diff") := 
+                  compareKUBE[[paste0(i, "_new")]] - compareKUBE[[paste0(i, "_old")]]]
+    
+  }
+  
+  compareKUBE <<- .FixDecimals(compareKUBE)
   
 }
 
@@ -276,7 +294,8 @@ FormatData <- function(data1 = dfnew,
   .FlagNew(data1 = data1, 
            data2 = data2, 
            commondims = commondims,
-           newdims = newdims)
+           newdims = newdims,
+           vals = valnew)
 
   cat("\n\nSTARTS flagging old kube:")
   cat(msg_commondims)
@@ -327,8 +346,58 @@ FormatData <- function(data1 = dfnew,
 
 }
 
+#' How many rows differs for each value column
+#'
+#' @param data defaults to compareKUBE
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CompareDiffRowsN <- function(data = compareKUBE){
+  
+  # Identify existing dimensions
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+  }
+  
+  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
+  
+  .RowDiffN <- function(data,
+                        val){
+    
+    new <- paste0(val, "_new")
+    old <- paste0(val, "_old")
+    
+    nrow <- nrow(data[data[[new]] != data[[old]]])
+    
+    tibble(Value = val,
+           `N row diff` = nrow)
+  }
+  
+  map_df(vals,
+         ~.RowDiffN(data = data, 
+                    val = .x))
+}
+
+#' Compare new and old value
+#' 
+#' Prints one table per value column, highlighting the absolute and relative 
+#' difference between the new and the old file. 
+#' 
+#' Produces an R object per value column for differing rows
+#'
+#' @param data defaults to compareKUBE
+#' @param profileyear 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 CompareNewOld <- function(data = compareKUBE,
-                          vals = VALUES){
+                          profileyear = PROFILEYEAR){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -337,74 +406,49 @@ CompareNewOld <- function(data = compareKUBE,
   }
   
   # Identify existing dimensions
-  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(data)]
-  valexist <- names(data)[str_detect(names(data), "_new")] %>%
-    str_replace("_new", "")
+  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
   
+  # Get filepath for filedumps
+  kubename <- .GetKubename(data1)
+  .CreateFolders(profileyear = profileyear,
+                 kubename = kubename)
   
-  for(i in valexist){
+  dumppath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        profileyear,
+                        "KVALITETSKONTROLL",
+                        kubename,
+                        "FILDUMPER",
+                        "/")
+  
+  .CompareValue <- function(data,
+                            dims,
+                            val,
+                            dumppath = dumppath){
     
-    tab <- .CompareValueTab(data = data,
-                            val = "TELLER",
-                            dims = dimexist)
+    new <- paste0(val, "_new")
+    old <- paste0(val, "_old")
     
-    cat("\n")
-    cat("##", i, "\n")
+    # Filter out rows where *_new != *_old
+    data <- data[data[[new]] != data[[old]]]
     
-    print(
-    if(nrow(tab) == 0){
-      cat("\n", i, "is identical")
-    } else {
-      datatable(tab, rownames = F)
-    })
+    # Create Absolute and Relative difference
     
-    cat("\n")
-  
-}
-  
-  
-  # tables <- map(valexist, ~.CompareValueTab(data = data,
-  #                                          val = .x,
-  #                                          dims = dimexist))
-  # 
-  # walk2(valexist, tables, function(.x, .y){
-  #   cat("\n##", .x, "\n")
-  #   
-  #   if(nrow(.y) == 0){
-  #     cat("\n", .x, "is identical\n")
-  #   } else {
-  #     print(.y)
-  #   }
-  # }
-  # )
-
-}
-
-.CompareValueTab <- function(data = data,
-                             val = val){
-  
-  # Identify existing dimensions
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-    rm(ALL_DIMENSIONS)
+    data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
+                         Relative = round(data[[new]]/data[[old]], 3))]
+    setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
+    
   }
   
-  dimexist <- .ALL_DIMENSIONS[.ALL_DIMENSIONS %in% names(data)]
+  tables <- map(vals, 
+                ~.CompareValue(data = data,
+                              dims = dims,
+                              val = .x))
   
-  new <- paste0(val, "_new")
-  old <- paste0(val, "_old")
-  
-  # Filter out rows where *_new != *_old
-  data <- data[data[[new]] != data[[old]]]
-  
-  # Create Absolute and Relative difference
-  
-  data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
-                       Relative = round(data[[new]]/data[[old]], 3))]
-  setcolorder(data, c(dimexist, new, old, "Absolute", "Relative"))
-  
-  data[]
-  
+  walk(tables, print)
 }
-
