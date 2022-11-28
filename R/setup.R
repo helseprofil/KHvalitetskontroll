@@ -1,6 +1,3 @@
-cat("\nSynchronize project library\n")
-renv::restore()
-
 #Load packages
 library(dplyr)
 library(tidyr)
