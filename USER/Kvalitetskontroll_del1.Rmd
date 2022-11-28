@@ -37,7 +37,7 @@ dfnew <- ReadFile(file = "HKR_2022-11-21", # Matching, if >1 file found in folde
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -142,7 +142,7 @@ CheckPrikk()
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-ComparePrikk(groupdim = EXTRAdims)
+ComparePrikk(groupdim = NULL)
 ```
 
 ## 2C. Check censoring within each time series
