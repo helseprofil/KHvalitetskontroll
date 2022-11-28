@@ -46,5 +46,6 @@ cat("\nWelcome to KHvalitetskontroll\n",
 
 rm(updatemsg)
 
-cat("\n Controlling package versions:\n")
+cat("\nControlling package versions:\n")
+
 renv::status()
