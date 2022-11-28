@@ -178,12 +178,22 @@
   setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
-  compareKUBE <<- comparenew[compareold, on = commondims] %>% 
-    select(all_of(commondims), 
+  compareKUBE <- comparenew[compareold, on = commondims]  %>% 
+    select(all_of(commondims),
            starts_with(paste0(commonvals, "_")),
-           everything()) %>% 
-    .FixDecimals()
+           everything()) 
   setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
+  
+  # Create diff columns
+  
+  for(i in commonvals){
+    
+    compareKUBE[, paste0(i, "_diff") := 
+                  compareKUBE[[paste0(i, "_new")]] - compareKUBE[[paste0(i, "_old")]]]
+    
+  }
+  
+  compareKUBE <<- .FixDecimals(compareKUBE)
   
 }
 
