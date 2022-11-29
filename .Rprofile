@@ -6,3 +6,6 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # Source setup file to load functions:
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+
+# Source welcome messages
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/welcome.R")
