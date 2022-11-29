@@ -46,7 +46,9 @@ cat("\nWelcome to KHvalitetskontroll\n",
       },
     "\n---\n")
 
-rm(updatemsg)
+if(exists("updatemsg")){
+  rm(updatemsg)
+}
 
 cat("\nControlling package versions:\n")
 
