@@ -4,8 +4,9 @@ cat("\nWelcome to KHvalitetskontroll\n",
     "\n---\n", 
     "\nAvailable user files:\n",
     "- Kvalitetskontroll_del1.Rmd\n",
+    "  - Manuell sjekk\n",
     "- Kvalitetskontroll_del2.Rmd\n",
-    "- Interactive.Rmd (not active)",
+    "  - Compare\n",
     "\n---\n",
     if(exists("updatemsg")) {
       updatemsg

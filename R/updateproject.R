@@ -3,8 +3,8 @@ ask <- utils::askYesNo("Vil du oppdatere brukerfilene til siste versjon?\n-Dette
 if(ask) {
   cat("\nSer etter endringer\n",
       "\nIf this fails, run:\n",
-      '\n -source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")\n',
-      "\n -kh_install(KHvalitetskontroll)\n\n")
+      '\n source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")\n',
+      "\n kh_install(KHvalitetskontroll)\n\n")
   gert::git_branch_checkout("main")
   gert::git_reset_hard()
   gert::git_pull()
