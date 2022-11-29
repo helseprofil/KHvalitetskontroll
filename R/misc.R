@@ -81,6 +81,14 @@ print_dim <- function(...){
 }
 
 
+#' Finds name of cube from filepath
+#'
+#' @param df 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 .GetKubename <- function(df){
   filename <- attributes(df)$Filename
   str_extract(filename, "^.*(?=_[:digit:]{4})")
@@ -134,6 +142,16 @@ print_dim <- function(...){
   }
 }
 
+#' Save HTML-report
+#'
+#' @param profileyear 
+#' @param inputfile 
+#' @param savename 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 SaveReport <- function(profileyear = 2023,
                        inputfile = "Kvalitetskontroll_del1.Rmd",
                        savename = NULL){
