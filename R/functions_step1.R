@@ -13,11 +13,9 @@
 CompareCols <- function(data1 = dfnew,
                         data2 = dfold){
   
-  new <- names(data1 %>% 
-                 select(!any_of(as.character(names(data2))))) 
+  new <- names(data1)[!names(data1) %in% names(data2)]  
   
-  exp <- names(data2 %>% 
-                 select(!any_of(as.character(names(data1))))) 
+  exp <- names(data2)[!names(data2) %in% names(data1)]  
   
   msgnew <- case_when(length(new) == 0 ~ "No new columns.",
                       TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
@@ -47,8 +45,14 @@ CompareDims <- function(data1 = dfnew,
                         data2 = dfold,
                         dims = c(STANDARDdims, EXTRAdims)){
   
-  dimnew <- names(data1[, names(data1) %in% dims, with = F])
-  dimold <- names(data2[, names(data2) %in% dims, with = F])
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
+  
+  dimnew <- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
+  dimold <- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
   commondims <- dimnew[dimnew %in% dimold]
   newdims <- dimnew[!dimnew %in% dimold]
   expdims <- dimold[!dimold %in% dimnew]
