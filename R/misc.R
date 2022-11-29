@@ -61,6 +61,21 @@ ReadFile <- function(file = NULL,
   outdata
 }
 
+.IdentifyVariables <- function(data1 = NULL,
+                               data2 = NULL){
+  
+  # Identify common columns, and extract dimensions
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+  }
+  
+  if(is.null(data1) && is.null(data2)){
+    NULL
+  }
+  
+}
+
 #' Print dim
 #' 
 #' Wrapper around str_c for nice printing of variable names in .Rmd-reports
