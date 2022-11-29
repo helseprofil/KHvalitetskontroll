@@ -57,7 +57,7 @@ CompareDims <- function(data1 = dfnew,
   cat(c("The following dimensions are not present in both files: ", print_dim(c(newdims, expdims)), "\n"))
   }
   
-  CompareDim <- function(data1, 
+  .CompareDim <- function(data1, 
                          data2, 
                          dim = NULL){
     
@@ -89,7 +89,7 @@ CompareDims <- function(data1 = dfnew,
            "Expired levels" = explevels)
   }
   
-  map_df(commondims, ~CompareDim(data1, data2, dim = .x))
+  map_df(commondims, ~.CompareDim(data1, data2, dim = .x))
 }
 
 
