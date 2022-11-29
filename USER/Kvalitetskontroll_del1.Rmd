@@ -143,7 +143,7 @@ CheckPrikk()
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-ComparePrikk(groupdim = "GEO")
+ComparePrikk(groupdim = EXTRAdims)
 ```
 
 ## 2C. Check censoring within each time series
