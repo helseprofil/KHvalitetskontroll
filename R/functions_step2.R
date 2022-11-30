@@ -347,6 +347,9 @@ FormatData <- function(data1 = dfnew,
 }
 
 #' How many rows differs for each value column
+#' Calculate the mean difference
+#' 
+#' For each geographical level
 #'
 #' @param data defaults to compareKUBE
 #'
@@ -354,7 +357,7 @@ FormatData <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-CompareDiffRowsN <- function(data = compareKUBE){
+CompareDiffRows <- function(data = compareKUBE){
   
   # Identify existing dimensions
   if(!exists(".ALL_DIMENSIONS")) {
@@ -365,21 +368,50 @@ CompareDiffRowsN <- function(data = compareKUBE){
   dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
   vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
   
-  .RowDiffN <- function(data,
-                        val){
+  geoniv <- c("TOTAL", "LAND", "FYLKE", "KOMMUNE", "BYDEL")
+  
+  .RowDiff <- function(data,
+                       val,
+                       geoniv){
     
     new <- paste0(val, "_new")
     old <- paste0(val, "_old")
     
-    nrow <- nrow(data[data[[new]] != data[[old]]])
+    if(geoniv == "LAND"){
+      data <- data[GEO == 0]
+    } else if(geoniv == "FYLKE"){
+      data <- data[GEO > 0 & GEO < 80]
+    } else if(geoniv == "KOMMUNE"){
+      data <- data[GEO >999 & GEO < 10000]
+    } else if(geoniv == "BYDEL"){
+      data <- data[GEO >= 10000]
+    } 
+
+    nrowdiff <- nrow(data[data[[new]] != data[[old]]])
+    meandiff <- round(data[data[[new]] != data[[old]], mean(data[[new]]-data[[old]], na.rm = T)], 3)
     
-    tibble(Value = val,
-           `N row diff` = nrow)
+    meandiff[is.nan(meandiff)] <- NA_real_
+    
+    tibble(Geoniv = geoniv,
+           Value = val,
+           `N diff` = nrowdiff,
+           `Mean diff` = meandiff)
   }
   
-  map_df(vals,
-         ~.RowDiffN(data = data, 
-                    val = .x))
+.RowDiffTab <- function(data,
+                        vals, 
+                        geoniv){
+   map_df(vals,
+          ~.RowDiff(data = data, 
+                    val = .x,
+                    geoniv = geoniv))
+  }
+
+map_df(geoniv,
+       ~.RowDiffTab(data = data,
+                    vals = vals,
+                    geoniv = .x))
+
 }
 
 #' Compare new and old value

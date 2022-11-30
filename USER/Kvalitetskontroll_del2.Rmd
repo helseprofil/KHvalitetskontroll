@@ -12,7 +12,7 @@ Version: 0.4 (01.11.2022).
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
@@ -40,17 +40,12 @@ PROFILEYEAR <- 2023
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
+DUMPS <- "compareKUBE" #c("dfnew_flag", "compareKUBE", "dfold_flag")
 ```
 
-```{r}
-# To print input, do not change:
-cat("DIMENSION columns: ", print_dim(DIMENSIONS), 
-    "\nVALUE columns: ", print_dim(VALUES))
-```
 # Data formatting
 
-- Create flagged versions of new and old KUBE, according to strata defined by the following dimensions: `r print_dim(DIMENSIONS)`
+- Create flagged versions of new and old KUBE, according to strata defined by all dimension columns
     - Flags all **new** rows in the new KUBE (strata not present in old KUBE)
     - Flags all **expired** rows in the old KUBE (strata not present in the new KUBE)
 - Create combined data for comparisons, merged on the common dimensions in new and old KUBE
@@ -68,7 +63,7 @@ FormatData()
 
 - In the compareKUBE, how many rows are different for each value column
 ```{r}
-CompareDiffRowsN(data = compareKUBE)
+CompareDiffRows(data = compareKUBE)
 ```
 
 
