@@ -433,7 +433,7 @@ CompareDiffRows <- function(data = compareKUBE) {
     ))
   })
   
-  DT::datatable(difftable)
+  DT::datatable(difftable, rownames = F)
 }
 
 #' Compare new and old value
