@@ -397,7 +397,7 @@ CompareDiffRows <- function(data = compareKUBE) {
     nrowdiff <- nrow(data[data[[diff]] != 0])
     nprikknew <- nrow(data[is.na(data[[new]]) & !is.na(data[[old]])])
     nprikkexp <- nrow(data[!is.na(data[[new]]) & is.na(data[[old]])])
-    nbothexist <- nrow(data[!is.na(data[[new]]) & !is.na(data[[old]])])
+    nbothexist <- nrow(data[!is.na(data[[new]]) & !is.na(data[[old]]) & data[[diff]] != 0])
     if (nrowdiff > 0 & nbothexist > 0) {
       # Create subset of different rows with both new and old value existing
       diffdata <- data[data[[diff]] != 0 & !is.na(data[[new]]) & !is.na(data[[old]])]
