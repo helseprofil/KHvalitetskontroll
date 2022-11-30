@@ -357,61 +357,63 @@ FormatData <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-CompareDiffRows <- function(data = compareKUBE){
-  
-  # Identify existing dimensions
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-  }
-  
-  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
-  vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
-  
+CompareDiffRows <- function(data = compareKUBE) {
+  vals <- gsub("_diff", "", names(data)[str_detect(names(data), "_diff")])
   geoniv <- c("TOTAL", "LAND", "FYLKE", "KOMMUNE", "BYDEL")
   
   .RowDiff <- function(data,
                        val,
-                       geoniv){
+                       geoniv) {
+    diff <- paste0(val, "_diff")
     
-    new <- paste0(val, "_new")
-    old <- paste0(val, "_old")
-    
-    if(geoniv == "LAND"){
+    # Subset data based on selected geographical level
+    if (geoniv == "LAND") {
       data <- data[GEO == 0]
-    } else if(geoniv == "FYLKE"){
+    } else if (geoniv == "FYLKE") {
       data <- data[GEO > 0 & GEO < 80]
-    } else if(geoniv == "KOMMUNE"){
-      data <- data[GEO >999 & GEO < 10000]
-    } else if(geoniv == "BYDEL"){
+    } else if (geoniv == "KOMMUNE") {
+      data <- data[GEO > 999 & GEO < 10000]
+    } else if (geoniv == "BYDEL") {
       data <- data[GEO >= 10000]
-    } 
-
-    nrowdiff <- nrow(data[data[[new]] != data[[old]]])
-    meandiff <- round(data[data[[new]] != data[[old]], mean(data[[new]]-data[[old]], na.rm = T)], 3)
+    }
     
-    meandiff[is.nan(meandiff)] <- NA_real_
+    # Calculate n rows diff,
+    # If nrowdiff > 0, calculate mean/min/max diff within selected geographical strata
+    nrowdiff <- nrow(data[data[[diff]] != 0])
+    if (nrowdiff > 0) {
+      meandiff <-
+        round(data[data[[diff]] != 0, mean(data[[diff]], na.rm = T)], 3)
+      mindiff <-
+        round(data[data[[diff]] != 0, min(data[[diff]], na.rm = T)], 3)
+      maxdiff <-
+        round(data[data[[diff]] != 0, max(data[[diff]], na.rm = T)], 3)
+    } else {
+      meandiff <- NA_real_
+      mindiff <- NA_real_
+      maxdiff <- NA_real_
+    }
     
-    tibble(Geoniv = geoniv,
-           Value = val,
-           `N diff` = nrowdiff,
-           `Mean diff` = meandiff)
+    # Create summary table
+    tibble(
+      Geoniv = geoniv,
+      Value = val,
+      `N diff` = nrowdiff,
+      `Mean diff` = meandiff,
+      `Min diff` = mindiff,
+      `Max diff` = maxdiff
+    )
   }
   
-.RowDiffTab <- function(data,
-                        vals, 
-                        geoniv){
-   map_df(vals,
-          ~.RowDiff(data = data, 
-                    val = .x,
-                    geoniv = geoniv))
-  }
-
-map_df(geoniv,
-       ~.RowDiffTab(data = data,
-                    vals = vals,
-                    geoniv = .x))
-
+  # Create summary table
+  # Map over geographical levels, and within each level map over values to create rowdiff table
+  map_df(geoniv, function(geoniv) {
+    map_df(vals, ~ .RowDiff(
+      data = data,
+      val = .x,
+      geoniv = geoniv
+    ))
+  })
+  
 }
 
 #' Compare new and old value
