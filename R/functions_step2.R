@@ -188,16 +188,27 @@
   
   for(i in commonvals){
     
-    compareKUBE[, paste0(i, "_diff") := 
-                  compareKUBE[[paste0(i, "_new")]] - compareKUBE[[paste0(i, "_old")]]]
+    new <- paste0(i, "_new")
+    old <- paste0(i, "_old")
+    diff <- paste0(i, "_diff")
     
+    # Create diff column, new - old value 
+    compareKUBE[, (diff) := compareKUBE[[new]] - compareKUBE[[old]]]
+    # For rows with missing old and new, set _diff = 0
+    compareKUBE[is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]]), 
+                (diff) := 0]
+    # For rows with missing new but existing old value, set _diff to -old
+    compareKUBE[is.na(compareKUBE[[new]]) & !is.na(compareKUBE[[old]]), 
+                (diff) := -compareKUBE[is.na(compareKUBE[[new]]) & !is.na(compareKUBE[[old]])][[old]]]
+    # For rows with missing old, but existing new, set _diff to + new
+    compareKUBE[!is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]]), 
+                (diff) := compareKUBE[!is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]])][[new]]]
+
   }
   
   compareKUBE <<- .FixDecimals(compareKUBE)
   
 }
-
-
 
 #' Format data
 #' 
@@ -365,6 +376,8 @@ CompareDiffRows <- function(data = compareKUBE) {
                        val,
                        geoniv) {
     diff <- paste0(val, "_diff")
+    new <- paste0(val, "_new")
+    old <- paste0(val, "_old")
     
     # Subset data based on selected geographical level
     if (geoniv == "LAND") {
@@ -378,8 +391,11 @@ CompareDiffRows <- function(data = compareKUBE) {
     }
     
     # Calculate n rows diff,
-    # If nrowdiff > 0, calculate mean/min/max diff within selected geographical strata
+    # If nrowdiff > 0 or NA, calculate mean/min/max diff within selected geographical strata
+    nrowidentical <- nrow(data[data[[diff]] == 0])
     nrowdiff <- nrow(data[data[[diff]] != 0])
+    nprikknew <- nrow(data[is.na(data[[new]]) & !is.na(data[[old]])])
+    nprikkexp <- nrow(data[!is.na(data[[new]]) & is.na(data[[old]])])
     if (nrowdiff > 0) {
       meandiff <-
         round(data[data[[diff]] != 0, mean(data[[diff]], na.rm = T)], 3)
@@ -397,7 +413,10 @@ CompareDiffRows <- function(data = compareKUBE) {
     tibble(
       Geoniv = geoniv,
       Value = val,
+      `N identical` = nrowidentical,
       `N diff` = nrowdiff,
+      `N new prikk` = nprikknew,
+      `N expired prikk` = nprikkexp,
       `Mean diff` = meandiff,
       `Min diff` = mindiff,
       `Max diff` = maxdiff
@@ -406,7 +425,7 @@ CompareDiffRows <- function(data = compareKUBE) {
   
   # Create summary table
   # Map over geographical levels, and within each level map over values to create rowdiff table
-  map_df(geoniv, function(geoniv) {
+  difftable <- map_df(geoniv, function(geoniv) {
     map_df(vals, ~ .RowDiff(
       data = data,
       val = .x,
@@ -414,6 +433,7 @@ CompareDiffRows <- function(data = compareKUBE) {
     ))
   })
   
+  DT::datatable(difftable, rownames = F)
 }
 
 #' Compare new and old value

@@ -114,14 +114,20 @@ ComparePrikk <- function(data1 = dfnew,
                          data2 = dfold, 
                          groupdim = EXTRAdims){
   
+  .by_vars <- function(){
+    c("SPVFLAGG", all_of(groupdim))
+  }
+  
+  group_vars <- .by_vars()
+  
   output <- full_join(
     data1 %>% 
-      group_by(across(c(SPVFLAGG, all_of(groupdim)))) %>% 
+      group_by(across(all_of(group_vars))) %>% 
       summarise(N_New = n(), .groups = "drop"),
     data2 %>% 
-      group_by(across(c(SPVFLAGG, all_of(groupdim)))) %>% 
+      group_by(across(all_of(group_vars))) %>% 
       summarise(N_Old = n(), .groups = "drop"),
-    by = c("SPVFLAGG", all_of(groupdim))) %>% 
+    by = .by_vars()) %>% 
     replace_na(list(N_New = 0,
                     N_Old = 0)) %>% 
     mutate(across(SPVFLAGG, as.character),

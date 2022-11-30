@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 0.4 (01.11.2022). 
+Version: 0.5 (30.11.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
@@ -40,7 +40,7 @@ PROFILEYEAR <- 2023
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- "compareKUBE" #c("dfnew_flag", "compareKUBE", "dfold_flag")
+DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
 ```
 
 # Data formatting
@@ -59,9 +59,14 @@ FormatData()
 
 # Compare
 
-## Number of different rows
+## Summary table
 
-- In the compareKUBE, how many rows are different for each value column
+- In the compareKUBE, calculate per value column per geographical level:
+    - How many rows are identical (same value or both censored)
+    - How many rows are different (different value, or one value censored)
+    - How many rows are censored in the new file, but not in the old (N new prikk)
+    - How many rows were censored in the old file, but no longer in the new (N expired prikk)
+    - Mean, minumum and maximum difference between new and old file
 ```{r}
 CompareDiffRows(data = compareKUBE)
 ```
