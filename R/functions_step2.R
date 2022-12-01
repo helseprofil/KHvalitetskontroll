@@ -397,14 +397,11 @@ CompareDiffRows <- function(data = compareKUBE) {
     nrowdiff <- nrow(data[data[[diff]] != 0])
     nprikknew <- nrow(data[is.na(data[[new]]) & !is.na(data[[old]])])
     nprikkexp <- nrow(data[!is.na(data[[new]]) & is.na(data[[old]])])
-    nbothexist <- nrow(data[!is.na(data[[new]]) & !is.na(data[[old]]) & data[[diff]] != 0])
-    if (nrowdiff > 0 & nbothexist > 0) {
+    ncompared <- nrow(data[!is.na(data[[new]]) & !is.na(data[[old]]) & data[[diff]] != 0])
+    if (nrowdiff > 0 & ncompared > 0) {
       # Create subset of different rows with both new and old value existing
       diffdata <- data[data[[diff]] != 0 & !is.na(data[[new]]) & !is.na(data[[old]])]
-    }
-      
-    if(nrow(diffdata) > 0){
-    # Estimate mean, min, max
+      # Estimate mean, min, max
       meandiff <- round(mean(diffdata[[diff]], na.rm = T), 3)
       mindiff <- round(min(diffdata[[diff]], na.rm = T), 3)
       maxdiff <- round(max(diffdata[[diff]], na.rm = T), 3)
@@ -422,7 +419,7 @@ CompareDiffRows <- function(data = compareKUBE) {
       `N diff` = nrowdiff,
       `N new prikk` = nprikknew,
       `N expired prikk` = nprikkexp,
-      `N compared` = nbothexist,
+      `N compared` = ncompared,
       `Mean diff` = meandiff,
       `Min diff` = mindiff,
       `Max diff` = maxdiff
