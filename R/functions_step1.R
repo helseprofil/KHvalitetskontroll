@@ -481,10 +481,10 @@ PlotTimeseries <- function(data = dfnew,
 }
 
 .AggregateAge <- function(data){
-  data[, ':=' (ALDERl = as.numeric(str_extract(ALDER, "[:digit:]*(?=_)")),
-               ALDERh = as.numeric(str_extract(ALDER, "(?<=_)[:digit:]*")))]
-  data <- data[ALDERl == min(ALDERl) & ALDERh == max(ALDERh)]
-  data[, ':=' (ALDERl = NULL, ALDERh = NULL)]
+  ALDERl <- min(as.numeric(str_extract(data$ALDER, "[:digit:]*(?=_)")))
+  ALDERh <- max(as.numeric(str_extract(data$ALDER, "(?<=_)[:digit:]*")))
+  ALDERtot <- paste0(ALDERl, "_", ALDERh)
+  data[ALDER == ALDERtot]
 }
 
 # create plotting function
