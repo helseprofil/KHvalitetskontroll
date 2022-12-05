@@ -13,7 +13,7 @@ output: html_document
 
 Run this to load functions: 
 
-```{r setup, include=FALSE, message=FALSE}
+```{r, include=FALSE, message=FALSE}
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
@@ -52,6 +52,28 @@ data
 View(data)
 ```
 
+# Show time series
+
+- For boxplot checks
+- The new data file must be loaded (see methods above)
+- Plots the time series for one specific strata
+- Specify all dimensions so only one level is selected
+    - If NULL, the total group will be selected by default if the dimension exists
+    for non-standard dimensions. A message will indicate which group was selected
+    .
+```{r}
+ShowTS(data = dfnew, # Name of data object
+       maltall = "MEIS", # Value to plot on y-axis
+       geo = NULL, # NUMERIC: e.g. 0
+       alder = NULL, # INTERVAL: XX_YY, e.g. "0_120"
+       kjonn = NULL, # NUMERIC: 0, 1, or 2
+       utdann = NULL, # NUMERIC
+       innvkat = NULL, # NUMERIC
+       landbak = NULL, # NUMERIC
+       extradim = NULL, # e.g. "KODEGRUPPE"
+       extraval = NULL) # e.g. "Dod_med_hjerteinfarkt"
+```
+
 # Check if two objects are identical
 
 * Check if two objects (e.g. data files) are identical
@@ -61,4 +83,7 @@ View(data)
 ```{r}
 identical(object1, object2)
 ```
+
+
+
 
