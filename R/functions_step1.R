@@ -263,7 +263,7 @@ CompareFylkeLand <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
           dplyr::filter(Relative < 1)) == 0) {
     cat("\nLAND is always larger than FYLKE")
   } else {
-    cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with relative < 1")
+    cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with Absolute < 1")
   }
    
   datatable(output, rownames = F)
@@ -307,7 +307,7 @@ CompareKommuneFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
           dplyr::filter(Relative < 1)) == 0) {
     cat("\nFYLKE is always larger than KOMMUNE")
   } else {
-    cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with relative < 1")
+    cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with Absolute < 1")
   }
   
   datatable(output, rownames = F)
@@ -355,7 +355,7 @@ CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = C
           dplyr::filter(Relative < 1)) == 0) {
     cat("\nKOMMUNE is always larger than BYDEL") 
   } else {
-    cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with relative < 1")
+    cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with Absolute < 1")
   }
   
   datatable(output, rownames = F)
@@ -394,7 +394,7 @@ CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREva
           dplyr::filter(Relative != 1)) == 0) {
     cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
-    cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where relative does not = 1")
+    cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where Absolute does not = 0")
   }
   
   datatable(output, rownames = F)

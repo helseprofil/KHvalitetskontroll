@@ -40,7 +40,7 @@ dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 # Load old data file
 dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
-                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the old KUBE, uncomment and run the following code: 
@@ -168,7 +168,8 @@ ComparePrikkTS()
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
-# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+# Example: CompareFylkeLand(groupdim = c("AAR", "ALDER", "etc"))
+# To mimic the boxplot table, use: CompareFylkeLand(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
@@ -186,7 +187,8 @@ CompareFylkeLand(groupdim = GROUPdims)
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
-# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+# Example: CompareKommuneFylke(groupdim = c("AAR", "ALDER", "etc"))
+# To mimic the boxplot table, use: CompareKommuneFylke(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
@@ -205,11 +207,12 @@ CompareKommuneFylke(groupdim = GROUPdims)
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
-# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+# Example: CompareBydelKommune(groupdim = c("AAR", "ALDER", "etc"))
+# To mimic the boxplot table, use: CompareBydelKommune(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareBydelKommune(groupdim = GROUPdims)
+CompareBydelKommune(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 ```
 
 ## 3D. Oslo KOMMUNE = Oslo FYLKE?
@@ -223,11 +226,12 @@ CompareBydelKommune(groupdim = GROUPdims)
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
-# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+# Example: CompareOslo(groupdim = c("AAR", "ALDER", "etc"))
+# To mimic the boxplot table, use: CompareOslo(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareOslo(groupdim = GROUPdims)
+CompareOslo(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 ```
 
 # 4. Country level time-series plots
