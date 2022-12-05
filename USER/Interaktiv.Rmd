@@ -64,14 +64,14 @@ View(data)
 ```{r}
 ShowTS(data = dfnew, # Name of data object
        maltall = "MEIS", # Value to plot on y-axis
-       geo = 0301, # NUMERIC: e.g. 0
-       alder = "0_120", # INTERVAL: XX_YY, e.g. "0_120"
+       geo = NULL, # NUMERIC: e.g. 0
+       alder = NULL, # INTERVAL: XX_YY, e.g. "0_120"
        kjonn = NULL, # NUMERIC: 0, 1, or 2
        utdann = NULL, # NUMERIC
        innvkat = NULL, # NUMERIC
        landbak = NULL, # NUMERIC
-       extradim = "KODEGRUPPE", # e.g. "KODEGRUPPE"
-       extraval = "Dod_med_hjerteinfarkt") # e.g. "Dod_med_hjerteinfarkt"
+       extradim = NULL, # e.g. "KODEGRUPPE"
+       extraval = NULL) # e.g. "Dod_med_hjerteinfarkt"
 ```
 
 # Check if two objects are identical
