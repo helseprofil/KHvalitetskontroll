@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.5.2 (29.11.2022). 
+Version: 1.5.3 (05.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -25,9 +25,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "HKR_2022-11-21", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
@@ -172,12 +172,30 @@ ComparePrikkTS()
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareLandFylke(groupdim = GROUPdims)
+CompareFylkeLand(groupdim = GROUPdims)
 ```
 
-## 3B. Does BYDEL sum to KOMMUNE?
+## 3B. Does KOMMUNE sum to FYLKE?
 
--   Summarise the column **`r COMPAREval`** for KOMMUNE and BYDEL, grouped by: `r print_dim(GROUPdims)`
+-   Summarise the column **`r COMPAREval`** for KOMMUNE and FYLKE, grouped by: `r print_dim(GROUPdims)`
+-   Calculate the absolute (FYLKE - KOMMUNE) and relative (FYLKE/KOMMUNE) difference
+-   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest 
+
+```{r}
+# Default is to stratify the output by GROUPdims (input)
+
+# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
+# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
+
+# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
+
+CompareKommuneFylke(groupdim = GROUPdims)
+```
+
+## 3C. Does BYDEL sum to KOMMUNE?
+
+-   Summarise the column **`r COMPAREval`** for BYDEL and KOMMUNE, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
@@ -194,7 +212,7 @@ CompareLandFylke(groupdim = GROUPdims)
 CompareBydelKommune(groupdim = GROUPdims)
 ```
 
-## 3C. Oslo KOMMUNE = Oslo FYLKE?
+## 3D. Oslo KOMMUNE = Oslo FYLKE?
 
 -   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
