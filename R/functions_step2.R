@@ -391,18 +391,20 @@ CompareDiffRows <- function(data = compareKUBE) {
     }
     
     # Calculate n rows diff,
-    # If nrowdiff > 0 or NA, calculate mean/min/max diff within selected geographical strata
+    # If nrowdiff > 0, and both new and old value exists, calculate mean/min/max diff within selected geographical strata
+    # If nrowdiff == 0, set mean/min/max = NA
     nrowidentical <- nrow(data[data[[diff]] == 0])
     nrowdiff <- nrow(data[data[[diff]] != 0])
     nprikknew <- nrow(data[is.na(data[[new]]) & !is.na(data[[old]])])
     nprikkexp <- nrow(data[!is.na(data[[new]]) & is.na(data[[old]])])
-    if (nrowdiff > 0) {
-      meandiff <-
-        round(data[data[[diff]] != 0, mean(data[[diff]], na.rm = T)], 3)
-      mindiff <-
-        round(data[data[[diff]] != 0, min(data[[diff]], na.rm = T)], 3)
-      maxdiff <-
-        round(data[data[[diff]] != 0, max(data[[diff]], na.rm = T)], 3)
+    ncompared <- nrow(data[!is.na(data[[new]]) & !is.na(data[[old]]) & data[[diff]] != 0])
+    if (nrowdiff > 0 & ncompared > 0) {
+      # Create subset of different rows with both new and old value existing
+      diffdata <- data[data[[diff]] != 0 & !is.na(data[[new]]) & !is.na(data[[old]])]
+      # Estimate mean, min, max
+      meandiff <- round(mean(diffdata[[diff]], na.rm = T), 3)
+      mindiff <- round(min(diffdata[[diff]], na.rm = T), 3)
+      maxdiff <- round(max(diffdata[[diff]], na.rm = T), 3)
     } else {
       meandiff <- NA_real_
       mindiff <- NA_real_
@@ -417,6 +419,7 @@ CompareDiffRows <- function(data = compareKUBE) {
       `N diff` = nrowdiff,
       `N new prikk` = nprikknew,
       `N expired prikk` = nprikkexp,
+      `N compared` = ncompared,
       `Mean diff` = meandiff,
       `Min diff` = mindiff,
       `Max diff` = maxdiff
