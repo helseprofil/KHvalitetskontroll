@@ -225,7 +225,7 @@ CheckPrikk <- function(data1 = dfnew,
 
 }
 
-#' CompareLandFylke
+#' CompareFylkeLand
 #' 
 #'
 #' @param data1 new KUBE, defaults to dfnew set in INPUT
@@ -236,7 +236,7 @@ CheckPrikk <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
+CompareFylkeLand <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
   
   data <- data1 %>% 
     dplyr::filter(GEO < 100) %>% 
@@ -266,6 +266,50 @@ CompareLandFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMP
     cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with relative < 1")
   }
    
+  datatable(output, rownames = F)
+}
+
+#' CompareKommuneFylke
+#' 
+#'
+#' @param data1 new KUBE, defaults to dfnew set in INPUT
+#' @param groupdim 
+#' @param compare 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CompareKommuneFylke <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
+  
+  data <- data1 %>% 
+    dplyr::filter(GEO > 0, GEO < 10000) %>% 
+    dplyr::filter(!(GEO %in% 81:84)) %>% # Remove HELSEREGION
+    mutate(geolevel = case_when(GEO < 100 ~ "Fylke",
+                                GEO > 100 ~ "Kommune")) 
+  
+  output <- data %>% 
+    group_by(across(c(geolevel, all_of(groupdim)))) %>% 
+    summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
+    pivot_wider(names_from = geolevel, 
+                values_from = sum) %>% 
+    mutate(Absolute = Fylke-Kommune,
+           Relative = Fylke/Kommune) %>% 
+    arrange(desc(Relative)) %>% 
+    mutate(across(c(Fylke, Kommune, Absolute), ~round(.x, 0)),
+           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
+                                       TRUE ~ round(Relative, 3)))) %>% 
+    select(all_of(groupdim), Fylke, Kommune, Absolute, Relative)
+  
+  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  
+  if(nrow(output %>%
+          dplyr::filter(Relative < 1)) == 0) {
+    cat("\nFYLKE is always larger than KOMMUNE")
+  } else {
+    cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with relative < 1")
+  }
+  
   datatable(output, rownames = F)
 }
 
