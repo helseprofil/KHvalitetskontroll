@@ -25,9 +25,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "HKR_2022-11-21", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
