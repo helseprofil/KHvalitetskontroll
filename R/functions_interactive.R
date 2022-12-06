@@ -170,12 +170,12 @@ ShowTS <- function(data = dfnew,
                     if("LANDBAK" %in% dims){paste0("\nLANDBAK = ", landbak)},
                     if(!is.null(extradim)){paste0("\n", extradim, " = ", extraval)})
   
-  plot <- data[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))] %>% 
+  plot <- data[, AARx := as.numeric(str_extract(AAR, "(?<=_)[:digit:]*"))] %>% 
     ggplot(aes(x = AARx,
                !!!ensyms(y = maltall))) + 
     geom_point() +
     geom_line() + 
-    labs(x = "AAR (lowest in interval)",
+    labs(x = "AAR (highest in interval)",
          y = maltall,
          title = caption)
   
