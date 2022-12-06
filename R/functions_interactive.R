@@ -12,6 +12,7 @@
 #' @param landbak select country of origin, if not selected it will default to 0
 #' @param extradim any non-standard dimension
 #' @param extraval selected level of non-standard dimension
+#' #' @param tab should table be printed? defaults to TRUE
 ShowTS <- function(data = dfnew,
                    maltall = "MEIS",
                    geo = NULL,
@@ -21,7 +22,8 @@ ShowTS <- function(data = dfnew,
                    innvkat = NULL,
                    landbak = NULL,
                    extradim = NULL,
-                   extraval = NULL){
+                   extraval = NULL,
+                   tab = TRUE){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -179,7 +181,9 @@ ShowTS <- function(data = dfnew,
          y = maltall,
          title = caption)
   
+  if(tab){
   outdata <- data %>% arrange(AARx) %>% select(-AARx)
   print(outdata)
+  }
   print(plot)
 } 

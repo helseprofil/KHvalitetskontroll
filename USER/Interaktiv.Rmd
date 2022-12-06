@@ -5,6 +5,8 @@ date: "2022-09-29"
 output: html_document
 ---
 
+Last updated: 06.12.2022
+
 - This document contain useful functions for exploration of data files
 - Alternative to open the file in Excel
 - This document should only be used interactively when needed, not saved as report.
@@ -27,7 +29,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 ```{r}
 # KUBE files in DATERT or NESSTAR-folders
-data <- ReadFile(file = "BEFOLK_GK", # Matching, if >1 file found in folder, specify file name further
+data <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "2023") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -61,18 +63,42 @@ View(data)
     - If NULL, the total group will be selected by default if the dimension exists
     for non-standard dimensions. A message will indicate which group was selected
     .
-```{r}
-ShowTS(data = dfnew, # Name of data object
+```{r message=FALSE, warning=FALSE}
+ShowTS(data = data, # Name of data object
        maltall = "MEIS", # Value to plot on y-axis
-       geo = 0, # NUMERIC: e.g. 0
+       geo = 030112, # NUMERIC: e.g. 0
        alder = "75_120", # INTERVAL: XX_YY, e.g. "0_120"
-       kjonn = 0, # NUMERIC: 0, 1, or 2
+       kjonn = 2, # NUMERIC: 0, 1, or 2
        utdann = NULL, # NUMERIC
        innvkat = NULL, # NUMERIC
        landbak = NULL, # NUMERIC
        extradim = "KODEGRUPPE", # e.g. "KODEGRUPPE"
-       extraval = "Dod_med_hjerteinfarkt") # e.g. "Dod_med_hjerteinfarkt"
+       extraval = "Tot_hjerneslag", # e.g. "Dod_med_hjerteinfarkt"
+       tab = F) # Prints table, change to FALSE if you only want the plot
 ```
+
+# Plot multiple time series
+
+- Useful if you want to see the time series for all age groups, all genders, all diagnoses etc for one strata. 
+```{r message=FALSE, warning=FALSE}
+# Creates one plot per unique level of the selected dimension
+# All inputs are the same as above
+walk(unique(data$KJONN), # Select dimension you want to plot separately, insert .x as value below on the corresponding row
+    ~ShowTS(data = data, 
+            maltall = "MEIS", 
+            geo = 030115, 
+            alder = NULL, 
+            kjonn = .x, # Insert .x for the variable selected above
+            utdann = NULL, 
+            innvkat = NULL, 
+            landbak = NULL, 
+            extradim = "KODEGRUPPE", # If the selected dimension is the extradimension, extraval must be .x
+            extraval = "Tot_hjerneslag", 
+            tab = FALSE)) # Change to TRUE if you also want to see the data
+```
+
+
+
 
 # Check if two objects are identical
 
@@ -81,6 +107,8 @@ ShowTS(data = dfnew, # Name of data object
 * Returns TRUE or FALSE
 
 ```{r}
+
+
 identical(object1, object2)
 ```
 
