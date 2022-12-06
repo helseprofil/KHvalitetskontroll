@@ -1,4 +1,4 @@
-ask <- utils::askYesNo("Vil du oppdatere brukerfilene til siste versjon?\n-Dette vil overskrive eksisterende filer.\n-Dersom du har gjort endringer du vil beholde, velg nei og kopier filene til lokal mappe")
+ask <- utils::askYesNo("SISTE OPPDATERING AV BRUKERFILER 05.12.2022\n\nFor å oppdatere til siste versjoner, velg ja.\n\nHvis ikke kan du fortsette uten å oppdatere, og eventuelt ta sikkerhetskopi av filer du vil beholde.")
 
 if(ask) {
   cat("\nSer etter endringer\n",
