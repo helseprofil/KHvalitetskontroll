@@ -171,8 +171,8 @@ ShowTS <- function(data = dfnew,
                     if(!is.null(extradim)){paste0("\n", extradim, " = ", extraval)})
   
   plot <- data[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))] %>% 
-    ggplot(aes_string(x = "AARx",
-                      y = maltall)) + 
+    ggplot(aes(x = AARx,
+               !!!ensyms(y = maltall))) + 
     geom_point() +
     geom_line() + 
     labs(x = "AAR (lowest in interval)",
