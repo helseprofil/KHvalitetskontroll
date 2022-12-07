@@ -54,7 +54,11 @@ data
 View(data)
 ```
 
-# Show time series
+# Boxplot checks, useful functions
+
+## Show time series
+
+### One strata
 
 - For boxplot checks
 - The new data file must be loaded (see methods above)
@@ -66,38 +70,60 @@ View(data)
 ```{r message=FALSE, warning=FALSE}
 ShowTS(data = data, # Name of data object
        maltall = "MEIS", # Value to plot on y-axis
-       geo = 030112, # NUMERIC: e.g. 0
+       geo = 500103, # NUMERIC: e.g. 0
        alder = "75_120", # INTERVAL: XX_YY, e.g. "0_120"
        kjonn = 2, # NUMERIC: 0, 1, or 2
        utdann = NULL, # NUMERIC
        innvkat = NULL, # NUMERIC
        landbak = NULL, # NUMERIC
        extradim = "KODEGRUPPE", # e.g. "KODEGRUPPE"
-       extraval = "Tot_hjerneslag", # e.g. "Dod_med_hjerteinfarkt"
-       tab = F) # Prints table, change to FALSE if you only want the plot
+       extraval = "Pas_med_hjerteinfarkt", # e.g. "Dod_med_hjerteinfarkt"
+       tab = T) # Prints table, change to FALSE if you only want the plot
 ```
 
-# Plot multiple time series
+### Multiple strata
 
-- Useful if you want to see the time series for all age groups, all genders, all diagnoses etc for one strata. 
+- Useful if you want to see the time series for several or all age groups, all genders, all diagnoses etc for one strata. 
 ```{r message=FALSE, warning=FALSE}
-# Creates one plot per unique level of the selected dimension
-# All inputs are the same as above
-walk(unique(data$KJONN), # Select dimension you want to plot separately, insert .x as value below on the corresponding row
+# Create multiple plots
+# On first row, enter a dimension to plot one time series for each level, or a list of levels you want to plot for one dimension (e.g. list of GEO). 
+# On the corresponding row, input is replaced with ".x", to make one plot per element of the input list. 
+
+# ".x" should be typed without quotes
+
+walk(c(30101, 30102, 30102), # Select dimension or enter list of valid values here as `walk(DIMNAME)' or 'walk(c(a, b, c)' 
     ~ShowTS(data = data, 
             maltall = "MEIS", 
-            geo = 030115, 
-            alder = NULL, 
-            kjonn = .x, # Insert .x for the variable selected above
+            geo = .x, # Insert .x to refer to the list added above 
+            alder = "0_74", 
+            kjonn = 1, 
             utdann = NULL, 
             innvkat = NULL, 
             landbak = NULL, 
-            extradim = "KODEGRUPPE", # If the selected dimension is the extradimension, extraval must be .x
-            extraval = "Tot_hjerneslag", 
+            extradim = "KODEGRUPPE", # If the selected dimension is the extradimension, extraval must be ".x"
+            extraval = "Tot_hjerneslag", # If the list is several diagnoses, ".x" also goes here.
             tab = FALSE)) # Change to TRUE if you also want to see the data
 ```
 
+# Bydelsplott
 
+## Show bydelsdata
+
+- Prints a table with one row per bydel, one column per year
+- Show MEIS if available, otherwise show SMR or TELLER
+- If a dimension is present but not specified, all levels will be shown in the table, making it harder to read
+
+```{r fig.height = 10}
+ShowBydel(data = data, 
+          kommune = 301, 
+          alder = "0_120", 
+          kjonn = 1, 
+          utdann = NULL,
+          innvkat = NULL,
+          landbak = NULL,
+          extradim = "KODEGRUPPE",
+          extraval = "Dod_med_hjerneslag")
+```
 
 
 # Check if two objects are identical

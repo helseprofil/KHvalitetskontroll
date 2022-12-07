@@ -187,3 +187,156 @@ ShowTS <- function(data = dfnew,
   }
   print(plot)
 } 
+
+#' Show data on all bydels
+#' 
+#' Prints a table with one row per bydel, and one column per year
+#' 
+#' Show MEIS if available, otherwise SMR or TELLER
+#'
+#' @param data 
+#' @param kommune 
+#' @param alder 
+#' @param kjonn 
+#' @param utdann 
+#' @param innvkat 
+#' @param landbak 
+#' @param extradim 
+ShowBydel <- function(data = data,
+                      kommune = NULL,
+                      alder = NULL,
+                      kjonn = NULL,
+                      utdann = NULL,
+                      innvkat = NULL,
+                      landbak = NULL,
+                      extradim = NULL,
+                      extraval = NULL){
+  
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
+  
+  # Identify existing dimensions
+  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- names(data)[!names(data) %in% dims]
+  
+  # Filter out correct strata
+  
+  if ("ALDER" %in% dims) {
+    
+    if(!is.null(alder) && !alder %in% unique(data$ALDER)){
+      stop(paste0("\n", alder, " is not a valid level in ALDER"))
+    }
+    
+    if(!is.null(alder)){
+      data <- data[ALDER == alder]  
+    }
+  }
+  
+  if ("KJONN" %in% dims) {
+    
+    if(!is.null(kjonn) && !is.numeric(kjonn)){
+      stop("\nkjonn must be numeric")
+    }
+    
+    if(!is.null(kjonn) && !kjonn %in% unique(data$KJONN)){
+      stop(paste0("\n", kjonn, " is not a valid level in KJONN"))
+    }
+    
+    if(!is.null(kjonn)){
+      data <- data[KJONN == kjonn]
+    }
+  }
+  
+  if ("UTDANN" %in% dims) {
+    
+    if(!is.null(utdann) && !is.numeric(utdann)){
+      stop("\nutdann must be numeric")
+    }
+    
+    if(!is.null(utdann) && !utdann %in% unique(data$UTDANN)){
+      stop(paste0("\n", utdann, " is not a valid level in UTDANN"))
+    }
+    
+    if(!is.null(utdann)){
+      data <- data[UTDANN == utdann]
+    }
+  }
+  
+  if ("INNVKAT" %in% dims) {
+    
+    if(!is.null(innvkat) && !is.numeric(innvkat)){
+      stop("\ninnvkat must be numeric")
+    }
+    
+    if(!is.null(innvkat) && !innvkat %in% unique(data$INNVKAT)){
+      stop(paste0("\n", innvkat, "is not a valid level in INNVKAT"))
+    }
+    
+    if(!is.null(innvkat)){
+      data <- data[INNVKAT == innvkat]
+    }
+  }
+  
+  if ("LANDBAK" %in% dims) {
+    
+    if(!is.null(landbak) && !is.numeric(landbak)){
+      stop("\nlandbak must be numeric")
+    }
+    
+    if(!is.null(landbak) && !landbak %in% unique(data$LANDBAK)){
+      stop(paste0("\n", landbak, " is not a valid level in LANDBAK"))
+    }
+    
+    if(!is.null(landbak)){
+      data <- data[LANDBAK == landbak]
+    }
+    
+  }
+  
+  if (!is.null(extradim)) {
+    
+    if(!extradim %in% names(data)){
+      stop(paste0("\nNo column called ", extradim))
+    }
+    
+    if(is.null(extraval)){
+      stop("\nextradim is selected but not extraval, please specify")
+    }
+    
+    if(!is.null(extraval) && !extraval %in% unique(data[[extradim]])){
+      stop(paste0("\n'", extraval, "' is not a valid level in '", extradim, "'"))
+    }
+    
+    data <- data[data[[extradim]] == extraval]
+  }
+  
+  
+  if(is.null(kommune)){
+    stop("Kommune cannot be empty")
+  }
+  if(!is.numeric(kommune) && !nchar(kommune) %in% c(3,4)){
+    stop("kommune must be numeric and 3-4 digits")
+  }
+  
+  geo <- unique(data[GEO>9999]$GEO)
+  geo <- str_subset(geo, paste0("^", kommune))
+  
+  if("MEIS" %in% vals){
+    val <- "MEIS"
+  } else if ("SMR" %in% vals) {
+    val <- "SMR"
+  } else {
+    val <- "TELLER"
+  }
+  
+  data <- data[GEO %in% geo, c(..dims, ..val)]
+  setkeyv(data, dims)
+  DT::datatable(dcast(data, ... ~ AAR, value.var = "MEIS"), 
+                options = list(pageLength = 20,
+                               lengthMenu = c(10, 20, 30),
+                               scrollX = TRUE),
+                rownames = F)
+}
