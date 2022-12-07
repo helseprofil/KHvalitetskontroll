@@ -4,12 +4,12 @@
 #'
 #' @param data name of data set
 #' @param maltall which value to plot on y-axis, defaults to "MEIS"
-#' @param geo select GEO, if not selected it will default to 0
-#' @param alder select age group, if not selected it will default to 0
-#' @param kjonn select gender, if not selected it will default to 0
-#' @param utdann select education, if not selected it will default to 0
-#' @param innvkat select immigrant status, if not selected it will default to 0
-#' @param landbak select country of origin, if not selected it will default to 0
+#' @param geo select GEO
+#' @param alder select age group
+#' @param kjonn select gender
+#' @param utdann select education
+#' @param innvkat select immigrant status
+#' @param landbak select country of origin
 #' @param extradim any non-standard dimension
 #' @param extraval selected level of non-standard dimension
 #' #' @param tab should table be printed? defaults to TRUE
@@ -33,128 +33,36 @@ ShowTS <- function(data = NULL,
   
   # Identify existing dimensions
   dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- names(data)[!names(data) %in% dims]
   
   # Filter out correct strata
+  data <- .MakeSubset(data = data,
+                      dims = dims,
+                      alder = alder,
+                      kjonn = kjonn,
+                      utdann = utdann,
+                      innvkat = innvkat,
+                      landbak = landbak,
+                      extradim = extradim,
+                      extraval = extraval)
   
+  # Filter out correct GEO
   if ("GEO" %in% dims) {
-    
-    if(!is.null(geo) && !is.numeric(geo)){
-      stop("\ngeo must be numeric or NULL")
-    }
-    if(!is.null(geo) && !geo %in% unique(data$GEO)){
-      stop("\ngeo not found in file")
-    }
-    
+   
     if(is.null(geo)){
-      message("\nGEO not specified, GEO = 0 plotted by default")
-      geo <- 0
+      stop("\ngeo must be specified")
     }
     
-    data <- data[GEO == geo]
+   if(!is.numeric(geo)){
+     stop("\ngeo must be numeric")
+   }
+   if(!geo %in% unique(data$GEO)){
+     stop(paste0("\n", geo, " is not a valid level of GEO"))
+   }
+   
+   data <- data[GEO == geo]
   }
-  
-  if ("ALDER" %in% dims) {
-    
-    if(!is.null(alder) && !alder %in% unique(data$ALDER)){
-      stop(paste0("\n", alder, " is not a valid level in ALDER"))
-    }
-    
-    if(is.null(alder)){
-      # Find total age group (min_max)
-      ALDERl <- min(as.numeric(str_extract(data$ALDER, "[:digit:]*(?=_)")))
-      ALDERh <- max(as.numeric(str_extract(data$ALDER, "(?<=_)[:digit:]*")))
-      alder <- paste0(ALDERl, "_", ALDERh)
-      message(paste("\nALDER not specified, ALDER =", alder, "plotted by default"))
-    }
-    
-    data <- data[ALDER == alder]
-  }
-  
-  if ("KJONN" %in% dims) {
-    
-    if(!is.null(kjonn) && !is.numeric(kjonn)){
-      stop("\nkjonn must be numeric")
-    }
-    
-    if(!is.null(kjonn) && !kjonn %in% unique(data$KJONN)){
-      stop(paste0("\n", kjonn, " is not a valid level in KJONN"))
-    }
-    
-    if(is.null(kjonn)){
-      message("\nKJONN not specified, KJONN = 0 plotted by default")
-      kjonn <- 0
-    }
-    data <- data[KJONN == kjonn]
-  }
-  
-  if ("UTDANN" %in% dims) {
-    
-    if(!is.null(utdann) && !is.numeric(utdann)){
-      stop("\nutdann must be numeric")
-    }
-    
-    if(!is.null(utdann) && !utdann %in% unique(data$UTDANN)){
-      stop(paste0("\n", utdann, " is not a valid level in UTDANN"))
-    }
-    
-    if(is.null(utdann)){
-      message("\nUTDANN not specified, UTDANN = 0 plotted by default")
-      utdann <- 0
-    }
-    data <- data[UTDANN == utdann]
-  }
-  
-  if ("INNVKAT" %in% dims ) {
-    
-    if(!is.null(innvkat) && !is.numeric(innvkat)){
-      stop("\ninnvkat must be numeric")
-    }
-    
-    if(!is.null(innvkat) && !innvkat %in% unique(data$INNVKAT)){
-      stop(paste0("\n", innvkat, "is not a valid level in INNVKAT"))
-    }
-    
-    if(is.null(innvkat)){
-      message("\nINNVKAT not specified, INNVKAT = 0 plotted by default")
-      innvkat <- 0
-    }
-    data <- data[INNVKAT == innvkat]
-  }
-  
-  if ("LANDBAK" %in% dims) {
-    
-    if(!is.null(landbak) && !is.numeric(landbak)){
-      stop("\nlandbak must be numeric")
-    }
-    
-    if(!is.null(landbak) && !landbak %in% unique(data$LANDBAK)){
-      stop(paste0("\n", landbak, " is not a valid level in LANDBAK"))
-    }
-    
-    if(is.null(landbak)){
-      message("\nLANDBAK not specified, LANDBAK = 0 plotted by default")
-      landbak <- 0
-    }
-    data <- data[LANDBAK == landbak]
-  }
-  
-  if (!is.null(extradim)) {
-    
-    if(!extradim %in% names(data)){
-      stop(paste0("\nNo column called ", extradim))
-    }
-    
-    if(is.null(extraval)){
-      stop("\nextradim is selected but not extraval, please specify")
-    }
-    
-    if(!is.null(extraval) && !extraval %in% unique(data[[extradim]])){
-      stop(paste0("\n'", extraval, "' is not a valid level in '", extradim, "'"))
-    }
-    
-    data <- data[data[[extradim]] == extraval]
-  }
-  
+
   # Control that only one level is selected per dimension (except AAR) 
   for(i in str_subset(dims, "AAR", negate = T)){
     
@@ -164,6 +72,7 @@ ShowTS <- function(data = NULL,
     }
   }
   
+  # Create plot title
   caption <- paste0(if("GEO" %in% dims){paste0("GEO = ", geo)},
                     if("ALDER" %in% dims){paste0("\nALDER = ", alder)},
                     if("KJONN" %in% dims){paste0("\nKJONN = ", kjonn)},
@@ -195,14 +104,16 @@ ShowTS <- function(data = NULL,
 #' Show MEIS if available, otherwise SMR or TELLER
 #'
 #' @param data 
-#' @param kommune 
+#' @param maltall which number to show, defaults to SPVFLAGG but can also show other value columns
 #' @param alder 
 #' @param kjonn 
 #' @param utdann 
 #' @param innvkat 
 #' @param landbak 
+#' @param extraval 
 #' @param extradim 
 ShowBydel <- function(data = NULL,
+                      maltall = "SPVFLAGG",
                       kommune = NULL,
                       alder = NULL,
                       kjonn = NULL,
@@ -221,6 +132,52 @@ ShowBydel <- function(data = NULL,
   # Identify existing dimensions
   dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
   vals <- names(data)[!names(data) %in% dims]
+  
+  # Filter out correct strata
+
+  data <- .MakeSubset(data = data,
+                      dims = dims,
+                      alder = alder,
+                      kjonn = kjonn,
+                      utdann = utdann,
+                      innvkat = innvkat,
+                      landbak = landbak,
+                      extradim = extradim,
+                      extraval = extraval)
+  
+  if(is.null(kommune)){
+    stop("Kommune cannot be empty")
+  }
+  if(!is.numeric(kommune) && !nchar(kommune) %in% c(3,4)){
+    stop("kommune must be numeric and 3-4 digits")
+  }
+  
+  geo <- unique(data[GEO>9999]$GEO)
+  geo <- str_subset(geo, paste0("^", kommune))
+  
+  if(is.null(maltall)){
+    maltall <- "SPVFLAGG"
+  }
+  
+  data <- data[GEO %in% geo, c(..dims, ..maltall)]
+  setkeyv(data, dims)
+  DT::datatable(dcast(data, ... ~ AAR, value.var = maltall), 
+                options = list(pageLength = 20,
+                               lengthMenu = c(10, 20, 30),
+                               scrollX = TRUE),
+                rownames = F)
+}
+
+
+.MakeSubset <- function(data = data,
+                        dims = dims,
+                        alder = NULL,
+                        kjonn = NULL,
+                        utdann = NULL,
+                        innvkat = NULL,
+                        landbak = NULL,
+                        extradim = NULL,
+                        extraval = NULL){
   
   # Filter out correct strata
   
@@ -296,6 +253,8 @@ ShowBydel <- function(data = NULL,
     
   }
   
+  # Special handling of exstra dimension
+  
   if (!is.null(extradim)) {
     
     if(!extradim %in% names(data)){
@@ -313,30 +272,5 @@ ShowBydel <- function(data = NULL,
     data <- data[data[[extradim]] == extraval]
   }
   
-  
-  if(is.null(kommune)){
-    stop("Kommune cannot be empty")
-  }
-  if(!is.numeric(kommune) && !nchar(kommune) %in% c(3,4)){
-    stop("kommune must be numeric and 3-4 digits")
-  }
-  
-  geo <- unique(data[GEO>9999]$GEO)
-  geo <- str_subset(geo, paste0("^", kommune))
-  
-  if("MEIS" %in% vals){
-    val <- "MEIS"
-  } else if ("SMR" %in% vals) {
-    val <- "SMR"
-  } else {
-    val <- "TELLER"
-  }
-  
-  data <- data[GEO %in% geo, c(..dims, ..val)]
-  setkeyv(data, dims)
-  DT::datatable(dcast(data, ... ~ AAR, value.var = "MEIS"), 
-                options = list(pageLength = 20,
-                               lengthMenu = c(10, 20, 30),
-                               scrollX = TRUE),
-                rownames = F)
+  data
 }
