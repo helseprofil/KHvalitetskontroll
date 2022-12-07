@@ -2,8 +2,8 @@
 
 #' Plot time serie for specific strata
 #'
-#' @param data defaults to dfnew
-#' @param maltall which value to plot on y-axis
+#' @param data name of data set
+#' @param maltall which value to plot on y-axis, defaults to "MEIS"
 #' @param geo select GEO, if not selected it will default to 0
 #' @param alder select age group, if not selected it will default to 0
 #' @param kjonn select gender, if not selected it will default to 0
@@ -13,7 +13,7 @@
 #' @param extradim any non-standard dimension
 #' @param extraval selected level of non-standard dimension
 #' #' @param tab should table be printed? defaults to TRUE
-ShowTS <- function(data = dfnew,
+ShowTS <- function(data = NULL,
                    maltall = "MEIS",
                    geo = NULL,
                    alder = NULL,
@@ -202,7 +202,7 @@ ShowTS <- function(data = dfnew,
 #' @param innvkat 
 #' @param landbak 
 #' @param extradim 
-ShowBydel <- function(data = data,
+ShowBydel <- function(data = NULL,
                       kommune = NULL,
                       alder = NULL,
                       kjonn = NULL,
