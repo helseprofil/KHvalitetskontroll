@@ -5,7 +5,7 @@ date: "2022-09-29"
 output: html_document
 ---
 
-Last updated: 06.12.2022
+Last updated: 07.12.2022
 
 - This document contain useful functions for exploration of data files
 - Alternative to open the file in Excel
@@ -84,6 +84,8 @@ ShowTS(data = data, # Name of data object
 ### Multiple strata
 
 - Useful if you want to see the time series for several or all age groups, all genders, all diagnoses etc for one strata. 
+- When providing a list of GEO-codes, this can be a shortcut to check all outlier GEO-codes in one strata
+
 ```{r message=FALSE, warning=FALSE}
 # Create multiple plots
 # On first row, enter a dimension to plot one time series for each level, or a list of levels you want to plot for one dimension (e.g. list of GEO). 
@@ -110,19 +112,21 @@ walk(c(30101, 30102, 30102), # Select dimension or enter list of valid values he
 ## Show bydelsdata
 
 - Prints a table with one row per bydel, one column per year
-- Show MEIS if available, otherwise show SMR or TELLER
+- By default show SPVFLAGG, to identify if numbers are censored (3) or actually missing (1)
+    - To show data, change the value of "maltall"
 - If a dimension is present but not specified, all levels will be shown in the table, making it harder to read
 
 ```{r fig.height = 10}
 ShowBydel(data = data, 
-          kommune = 301, 
+          maltall = "SPVFLAGG",
+          kommune = 1103, 
           alder = "0_120", 
-          kjonn = 1, 
+          kjonn = 0, 
           utdann = NULL,
           innvkat = NULL,
           landbak = NULL,
           extradim = "KODEGRUPPE",
-          extraval = "Dod_med_hjerneslag")
+          extraval = "Dod_med_hjerte_og_karsykdom")
 ```
 
 
