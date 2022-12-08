@@ -601,7 +601,7 @@ UnspecifiedBydel <- function(data = dfnew,
   # Only keep complete strata
   d <- d[sumSPV == 0]
   if(nrow(d) < 1){
-    cat("No complete strata, not possible to estimate unspecified bydel.\n")
+    cat("No complete strata, not possible to estimate unspecified bydel. Was bydelstart set to the correct year?\n")
     return(invisible(NULL))
   } 
   
