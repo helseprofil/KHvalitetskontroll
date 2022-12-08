@@ -548,7 +548,7 @@ PlotTimeseries <- function(data = dfnew,
 #' Outputs a sortable and searchable table ordered according to proportion unspecified 
 #' 
 #' @param data defaults to dfnew
-#' @param bydelstart defaults to STARTBYDEL
+#' @param bydelstart defaults to BYDELSTART
 #'
 #' @return
 #' @export
