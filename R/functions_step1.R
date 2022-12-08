@@ -421,13 +421,13 @@ PlotTimeseries <- function(data = dfnew,
   
   plotdata <- copy(data)
   
+  # Identify all dimensions in the file
+  dimexist <- names(plotdata)[names(plotdata) %in% .ALL_DIMENSIONS]
+  
   # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
-  plotdata <- plotdata[, names(plotdata) %in% c(.ALL_DIMENSIONS, plotvals), with = F]
-  
-  # Identify all dimensions in the file
-  dimexist <- names(plotdata)[names(plotdata) %in% .ALL_DIMENSIONS]
+  plotdata <- plotdata[, c(..dimexist, ..plotvals)]
   
   # If ALDER is included, only keep total (minALDERl_maxALDERh)
   if ("ALDER" %in% dimexist) {
@@ -469,7 +469,7 @@ PlotTimeseries <- function(data = dfnew,
 
 .AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
   # Group by all existing standard dimensions
-  groupcols <- dimexist[!dimexist %in% dimextra]
+  groupcols <- str_subset(dimexist, dimextra, negate = TRUE)
   # Identify value columns to average or sum
   sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
   avgcols <- plotvals[!plotvals %in% sumcols]
@@ -478,6 +478,7 @@ PlotTimeseries <- function(data = dfnew,
   data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
   data[, (dimextra) := NULL]
   data <- unique(data)
+  data
 }
 
 .AggregateAge <- function(data){
