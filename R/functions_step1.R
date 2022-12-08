@@ -554,8 +554,7 @@ PlotTimeseries <- function(data = dfnew,
 #' @export
 #'
 #' @examples
-UnspecifiedBydel <- function(data = dfnew,
-                             bydelstart = BYDELSTART){
+UnspecifiedBydel <- function(data = dfnew){
   
   kommunegeo <- c(301, 1103, 4601, 5001)
   bydelsgeo <- unique(data[GEO>9999]$GEO)
@@ -569,11 +568,10 @@ UnspecifiedBydel <- function(data = dfnew,
   
   d <- copy(data)
   
-  # Remove years before bydelstart (unless bydelstart = NULL)
-  if(!is.null(bydelstart)){
-    d <- d[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))] 
-    d <- d[AARx >= bydelstart]
-    }
+  # Remove years with no data on bydel
+  
+  bydelaar <- d[GEO %in% bydelsgeo & SPVFLAGG == 0, .N, by = AAR]$AAR
+  d <- d[AAR %in% bydelaar]
   
   # If no rows left after filtering years, stop and return NULL.
   if(nrow(d) < 1){
@@ -604,7 +602,6 @@ UnspecifiedBydel <- function(data = dfnew,
     cat("No complete strata, not possible to estimate unspecified bydel. Was bydelstart set to the correct year?\n")
     return(invisible(NULL))
   } 
-  
   
   # sum `vals` columns for kommune and bydel
   d <- d[, lapply(.SD, sum, na.rm = T), .SDcols = vals, by = c("KOMMUNE", "GEONIV", 
