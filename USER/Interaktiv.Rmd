@@ -70,7 +70,7 @@ View(data)
 ```{r message=FALSE, warning=FALSE}
 ShowTS(data = data, # Name of data object
        maltall = "MEIS", # Value to plot on y-axis
-       geo = 500103, # NUMERIC: e.g. 0
+       geo = 0, # NUMERIC: e.g. 0
        alder = "75_120", # INTERVAL: XX_YY, e.g. "0_120"
        kjonn = 2, # NUMERIC: 0, 1, or 2
        utdann = NULL, # NUMERIC
@@ -119,16 +119,15 @@ walk(c(30101, 30102, 30102), # Select dimension or enter list of valid values he
 ```{r fig.height = 10}
 ShowBydel(data = data, 
           maltall = "SPVFLAGG",
-          kommune = 1103, 
-          alder = "0_120", 
+          kommune = 4601, 
+          alder = "0_74", 
           kjonn = 0, 
           utdann = NULL,
           innvkat = NULL,
           landbak = NULL,
           extradim = "KODEGRUPPE",
-          extraval = "Dod_med_hjerte_og_karsykdom")
+          extraval = "Dod_med_hjerteinfarkt")
 ```
-
 
 # Check if two objects are identical
 
@@ -137,10 +136,9 @@ ShowBydel(data = data,
 * Returns TRUE or FALSE
 
 ```{r}
-
-
 identical(object1, object2)
 ```
+
 
 
 

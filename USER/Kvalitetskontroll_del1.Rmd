@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.5.3 (05.12.2022). 
+Version: 1.5.4 (08.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
