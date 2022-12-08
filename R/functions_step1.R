@@ -538,3 +538,97 @@ PlotTimeseries <- function(data = dfnew,
     force_panelsizes(rows = unit(4.5, "cm"))
 }
 
+#' UnspecifiedBydel
+#'
+#' Calculates the proportion of unspecified BYDEL, for evaluation of the quality of data on this geographical level. 
+#' 
+#' The proportion is calculated for all strata containing complete (no censoring) data on BYDEL, for all value columns whose name contains "TELLER" or "NEVNER"
+#' 
+#' Outputs a sortable and searchable table ordered according to proportion unspecified 
+#' 
+#' @param data defaults to dfnew
+#' @param bydelstart defaults to STARTBYDEL
+#'
+#' @return
+#' @export
+#'
+#' @examples
+UnspecifiedBydel <- function(data = dfnew,
+                             bydelstart = BYDELSTART){
+  
+  kommunegeo <- c(301, 1103, 4601, 5001)
+  bydelsgeo <- unique(data[GEO>9999]$GEO)
+  
+  # If no data on bydel, stop and return NULL
+  if(length(bydelsgeo) < 1){
+    cat("No geo-codes corresponding to bydel, not possible to estimate unspecified bydel.\n")
+    out <- NULL
+    return(out)
+  } 
+  
+  d <- copy(data)
+  
+  # Remove years before bydelstart (unless bydelstart = NULL)
+  if(!is.null(bydelstart)){
+    d <- d[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))] 
+    d <- d[AARx >= bydelstart]
+    }
+  
+  # If no rows left after filtering years, stop and return NULL.
+  if(nrow(d) < 1){
+      cat("No rows left in data after removing years < bydel start.\n")
+      return(invisible(NULL))
+    } 
+  
+  # Identify dimemsion and value columns
+  dims <- names(d)[names(d) %in% .ALL_DIMENSIONS]
+  vals <- names(d)[!names(d) %in% dims]
+  vals <- str_subset(vals, "TELLER|NEVNER")
+        
+  # Create subset, create geolevel and kommune variable
+  d <- d[GEO %in% c(kommunegeo, bydelsgeo), c(..dims, ..vals, "SPVFLAGG")][, ':=' (KOMMUNE = character(),
+                                                                                      GEONIV = "Bydel")]
+  d[grep("^301", GEO), KOMMUNE := "Oslo"]
+  d[grep("^1103", GEO), KOMMUNE := "Stavanger"]
+  d[grep("^4601", GEO), KOMMUNE := "Bergen"]
+  d[grep("^5001", GEO), KOMMUNE := "Trondheim"]
+  d[GEO < 9999, GEONIV := "Kommune"]
+  
+  # Identify complete strata within kommune and all dims except GEO and AAR
+  d[, sumSPV := sum(SPVFLAGG), by = c("KOMMUNE", 
+                                      dims[!dims %in% c("GEO", "AAR")])]
+  # Only keep complete strata
+  d <- d[sumSPV == 0]
+  if(nrow(d) < 1){
+    cat("No complete strata, not possible to estimate unspecified bydel.\n")
+    return(invisible(NULL))
+  } 
+  
+  
+  # sum `vals` columns for kommune and bydel
+  d <- d[, lapply(.SD, sum, na.rm = T), .SDcols = vals, by = c("KOMMUNE", "GEONIV", 
+                                                               str_subset(dims, "GEO", negate = TRUE))]
+  
+  # Format table
+  d[, (vals) := lapply(.SD, as.numeric, na.rm = T), .SDcols = vals]
+  d <- melt(d, measure.vars = c(vals), variable.name = "MALTALL")
+  d <- dcast(d, ... ~ GEONIV, value.var = "value")
+  
+  # Estimate unknown bydel
+  d[, `UOPPGITT, %` := round(100* (1 - Bydel/Kommune),1)]
+  
+  # Convert all dimensions to factor for search function
+  convert <- c("KOMMUNE", names(d)[names(d) %in% dims], "MALTALL")
+  d[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
+  
+  # Make datatable output
+  DT::datatable(d[order(-`UOPPGITT, %`)], 
+                filter = "top",
+                rownames = F,
+                options = list(
+                  columnDefs = list(list(targets = c("Bydel", "Kommune", "UOPPGITT, %"),
+                                         searchable = FALSE)))
+                )
+  
+}
+
