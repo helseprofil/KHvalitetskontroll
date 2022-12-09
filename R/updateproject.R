@@ -1,8 +1,8 @@
-ask <- utils::askYesNo("SISTE OPPDATERING AV BRUKERFILER 08.12.2022\n\n Vil du oppdatere?")
+ask <- utils::askYesNo("SISTE OPPDATERING AV BRUKERFILER 08.12.2022\n\nVil du oppdatere?")
 
 if(ask) {
   cat("\nSer etter endringer\n",
-      "\nIf this fails, run:\n",
+      "\nDersom dette feiler:\n",
       '\n source("https://raw.githubusercontent.com/helseprofil/misc/main/utils.R")\n',
       "\n kh_install(KHvalitetskontroll)\n\n")
   gert::git_branch_checkout("main")
