@@ -145,26 +145,49 @@ ShowBydel <- function(data = NULL,
                       extradim = extradim,
                       extraval = extraval)
   
-  if(is.null(kommune)){
-    stop("Kommune cannot be empty")
-  }
-  if(!is.numeric(kommune) && !nchar(kommune) %in% c(3,4)){
-    stop("kommune must be numeric and 3-4 digits")
+  if(!is.null(kommune) && !is.numeric(kommune) && !nchar(kommune) %in% c(3,4)){
+    stop("kommune must be numeric and 3-4 digits, or NULL to show all")
   }
   
+  # Make list of geo codes corresponding to bydel, and filter if kommune argument is specified
   geo <- unique(data[GEO>9999]$GEO)
+  if(!is.null(kommune)){
   geo <- str_subset(geo, paste0("^", kommune))
+  }
+  
+  # Filter out years with no data on bydel
+  bydelaar <- data[GEO %in% geo & SPVFLAGG == 0, .N, by = AAR]$AAR
+  data <- data[AAR %in% bydelaar][, KOMMUNE := character()]
+  
+  # Create KOMMUNE column
+  data[grep("^301", GEO), KOMMUNE := "0301 Oslo"]
+  data[grep("^1103", GEO), KOMMUNE := "1103 Stavanger"]
+  data[grep("^4601", GEO), KOMMUNE := "4601 Bergen"]
+  data[grep("^5001", GEO), KOMMUNE := "5001 Trondheim"]
+  
   
   if(is.null(maltall)){
     maltall <- "SPVFLAGG"
   }
   
-  data <- data[GEO %in% geo, c(..dims, ..maltall)]
-  setkeyv(data, dims)
-  DT::datatable(dcast(data, ... ~ AAR, value.var = maltall), 
+  data <- data[GEO %in% geo, c("KOMMUNE", ..dims, ..maltall)]
+  setkeyv(data, c("KOMMUNE", dims))
+  
+  # Format table
+  data <- dcast(data, ... ~ AAR, value.var = maltall)
+  
+  # Convert all dimensions to factor for search function
+  filtercols <- c("KOMMUNE", str_subset(dims, "GEO|AAR", negate = T))
+  data[, (filtercols) := lapply(.SD, as.factor), .SDcols = c(filtercols)]
+  nofilter <- names(data)[!names(data) %in% filtercols]
+  
+  DT::datatable(data, 
+                filter = "top",
                 options = list(pageLength = 20,
                                lengthMenu = c(10, 20, 30),
-                               scrollX = TRUE),
+                               scrollX = TRUE,
+                               columnDefs = list(list(targets = nofilter,
+                                                      searchable = FALSE))),
                 rownames = F)
 }
 
