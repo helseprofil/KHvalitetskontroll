@@ -111,22 +111,22 @@ walk(c(30101, 30102, 30102), # Select dimension or enter list of valid values he
 
 ## Show bydelsdata
 
-- Prints a table with one row per bydel, one column per year
-- By default show SPVFLAGG, to identify if numbers are censored (3) or actually missing (1)
-    - To show data, change the value of "maltall"
-- If a dimension is present but not specified, all levels will be shown in the table, making it harder to read
+- Prints a table with one row per value column per bydel, one column per year
+- For existing dimensions where level is not specified, all levels are included in the table and can be filtered interactively in the output table
+    - The more filters you specify, the quicker the function will run
+    
 
 ```{r fig.height = 10}
 ShowBydel(data = data, 
-          maltall = "SPVFLAGG",
-          kommune = 4601, 
-          alder = "0_74", 
+          maltall = c("SPVFLAGG", "MEIS", "TELLER"), # List of value columns to include, e.g. c("SPVFLAGG", "TELLER", "NEVNER"). If NULL, a default selection is shown.
+          kommune = NULL, 
+          alder = NULL, 
           kjonn = 0, 
           utdann = NULL,
           innvkat = NULL,
           landbak = NULL,
-          extradim = "KODEGRUPPE",
-          extraval = "Dod_med_hjerteinfarkt")
+          extradim = NULL,
+          extraval = NULL)
 ```
 
 # Check if two objects are identical

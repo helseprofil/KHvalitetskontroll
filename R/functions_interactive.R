@@ -101,10 +101,10 @@ ShowTS <- function(data = NULL,
 #' 
 #' Prints a table with one row per bydel, and one column per year
 #' 
-#' Show MEIS if available, otherwise SMR or TELLER
 #'
 #' @param data 
-#' @param maltall which number to show, defaults to SPVFLAGG but can also show other value columns
+#' @param maltall
+#' @param kommune
 #' @param alder 
 #' @param kjonn 
 #' @param utdann 
@@ -113,7 +113,7 @@ ShowTS <- function(data = NULL,
 #' @param extraval 
 #' @param extradim 
 ShowBydel <- function(data = NULL,
-                      maltall = "SPVFLAGG",
+                      maltall = NULL,
                       kommune = NULL,
                       alder = NULL,
                       kjonn = NULL,
@@ -131,10 +131,14 @@ ShowBydel <- function(data = NULL,
   
   # Identify existing dimensions
   dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
-  vals <- names(data)[!names(data) %in% dims]
+  
+  # Select value columns
+  if(is.null(maltall)){
+    maltall <- c("SPVFLAGG", "MEIS", "SMR", "RATE", "TELLER", "NEVNER", "sumTELLER", "sumNEVNER")
+  }
+  vals <- names(data)[names(data) %in% maltall]
   
   # Filter out correct strata
-
   data <- .MakeSubset(data = data,
                       dims = dims,
                       alder = alder,
@@ -165,29 +169,37 @@ ShowBydel <- function(data = NULL,
   data[grep("^4601", GEO), KOMMUNE := "4601 Bergen"]
   data[grep("^5001", GEO), KOMMUNE := "5001 Trondheim"]
   
-  
-  if(is.null(maltall)){
-    maltall <- "SPVFLAGG"
-  }
-  
-  data <- data[GEO %in% geo, c("KOMMUNE", ..dims, ..maltall)]
+  # Subset and order data
+  data <- data[GEO %in% geo, c("KOMMUNE", ..dims, ..vals)]
   setkeyv(data, c("KOMMUNE", dims))
   
   # Format table
-  data <- dcast(data, ... ~ AAR, value.var = maltall)
+  data[, (vals) := lapply(.SD, as.numeric, na.rm = T), .SDcols = vals]
+  data[, (vals) := lapply(.SD, round, 2), .SDcols = vals]
+  data <- melt(data, measure.vars = c(vals), variable.name = "MALTALL")
+  data <- dcast(data, ... ~ AAR, value.var = "value")
   
-  # Convert all dimensions to factor for search function
-  filtercols <- c("KOMMUNE", str_subset(dims, "GEO|AAR", negate = T))
+  # Rename GEO to BYDEL for output table
+  setnames(data, "GEO", "BYDEL")
+  
+  # Convert all dimensions (except GEO and AAR) to factor for search function
+  filtercols <- c("KOMMUNE", "MALTALL", str_subset(dims, "GEO|AAR", negate = T))
   data[, (filtercols) := lapply(.SD, as.factor), .SDcols = c(filtercols)]
   nofilter <- names(data)[!names(data) %in% filtercols]
   
+  # move maltall column, and set first value as default filter
+  setcolorder(data, c("MALTALL"))
+  defaultval <- paste0("[\"", maltall[1], "\"]")
+  
+  # Output
   DT::datatable(data, 
                 filter = "top",
                 options = list(pageLength = 20,
                                lengthMenu = c(10, 20, 30),
                                scrollX = TRUE,
                                columnDefs = list(list(targets = nofilter,
-                                                      searchable = FALSE))),
+                                                      searchable = FALSE)),
+                               searchCols = list(list(search = defaultval))),
                 rownames = F)
 }
 
