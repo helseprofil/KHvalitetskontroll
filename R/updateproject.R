@@ -1,4 +1,6 @@
-ask <- utils::askYesNo("SISTE OPPDATERING AV BRUKERFILER 08.12.2022\n\nVil du oppdatere?")
+.lastupdate <- "08.12.2022"
+
+ask <- utils::askYesNo(paste0("SISTE OPPDATERING AV BRUKERFILER: ", .lastupdate, "\n\nVil du oppdatere?"))
 
 if(ask) {
   cat("\nSer etter endringer\n",
@@ -8,9 +10,9 @@ if(ask) {
   gert::git_branch_checkout("main")
   gert::git_reset_hard()
   gert::git_pull()
-  updatemsg <- "\nEverything up to date!\n"
+  .updatemsg <- "\nAlt er oppdatert!\n"
 } else {
-  updatemsg <- "\nUser files not updated, new versions may be available.\nCopy the files you want to keep and restart the project (Ctrl + Shift + F10) to get the latest updates.\n"
+  .updatemsg <- paste0("\nBrukerfiler ikke oppdatert, nye versjoner kan være tilgjengelige.\n\nSist oppdatert: ", .lastupdate)
 }
 
 rm(ask)
