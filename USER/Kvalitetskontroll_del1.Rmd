@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.5.3 (05.12.2022). 
+Version: 1.5.4 (08.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -154,7 +154,6 @@ ComparePrikk(groupdim = EXTRAdims)
 ComparePrikkTS()
 ```
 
-
 # 3. Lower sums up to higher geographical level 
 
 ## 3A. Does FYLKE sum to LAND?
@@ -234,7 +233,18 @@ CompareBydelKommune(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 CompareOslo(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 ```
 
-# 4. Country level time-series plots
+# 4. Proportion of unspecified BYDEL
+
+- Searchable table summarizing the proportion of unspecified bydel
+- Uses value columns containing "TELLER" or "NEVNER"
+- Only includes years with data on bydel
+
+```{r}
+UnspecifiedBydel()
+```
+
+
+# 5. Country level time-series plots
 
 - Plots country-level time-series data for `r print_dim(PLOTVALS)`, to check for misclassification across: `r print_dim(PLOTDIMS)`
 
