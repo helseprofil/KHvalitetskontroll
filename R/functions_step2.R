@@ -44,9 +44,9 @@
   } 
   
   # Outlier detection
-  # Loop through all value columns except SPVFLAGG and .n-columns
-  outliervals <- vals[!vals %in% c("SPVFLAGG", 
-                                   grep(".n", vals, value = T))]
+  # .FlagOutlier(dfnew_flag,
+  #              commondims = commondims,
+  #              commonvals = commonvals)
   
   cat("\n-Flagged version of new KUBE created: dfnew_flag")
 }
@@ -509,3 +509,52 @@ CompareNewOld <- function(data = compareKUBE,
   
   walk(tables, print)
 }
+
+#' Flag outliers
+#' 
+#' *_outlier: Within all strata (total GEO and AAR)
+#' *_outlierTS: Within time series (all strata, total AAR)
+#' 
+#'
+#' @param data 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.FlagOutlier <- function(data = dfnew_flag,
+                         commondims = commondims,
+                         commonvals = commonvals){
+  
+  d <- copy(data)
+  
+  # Init required columns for outlier detection
+  d[, ':=' (geoniv = NA_character_,
+            low = NA_real_,
+            high = NA_real_)]
+  
+  d[GEO == 0, geoniv := "L"]
+  d[GEO > 0 & GEO < 100, ':=' (geoniv = "F")]
+  d[GEO > 100 & GEO < 10000, ':=' (geoniv = "K")]
+  d[GEO > 10000, ':=' (geoniv = "B")]
+  
+  # Detect strata for outlier detection
+  # groupdims <- c(commondims, newdims)
+  # groupdims <- str_subset(groupdims, "GEO|AAR", negate = TRUE)
+  # 
+  # outliervals <- c("MEIS", "TELLER")
+  # 
+  # for(i in outliervals){
+  #   
+  #   dfnew_flag[, ':=' (low = quantile(.SD, 0.25, na.rm = T) - 1.5*IQR(subset[[i]], na.rm = T),
+  #                      high = quantile(.SD, 0.75, na.rm = T) + 1.5*IQR(subset[[i]], na.rm = T)), 
+  #              by = c("geoniv", groupdims),
+  #              .SDcols = i]
+  #   
+  #   dfnew_flag[, paste0(i, "_outlier") := NA_real_]
+  #   dfnew_flag[, c("low", "high") := list(NULL)]
+  # }
+  
+  
+}
+  
