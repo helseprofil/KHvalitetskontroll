@@ -53,8 +53,8 @@ ShowTS <- function(data = NULL,
       stop("\ngeo must be specified")
     }
     
-   if(!is.numeric(geo)){
-     stop("\ngeo must be numeric")
+   if(is.character(geo)){
+     geo <- as.numeric(geo)
    }
    if(!geo %in% unique(data$GEO)){
      stop(paste0("\n", geo, " is not a valid level of GEO"))
