@@ -523,8 +523,7 @@ CompareNewOld <- function(data = compareKUBE,
 #'
 #' @examples
 .FlagOutlier <- function(data = dfnew_flag,
-                         commondims = commondims,
-                         commonvals = commonvals){
+                         dims = dimnew){
   
   d <- copy(data)
   
@@ -538,23 +537,23 @@ CompareNewOld <- function(data = compareKUBE,
   d[GEO > 100 & GEO < 10000, ':=' (geoniv = "K")]
   d[GEO > 10000, ':=' (geoniv = "B")]
   
-  # Detect strata for outlier detection
-  # groupdims <- c(commondims, newdims)
-  # groupdims <- str_subset(groupdims, "GEO|AAR", negate = TRUE)
-  # 
-  # outliervals <- c("MEIS", "TELLER")
-  # 
-  # for(i in outliervals){
-  #   
-  #   dfnew_flag[, ':=' (low = quantile(.SD, 0.25, na.rm = T) - 1.5*IQR(subset[[i]], na.rm = T),
-  #                      high = quantile(.SD, 0.75, na.rm = T) + 1.5*IQR(subset[[i]], na.rm = T)), 
-  #              by = c("geoniv", groupdims),
-  #              .SDcols = i]
-  #   
-  #   dfnew_flag[, paste0(i, "_outlier") := NA_real_]
-  #   dfnew_flag[, c("low", "high") := list(NULL)]
-  # }
-  
+  Detect strata for outlier detection
+  groupdims <- c(commondims, newdims)
+  groupdims <- str_subset(groupdims, "GEO|AAR", negate = TRUE)
+
+  outliervals <- c("MEIS", "TELLER")
+
+  for(i in outliervals){
+
+    dfnew_flag[, ':=' (low = quantile(.SD, 0.25, na.rm = T) - 1.5*IQR(subset[[i]], na.rm = T),
+                       high = quantile(.SD, 0.75, na.rm = T) + 1.5*IQR(subset[[i]], na.rm = T)),
+               by = c("geoniv", groupdims),
+               .SDcols = i]
+
+    dfnew_flag[, paste0(i, "_outlier") := NA_real_]
+    dfnew_flag[, c("low", "high") := list(NULL)]
+  }
+
   
 }
   
