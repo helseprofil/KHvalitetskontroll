@@ -7,6 +7,8 @@ cat("\nWelcome to KHvalitetskontroll\n",
     "  - Manuell sjekk\n",
     "- Kvalitetskontroll_del2.Rmd\n",
     "  - Compare\n",
+    "- Interaktiv.Rmd",
+    "  - Functions for interactive quality control",
     "\n---\n",
     if(exists(".updatemsg")) {
       .updatemsg
