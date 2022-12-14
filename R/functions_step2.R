@@ -243,8 +243,11 @@ FormatData <- function(data1 = dfnew,
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
+  
+  if(!is.null(dumps)){
   .CreateFolders(profileyear = profileyear,
                  kubename = kubename)
+  }
   
   dumppath <- file.path("F:", 
                         "Forskningsprosjekter", 
