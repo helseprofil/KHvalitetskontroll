@@ -397,12 +397,11 @@ CompareDiffRows <- function(data = compareKUBE) {
     # Calculate n rows diff,
     # If nrowdiff > 0, and both new and old value exists, calculate mean/min/max diff within selected geographical strata
     # If nrowdiff == 0, set mean/min/max = NA
-    nrowidentical <- nrow(data[data[[diff]] == 0])
-    nrowdiff <- nrow(data[data[[diff]] != 0])
-    nprikknew <- nrow(data[is.na(data[[new]]) & !is.na(data[[old]])])
-    nprikkexp <- nrow(data[!is.na(data[[new]]) & is.na(data[[old]])])
-    ncompared <- nrow(data[!is.na(data[[new]]) & !is.na(data[[old]]) & data[[diff]] != 0])
-    if (nrowdiff > 0 & ncompared > 0) {
+    nrowidentical <- nrow(data[get(diff) == 0])
+    nprikknew <- nrow(data[is.na(get(new)) & !is.na(get(old))])
+    nprikkexp <- nrow(data[!is.na(get(new)) & is.na(get(old))])
+    ndifferent <- nrow(data[data[[diff]] != 0])
+    if (ndifferent > 0) {
       # Create subset of different rows with both new and old value existing
       diffdata <- data[data[[diff]] != 0 & !is.na(data[[new]]) & !is.na(data[[old]])]
       # Estimate mean, min, max
@@ -417,13 +416,12 @@ CompareDiffRows <- function(data = compareKUBE) {
     
     # Create summary table
     tibble(
-      Geoniv = geoniv,
+      GEOniv = geoniv,
       Value = val,
       `N identical` = nrowidentical,
-      `N diff` = nrowdiff,
       `N new prikk` = nprikknew,
-      `N expired prikk` = nprikkexp,
-      `N compared` = ncompared,
+      `N exp prikk` = nprikkexp,
+      `N different` = ndifferent,
       `Mean diff` = meandiff,
       `Min diff` = mindiff,
       `Max diff` = maxdiff
@@ -437,11 +435,27 @@ CompareDiffRows <- function(data = compareKUBE) {
       data = data,
       val = .x,
       geoniv = geoniv
-    ))
+    )) 
   })
   
-  DT::datatable(difftable, rownames = F)
-}
+  # Convert to data.table and convert GEOniv and Value to factor for filtering
+  setDT(difftable)
+  filtercols <- c("GEOniv", "Value")
+  difftable[, (filtercols) := lapply(.SD, as.factor), .SDcols = filtercols]
+  
+  # Create output table
+  DT::datatable(difftable,
+                filter = "top",
+                rownames = F,
+                options = list(
+                  columnDefs = list(list(targets = 2:(ncol(difftable)-1),
+                                         searchable = FALSE)),
+                  # Show length menu, table and pagination
+                  dom = 'ltp', 
+                  scrollX = TRUE
+                  )
+                )
+  }
 
 #' Compare new and old value
 #' 

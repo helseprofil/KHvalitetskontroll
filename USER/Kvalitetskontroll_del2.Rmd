@@ -23,13 +23,13 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded**
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR_2022-11-30", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR_2022-12-14", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "HKR_2022-11-30", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
-                  folder = 2022) # DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "DATERT") # DATERT" or 4-digit year if file in NESSTAR-folder
 ```
 
 ```{r}
@@ -62,11 +62,14 @@ FormatData()
 ## Summary table
 
 - In the compareKUBE, calculate per value column per geographical level:
-    - How many rows are identical (same value or both censored)
-    - How many rows are different (different value, or one value censored)
-    - How many rows are censored in the new file, but not in the old (N new prikk)
-    - How many rows were censored in the old file, but no longer in the new (N expired prikk)
-    - Mean, minumum and maximum difference between new and old file
+    - N identical: How many rows are identical (same value or both censored)
+    - N new prikk: How many rows are censored in the new file, but not in the old
+    - N exp prikk: How many rows were censored in the old file, but no longer in the new
+    - N different: How many rows are different (with both new and old value present)
+- For different columns, calculate
+    - Absolute difference: Mean, minumum, and maximum (new - old)
+    - Relative difference: Mean, minimum, and maximum ratio (new / old) 
+    
 ```{r}
 CompareDiffRows(data = compareKUBE)
 ```
