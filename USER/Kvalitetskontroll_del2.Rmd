@@ -23,7 +23,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded**
 ```{r echo = F}
 ## Load data
-dfnew <- ReadFile(file = "HKR_2022-11-21", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "HKR_2022-11-30", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -70,7 +70,6 @@ FormatData()
 ```{r}
 CompareDiffRows(data = compareKUBE)
 ```
-
 
 
 ```{r eval = F}

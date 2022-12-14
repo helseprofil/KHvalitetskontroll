@@ -43,11 +43,6 @@
     cat("\n-For new dimensions, flagged all rows not representing total numbers as new rows")
   } 
   
-  # Outlier detection
-  # Loop through all value columns except SPVFLAGG and .n-columns
-  outliervals <- vals[!vals %in% c("SPVFLAGG", 
-                                   grep(".n", vals, value = T))]
-  
   cat("\n-Flagged version of new KUBE created: dfnew_flag")
 }
 
@@ -191,23 +186,24 @@
     new <- paste0(i, "_new")
     old <- paste0(i, "_old")
     diff <- paste0(i, "_diff")
+    reldiff <- paste0(i, "_reldiff")
     
-    # Create diff column, new - old value 
-    compareKUBE[, (diff) := compareKUBE[[new]] - compareKUBE[[old]]]
-    # For rows with missing old and new, set _diff = 0
-    compareKUBE[is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]]), 
-                (diff) := 0]
-    # For rows with missing new but existing old value, set _diff to -old
-    compareKUBE[is.na(compareKUBE[[new]]) & !is.na(compareKUBE[[old]]), 
-                (diff) := -compareKUBE[is.na(compareKUBE[[new]]) & !is.na(compareKUBE[[old]])][[old]]]
-    # For rows with missing old, but existing new, set _diff to + new
-    compareKUBE[!is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]]), 
-                (diff) := compareKUBE[!is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]])][[new]]]
-
+    # Initiate _diff (new - old) and _reldiff (new/old) columns 
+    compareKUBE[, (diff) := get(new) - get(old)]
+    compareKUBE[, (reldiff) := get(new) / get(old)]
+    # For rows with missing new or old values, set _diff and _reldiff to NA
+    compareKUBE[is.na(compareKUBE[[new]]) & !is.na(compareKUBE[[old]]), (diff) := NA_real_]
+    compareKUBE[is.na(compareKUBE[[new]]) & !is.na(compareKUBE[[old]]), (reldiff) := NA_real_]
+    # For rows with missing old AND new, set _diff = 0, and _reldiff = 1
+    compareKUBE[is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]]), (diff) := 0]
+    compareKUBE[is.na(compareKUBE[[new]]) & is.na(compareKUBE[[old]]), (reldiff) := 1]
   }
   
-  compareKUBE <<- .FixDecimals(compareKUBE)
+  # Remove SPVFLAGG_reldiff
+  compareKUBE[, SPVFLAGG_reldiff := NULL]
   
+  # Export compareKUBE to global environment
+  compareKUBE <<- .FixDecimals(compareKUBE)
 }
 
 #' Format data
@@ -270,14 +266,14 @@ FormatData <- function(data1 = dfnew,
   newdims <- dimnew[!dimnew %in% dimold]
   expdims <- dimold[!dimold %in% dimnew]
   
-  msg_commondims <- case_when(length(commondims) == 0 ~ "\n-No common dimensions found",
-                             TRUE ~ paste0("\n-Common columns found: ", str_c(commondims, collapse = ", ")))
+  msg_commondims <- case_when(length(commondims) == 0 ~ "\n- No common dimensions found",
+                             TRUE ~ paste0("\n- Common columns found: ", str_c(commondims, collapse = ", ")))
   
-  msg_newdims <- case_when(length(newdims) == 0 ~ "\n-No new dimensions.",
-                          TRUE ~ paste0("\n-New dimensions found: ", str_c(newdims, collapse = ", ")))
+  msg_newdims <- case_when(length(newdims) == 0 ~ "\n- No new dimensions.",
+                          TRUE ~ paste0("\n- New dimensions found: ", str_c(newdims, collapse = ", ")))
   
-  msg_expdims <- case_when(length(expdims) == 0 ~ "\n-No expired dimensions.",
-                      TRUE ~ paste0("\n-Expired dimensions found: ", str_c(expdims, collapse = ", ")))
+  msg_expdims <- case_when(length(expdims) == 0 ~ "\n- No expired dimensions.",
+                      TRUE ~ paste0("\n- Expired dimensions found: ", str_c(expdims, collapse = ", ")))
   
   # Identify value columns present in new and old KUBE
   # Separate into common, new, and expired values, write standard msg
@@ -287,14 +283,14 @@ FormatData <- function(data1 = dfnew,
   newvals <- valnew[!valnew %in% valold]
   expvals <- valold[!valold %in% valnew]
   
-  msg_commonvals <- case_when(length(commonvals) == 0 ~ "\n-No common value columns found",
-                         TRUE ~ paste0("\n-Common value columns found: ", str_c(commonvals, collapse = ", ")))
+  msg_commonvals <- case_when(length(commonvals) == 0 ~ "\n- No common value columns found",
+                         TRUE ~ paste0("\n- Common value columns found: ", str_c(commonvals, collapse = ", ")))
   
-  msg_newvals <- case_when(length(newvals) == 0 ~ "\n-No new value columns.",
-                      TRUE ~ paste0("\n-New value columns found: ", str_c(newvals, collapse = ", ")))
+  msg_newvals <- case_when(length(newvals) == 0 ~ "\n- No new value columns.",
+                      TRUE ~ paste0("\n- New value columns found: ", str_c(newvals, collapse = ", ")))
   
-  msg_expvals <- case_when(length(expvals) == 0 ~ "\n-No expired value columns.",
-                      TRUE ~ paste0("\n-Expired value columns found: ", str_c(expvals, collapse = ", ")))
+  msg_expvals <- case_when(length(expvals) == 0 ~ "\n- No expired value columns.",
+                      TRUE ~ paste0("\n- Expired value columns found: ", str_c(expvals, collapse = ", ")))
   
   # Flag new KUBE
   cat("STARTS flagging new kube:")
@@ -307,7 +303,21 @@ FormatData <- function(data1 = dfnew,
            commondims = commondims,
            newdims = newdims,
            vals = valnew)
-
+  
+  # Detect outliers...
+  cat("STARTS outlier detection:")
+  # .FlagOutlier()
+  
+  # Filedump new KUBE
+  if("dfnew_flag" %in% dumps){
+    filename <- str_remove(attributes(dfnew)$Filename, ".csv")
+    fwrite(dfnew_flag, 
+           file = paste0(dumppath, filename, "_(new)_FLAGGED.csv"),
+           sep = ";")
+    cat(paste0("\nFILEDUMP: ", filename, "_(new)_FLAGGED.csv\n"))
+  }
+  
+  # Flag old KUBE
   cat("\n\nSTARTS flagging old kube:")
   cat(msg_commondims)
   cat(msg_expdims)
@@ -319,13 +329,7 @@ FormatData <- function(data1 = dfnew,
            expdims = expdims)
   cat("\n\nCOMPLETED flagging!\n")
   
-  if("dfnew_flag" %in% dumps){
-    filename <- str_remove(attributes(dfnew)$Filename, ".csv")
-    fwrite(dfnew_flag, 
-           file = paste0(dumppath, filename, "_(new)_FLAGGED.csv"),
-           sep = ";")
-    cat(paste0("\nFILEDUMP: ", filename, "_(new)_FLAGGED.csv\n"))
-  }
+  # File dump old KUBE
   
   if("dfold_flag" %in% dumps){
     filename <- str_remove(attributes(dfold)$Filename, ".csv")
@@ -509,3 +513,71 @@ CompareNewOld <- function(data = compareKUBE,
   
   walk(tables, print)
 }
+
+#' Flag outliers
+#' 
+#' *_outlier: Within all strata (total GEO and AAR)
+#' *_outlierTS: Within time series (all strata, total AAR)
+#' 
+#'
+#' @param data 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+# .FlagOutlier <- function(data = dfnew_flag,
+#                          dims = dimnew){
+#   
+#   d <- copy(data)
+#   
+#   # Init required columns for outlier detection
+#   d[, ':=' (geoniv = NA_character_,
+#             low = NA_real_,
+#             high = NA_real_)]
+#   
+#   d[GEO == 0, geoniv := "L"]
+#   d[GEO > 0 & GEO < 100, ':=' (geoniv = "F")]
+#   d[GEO > 100 & GEO < 10000, ':=' (geoniv = "K")]
+#   d[GEO > 10000, ':=' (geoniv = "B")]
+#   
+#   
+#   # Detect strata for outlier detection
+#   groupdims <- str_subset(dims, "GEO|AAR", negate = TRUE)
+# 
+#   # Identify value columns to detect outlier
+#   if("MEIS" %in% names(d)){
+#     outlierval <- "MEIS"
+#     cat("\n- Outliers detected based on MEIS")
+#   } else if ("RATE" %in% names(d)){
+#     outlierval <- "RATE"
+#     cat("\n- Outliers detected based on RATE")
+#   } else if ("SMR" %in% names(d)){
+#     outlierval <- "SMR"
+#     cat("\n- Outliers detected based on SMR")
+#   } else {
+#     cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
+#   }
+#   
+  # if()
+  # 
+  # 
+  # for(i in outliervals){
+  # 
+  #   dfnew_flag[, ':=' (low = quantile(.SD, 0.25, na.rm = T) - 1.5*IQR(subset[[i]], na.rm = T),
+  #                      high = quantile(.SD, 0.75, na.rm = T) + 1.5*IQR(subset[[i]], na.rm = T)),
+  #              by = c("geoniv", groupdims),
+  #              .SDcols = i]
+  # 
+  #   dfnew_flag[, paste0(i, "_outlier") := NA_real_]
+  #   dfnew_flag[, c("low", "high") := list(NULL)]
+  # }
+
+  
+# }
+
+# PlotDiffTime <- function(data = compareKUBE){
+#  
+# }
+
+  
