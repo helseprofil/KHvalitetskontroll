@@ -477,7 +477,73 @@ CompareDiffRows <- function(data = compareKUBE) {
                   scrollX = TRUE
                   )
                 )
+}
+
+#' Plot differences between new and old file across time
+#' 
+#' 
+#'
+#' @param data 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+PlotTimeDiff <- function(data = compareKUBE){
+  
+  # Identify value column to plot
+  if("MEIS_diff" %in% names(data)){
+    val <- "MEIS"
+  } else if ("RATE" %in% names(data)){
+    val <- "RATE_diff"
+  } else if ("SMR" %in% names(data)){
+    val <- "SMR_diff"
+  } else {
+    cat("\n- None of MEIS, RATE, or SMR available for plot")
+    return(invisible(NULL))
   }
+  
+  # Get diff columns
+  diff <- paste0(val, "_diff")
+  reldiff <- paste0(val, "_reldiff")
+  
+  # Create plotdata, add geoniv
+  plotdata <- data[SPVFLAGG_new == 0 & SPVFLAGG_old == 0 & get(diff) != 0][, geoniv := character()]
+  plotdata[GEO == 0, geoniv := "Land"]
+  plotdata[GEO > 0 & GEO < 100, ':=' (geoniv = "Fylke")]
+  plotdata[GEO > 100 & GEO < 10000, ':=' (geoniv = "Kommune")]
+  plotdata[GEO > 10000, ':=' (geoniv = "Bydel")]
+  
+  setnames(plotdata, old = c(diff, reldiff), new = c("Absolute", "Ratio"))
+  
+  # Reshape data before plotting
+  plotdata <- melt(plotdata,
+                   measure.vars = c("Absolute", "Ratio"))
+  
+  # Plotting function to create one plot per geoniv
+  .plotgeoniv <- function(geofilter){
+    
+    d <- plotdata[geoniv == geofilter]
+    
+    ggplot(d,
+           mapping = aes(x = AAR, 
+                         y = value)) +
+      geom_boxplot() + 
+      facet_wrap(vars(variable), 
+                 scales = "free") + 
+      labs(title = geofilter,
+           x = "",
+           y = val) + 
+      theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
+  }
+  
+  # Create plots
+  plots <- map(unique(plotdata$geoniv),
+               ~.plotgeoniv(geofilter = .x))
+  
+  # Print plots
+  walk(plots, print)
+}
 
 #' Compare new and old value
 #' 

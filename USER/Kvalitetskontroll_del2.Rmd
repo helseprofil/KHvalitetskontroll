@@ -12,7 +12,7 @@ Version: 0.5 (30.11.2022).
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
-```{r, include=FALSE}
+```{r include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
@@ -20,16 +20,30 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # INPUT
 
-**Data files loaded**
+*New file:* 
 ```{r echo = F}
-## Load data
-dfnew <- ReadFile(file = "HKR_2022-12-14", # Matching, if >1 file found in folder, specify file name further
+## Load new data file
+dfnew <- ReadFile(file = "KUHR_2022-11-23-15", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
-dfold <- ReadFile(file = "HKR_2022-11-30", # Matching, if >1 file found in folder, specify file name further
+####
+# To get a list of variable names in the new KUBE, uncomment and run the following code: 
+# names(dfnew)
+###
+```
+
+*Old file for comparison:*
+```{r}
+# Load old data file
+dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
-                  folder = "DATERT") # DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
+
+####
+# To get a list of variable names in the old KUBE, uncomment and run the following code: 
+# names(dfold)
+###
 ```
 
 ```{r}
@@ -66,12 +80,17 @@ FormatData()
     - N new prikk: How many rows are censored in the new file, but not in the old
     - N exp prikk: How many rows were censored in the old file, but no longer in the new
     - N different: How many rows are different (with both new and old value present)
-- For different columns, calculate
+- For different columns (not total data set), calculate
     - Absolute difference: Mean, minumum, and maximum (new - old)
     - Relative difference: Mean, minimum, and maximum ratio (new / old) 
     
 ```{r}
 CompareDiffRows(data = compareKUBE)
+```
+
+## Time trends in diffs
+```{r fig.width=10}
+PlotTimeDiff(data = compareKUBE)
 ```
 
 
