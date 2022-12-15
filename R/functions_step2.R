@@ -223,7 +223,7 @@
 #' @param data2 Old KUBE, defaults to dfold
 #' @param dims Character vector of dimension columns, defaults to DIMENSIONS
 #' @param vals Character vector of value volumns, defaults to VALUES
-#' @param dumps List of dump points, defaults to DUMPS
+#' @param dumps List of dump points, defaults to .DUMPS (NULL)
 #' @param profileyear To save output in the correct folder
 #'
 #' @return
@@ -240,7 +240,7 @@ FormatData <- function(data1 = dfnew,
     .ALL_DIMENSIONS <- ALL_DIMENSIONS
     rm(ALL_DIMENSIONS)
   }
-  
+
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
   
@@ -383,6 +383,7 @@ CompareDiffRows <- function(data = compareKUBE) {
                        val,
                        geoniv) {
     diff <- paste0(val, "_diff")
+    reldiff <- paste0(val, "_reldiff")
     new <- paste0(val, "_new")
     old <- paste0(val, "_old")
     
@@ -400,34 +401,52 @@ CompareDiffRows <- function(data = compareKUBE) {
     # Calculate n rows diff,
     # If nrowdiff > 0, and both new and old value exists, calculate mean/min/max diff within selected geographical strata
     # If nrowdiff == 0, set mean/min/max = NA
-    nrowidentical <- nrow(data[get(diff) == 0])
+    nidentical <- nrow(data[get(diff) == 0])
     nprikknew <- nrow(data[is.na(get(new)) & !is.na(get(old))])
     nprikkexp <- nrow(data[!is.na(get(new)) & is.na(get(old))])
-    ndifferent <- nrow(data[data[[diff]] != 0])
+    ndifferent <- nrow(data[get(diff) != 0])
+    
+    #Initiate output table values as NA
+    meandiff <- NA_real_
+    mindiff <- NA_real_
+    maxdiff <- NA_real_
+    meanratio <- NA_real_
+    minratio <- NA_real_
+    maxratio <- NA_real_
+    
     if (ndifferent > 0) {
-      # Create subset of different rows with both new and old value existing
-      diffdata <- data[data[[diff]] != 0 & !is.na(data[[new]]) & !is.na(data[[old]])]
-      # Estimate mean, min, max
+      # Create subset of data for rows that differ and where new and old value exists
+      diffdata <- data[get(diff) != 0 & !is.na(get(new)) & !is.na(get(old))]
+      
+      # If diff column exists, calculate mean, min, and max, overwrite output table values
+      if(diff %in% names(diffdata)){
       meandiff <- round(mean(diffdata[[diff]], na.rm = T), 3)
       mindiff <- round(min(diffdata[[diff]], na.rm = T), 3)
       maxdiff <- round(max(diffdata[[diff]], na.rm = T), 3)
-    } else {
-      meandiff <- NA_real_
-      mindiff <- NA_real_
-      maxdiff <- NA_real_
-    }
+      }
+    
+      # If reldiff columns exists, calculate mean, min, and max, overwrite output table values
+      if(reldiff %in% names(diffdata)){
+      meanratio <- round(mean(diffdata[[reldiff]], na.rm = T), 3)
+      minratio <- round(min(diffdata[[reldiff]], na.rm = T), 3)
+      maxratio <- round(max(diffdata[[reldiff]], na.rm = T), 3)
+      } 
+    } 
     
     # Create summary table
     tibble(
       GEOniv = geoniv,
       Value = val,
-      `N identical` = nrowidentical,
+      `N identical` = nidentical,
       `N new prikk` = nprikknew,
       `N exp prikk` = nprikkexp,
       `N different` = ndifferent,
       `Mean diff` = meandiff,
       `Min diff` = mindiff,
-      `Max diff` = maxdiff
+      `Max diff` = maxdiff,
+      `Mean ratio` = meanratio,
+      `Min ratio` = minratio,
+      `Max ratio` = maxratio
     )
   }
   
