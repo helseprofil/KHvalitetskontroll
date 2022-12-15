@@ -167,7 +167,7 @@ print_dim <- function(...){
 #' @export
 #'
 #' @examples
-SaveReport <- function(profileyear = 2023,
+SaveReport <- function(profileyear = PROFILEYEAR,
                        inputfile = "Kvalitetskontroll_del1.Rmd",
                        savename = NULL){
   
