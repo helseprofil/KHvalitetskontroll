@@ -33,3 +33,10 @@ theme_update(legend.position = "top",
              panel.grid.minor = element_blank(),
              text = element_text(color = "black"),
              plot.margin = margin(t = 1, b = 1, r = 1, unit = "cm"))
+
+
+# Set global options
+PROFILEYEAR <- 2023  # For saving in correct folder
+DUMPS <- NULL        # Default is to not create file dumps
+
+      

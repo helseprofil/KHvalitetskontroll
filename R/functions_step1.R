@@ -562,8 +562,7 @@ UnspecifiedBydel <- function(data = dfnew){
   # If no data on bydel, stop and return NULL
   if(length(bydelsgeo) < 1){
     cat("No geo-codes corresponding to bydel, not possible to estimate unspecified bydel.\n")
-    out <- NULL
-    return(out)
+    return(invisible(NULL))
   } 
   
   d <- copy(data)
