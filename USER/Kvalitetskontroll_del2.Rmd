@@ -29,9 +29,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = "2023") # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
@@ -42,7 +42,7 @@ dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -60,7 +60,7 @@ PROFILEYEAR <- 2023
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
+DUMPS <- c("dfnew_flag", "compareKUBE", "dfold_flag")
 ```
 
 # Data formatting
