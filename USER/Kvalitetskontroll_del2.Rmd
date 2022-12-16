@@ -106,7 +106,7 @@ PlotTimeDiff(data = compareKUBE)
 # Profile year is defined in input
 # If savename = NULL, file name will default to the full cube name (incl date tag)
 
-# NB: You must save the source file (Ctrl + S) before saving the report using this function!
+# NB: You must load the data files AND save the source file (Ctrl + S) before creating the HTML report using this function!
 
 SaveReport(profileyear = PROFILEYEAR,
            inputfile = "Kvalitetskontroll_del2.Rmd",
