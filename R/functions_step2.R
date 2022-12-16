@@ -472,8 +472,8 @@ CompareDiffRows <- function(data = compareKUBE) {
                 options = list(
                   columnDefs = list(list(targets = 2:(ncol(difftable)-1),
                                          searchable = FALSE)),
-                  # Show length menu, table and pagination
-                  dom = 'ltp', 
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
                   scrollX = TRUE
                   )
                 )
