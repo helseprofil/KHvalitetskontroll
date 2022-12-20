@@ -520,10 +520,10 @@ PlotTimeDiff <- function(data = compareKUBE){
   # Identify value column to plot
   if("MEIS_diff" %in% names(data)){
     val <- "MEIS"
-  } else if ("RATE" %in% names(data)){
-    val <- "RATE_diff"
-  } else if ("SMR" %in% names(data)){
-    val <- "SMR_diff"
+  } else if ("RATE_diff" %in% names(data)){
+    val <- "RATE"
+  } else if ("SMR_diff" %in% names(data)){
+    val <- "SMR"
   } else {
     cat("\n- None of MEIS, RATE, or SMR available for plot")
     return(invisible(NULL))
