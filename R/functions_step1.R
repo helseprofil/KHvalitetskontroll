@@ -592,9 +592,9 @@ UnspecifiedBydel <- function(data = dfnew){
   d[grep("^5001", GEO), KOMMUNE := "Trondheim"]
   d[GEO < 9999, GEONIV := "Kommune"]
   
-  # Identify complete strata within kommune and all dims except GEO and AAR
+  # Identify complete strata within kommune and all dims except GEO
   d[, sumSPV := sum(SPVFLAGG), by = c("KOMMUNE", 
-                                      dims[!dims %in% c("GEO", "AAR")])]
+                                      dims[!dims %in% c("GEO")])]
   # Only keep complete strata
   d <- d[sumSPV == 0]
   if(nrow(d) < 1){
