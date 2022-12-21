@@ -441,12 +441,12 @@ PlotTimeseries <- function(data = dfnew,
   # aggregate plotvals to totals, remove extra dimensions, remove duplicated rows
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
-  if (length(dimextra) > 0 && !dimextra %in% plotdims) {
-    plotdata <- .AggregateExtradim(data = plotdata,
-                                   dimexist = dimexist,
-                                   dimextra = dimextra,
-                                   plotvals = plotvals)
-  }
+  # if (length(dimextra) > 0 && !dimextra %in% plotdims) {
+  #   plotdata <- .AggregateExtradim(data = plotdata,
+  #                                  dimexist = dimexist,
+  #                                  dimextra = dimextra,
+  #                                  plotvals = plotvals)
+  # }
   
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
@@ -499,6 +499,10 @@ PlotTimeseries <- function(data = dfnew,
   data <- copy(data)
   
   nrow <- ceiling(length(unique(data[[dim]]))/3)
+  
+  if(dim %in% dimextra){
+    dimextra <- dimextra[!dimextra %in% dim]
+  }
              
   if(length(dimextra) > 0 && !dimextra %in% dim){
     data <- .AggregateExtradim(data = data,
