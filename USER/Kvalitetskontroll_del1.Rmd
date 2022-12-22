@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.5.4 (08.12.2022). 
+Version: 1.5.5 (22.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -25,9 +25,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "TRANGBODDHET_2022-12-12-13-36", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
-                  folder = 2023) # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
@@ -46,6 +46,19 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 # To get a list of variable names in the old KUBE, uncomment and run the following code: 
 # names(dfold)
 ###
+
+### 
+# Change column names (if different names for same column, especially relevant for NH-2022)
+# setnames(dfold, old = "antall", new = "TELLER")
+# setnames(dfold, old = "Crude", new = "RATE")
+# setnames(dfold, old = "Adjusted", new = "MEIS")
+# setnames(dfold, old = "sumteller", new = "sumTELLER")
+# setnames(dfold, old = "sumnevner", new = "sumNEVNER")
+
+# Or do all at once
+# setnames(dfold, 
+#          old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner"),
+#          new = c("TELLER" ,"RATE", "MEIS", "sumTELLER", "sumNEVNER"))
 ```
 
 **Input parameters: **

@@ -14,7 +14,7 @@ output:
   margin: auto;
 }
 </style>
-Version: 1.1 (20.12.2022). 
+Version: 1.2 (22.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
@@ -50,6 +50,19 @@ dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify
 # To get a list of variable names in the old KUBE, uncomment and run the following code: 
 # names(dfold)
 ###
+
+### 
+# Change column names (if different names for same column, especially relevant for NH-2022)
+# setnames(dfold, old = "antall", new = "TELLER")
+# setnames(dfold, old = "Crude", new = "RATE")
+# setnames(dfold, old = "Adjusted", new = "MEIS")
+# setnames(dfold, old = "sumteller", new = "sumTELLER")
+# setnames(dfold, old = "sumnevner", new = "sumNEVNER")
+
+# Or do all at once
+# setnames(dfold, 
+#          old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner"),
+#          new = c("TELLER" ,"RATE", "MEIS", "sumTELLER", "sumNEVNER"))
 ```
 
 ```{r}
