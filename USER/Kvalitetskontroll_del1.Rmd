@@ -49,13 +49,15 @@ dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify 
 
 ### 
 # Change column names (if different names for same column, especially relevant for NH-2022)
+# NB: for the HTML report, all name changes must remain uncommented when saving the report. 
+
 # setnames(dfold, old = "antall", new = "TELLER")
 # setnames(dfold, old = "Crude", new = "RATE")
 # setnames(dfold, old = "Adjusted", new = "MEIS")
 # setnames(dfold, old = "sumteller", new = "sumTELLER")
 # setnames(dfold, old = "sumnevner", new = "sumNEVNER")
 
-# Or do all at once
+# Or do all at once (all "old" columns must be present)
 # setnames(dfold, 
 #          old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner"),
 #          new = c("TELLER" ,"RATE", "MEIS", "sumTELLER", "sumNEVNER"))
