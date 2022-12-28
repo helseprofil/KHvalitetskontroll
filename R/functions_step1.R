@@ -103,7 +103,7 @@ CompareDims <- function(data1 = dfnew,
 #'
 #' @param data1 new KUBE, defaults to dfnew set in INPUT
 #' @param data2 old KUBE, defaults to dfold set in INPUT
-#' @param groupdim dimension to group output by
+#' @param groupdim dimension to group output by, in addition to SPVFLAGG and AAR
 #'
 #' @return a table containing the number of flagged rows in the new and old KUBE, and the absolute and relative difference, grouped by type of SPVFLAGG and an additional dimension (optional)
 #' @export
@@ -112,33 +112,33 @@ CompareDims <- function(data1 = dfnew,
 #' ComparePrikk(groupdim = ALDER)
 ComparePrikk <- function(data1 = dfnew, 
                          data2 = dfold, 
-                         groupdim = EXTRAdims){
+                         groupdim = GROUPdims){
   
-  .by_vars <- function(){
-    c("SPVFLAGG", all_of(groupdim))
-  }
+  # Calculate number of observations per strata of SPV-flagg + groupdim
+  new <- data1[, .("N (new)" = .N), keyby = c("SPVFLAGG", groupdim)]
+  old <- data2[, .("N (old)" = .N), keyby = c("SPVFLAGG", groupdim)]
   
-  group_vars <- .by_vars()
+  # merge tables
+  output <- new[old]
   
-  output <- full_join(
-    data1 %>% 
-      group_by(across(all_of(group_vars))) %>% 
-      summarise(N_New = n(), .groups = "drop"),
-    data2 %>% 
-      group_by(across(all_of(group_vars))) %>% 
-      summarise(N_Old = n(), .groups = "drop"),
-    by = .by_vars()) %>% 
-    replace_na(list(N_New = 0,
-                    N_Old = 0)) %>% 
-    mutate(across(SPVFLAGG, as.character),
-           SPVFLAGG = paste0("SPVFLAGG=", SPVFLAGG),
-           Absolute = N_New - N_Old,
-           Relative = round(N_New/N_Old, 3),
-           Relative = case_when(Relative == Inf ~ NA_real_,
-                                TRUE ~Relative))
+  # Calculate absolute and relative difference
+  output[, `:=` (Absolute = `N (new)`-`N (old)`,
+                 Relative = round(`N (new)`/`N (old)`, 3))]
   
-  DT::datatable(output, rownames = F)
-    
+  # Convert dimensions to factor
+  convert <- names(output)[!names(output) %in% c("N (new)", "N (old)", "Absolute", "Relative")]
+  output[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
+  
+  DT::datatable(output, 
+                filter = "top",
+                rownames = F,
+                options = list(
+                  columnDefs = list(list(targets = c("N (new)", "N (old)", "Absolute", "Relative"),
+                                         searchable = FALSE)),
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
+                  scrollX = TRUE)
+                )
 }
 
 #' Compare censored observations across strata
