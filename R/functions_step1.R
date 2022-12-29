@@ -658,7 +658,10 @@ UnspecifiedBydel <- function(data = dfnew){
                 rownames = F,
                 options = list(
                   columnDefs = list(list(targets = c("Bydel", "Kommune", "UOPPGITT, %"),
-                                         searchable = FALSE)))
+                                         searchable = FALSE)),
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
+                  scrollX = TRUE)
                 )
   
 }
