@@ -284,8 +284,7 @@ CompareFylkeLand <- function(data = dfnew, groupdim = GROUPdims, compare = COMPA
                   columnDefs = list(list(targets = c("Land", "Fylke", "Absolute", "Relative"),
                                          searchable = FALSE)),
                   # Show length menu, table, pagination, and information
-                  dom = 'ltpi', 
-                  scrollX = TRUE)
+                  dom = 'ltpi')
                 )
 }
 
@@ -338,8 +337,7 @@ CompareKommuneFylke <- function(data = dfnew, groupdim = GROUPdims, compare = CO
                   columnDefs = list(list(targets = c("Fylke", "Kommune", "Absolute", "Relative"),
                                          searchable = FALSE)),
                   # Show length menu, table, pagination, and information
-                  dom = 'ltpi', 
-                  scrollX = TRUE)
+                  dom = 'ltpi')
                 )
 }
 
@@ -406,8 +404,7 @@ CompareBydelKommune <- function(data = dfnew, groupdim = GROUPdims, compare = CO
                   columnDefs = list(list(targets = c("Kommune", "Bydel", "Absolute", "Relative"),
                                          searchable = FALSE)),
                   # Show length menu, table, pagination, and information
-                  dom = 'ltpi', 
-                  scrollX = TRUE)
+                  dom = 'ltpi')
                 )
 }
 
