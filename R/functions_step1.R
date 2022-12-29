@@ -274,7 +274,7 @@ CompareFylkeLand <- function(data = dfnew, groupdim = GROUPdims, compare = COMPA
   }
    
   # Convert groupdim to factor and set column order
-  data[, (groupdim) := lapply(.SD, as.factor), .SDcols = c(groupdim)]
+  data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Land", "Fylke", "Absolute", "Relative"))
   
   DT::datatable(data[order(-Relative)], 
@@ -328,7 +328,7 @@ CompareKommuneFylke <- function(data = dfnew, groupdim = GROUPdims, compare = CO
   }
   
   # Convert groupdim to factor and set column order
-  data[, (groupdim) := lapply(.SD, as.factor), .SDcols = c(groupdim)]
+  data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Fylke", "Kommune", "Absolute", "Relative"))
   
   DT::datatable(data[order(-Relative)], 
@@ -353,42 +353,62 @@ CompareKommuneFylke <- function(data = dfnew, groupdim = GROUPdims, compare = CO
 #' @export
 #'
 #' @examples
-CompareBydelKommune <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval) {
+CompareBydelKommune <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval) {
   
-  data <- data1 %>% 
-    filter(GEO > 100) %>% 
-    mutate(geolevel = case_when(GEO < 10000 ~ "Kommune",
-                                TRUE ~ "Bydel")) %>%
-    dplyr::filter(!(GEO %in% 3011:3019), # Deselect KOMMUNE in Viken, otherwise included in Oslo
-                  str_detect(GEO, "^301|^1103|^4601|^5001")) %>% 
-    mutate(KOMMUNE = case_when(str_detect(GEO, "^301") ~ "Oslo",
-                               str_detect(GEO, "^1103") ~ "Stavanger",
-                               str_detect(GEO, "^4601") ~ "Bergen",
-                               str_detect(GEO, "^5001") ~ "Trondheim"))
+  kommunegeo <- c(301, 1103, 4601, 5001)
+  bydelsgeo <- unique(data[GEO>9999]$GEO)
   
-  output <- data %>%
-    group_by(across(c(KOMMUNE, geolevel, all_of(groupdim)))) %>% 
-    summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
-    pivot_wider(names_from = geolevel, 
-                values_from = sum) %>% 
-    mutate(Absolute = Kommune-Bydel,
-           Relative = Kommune/Bydel) %>%  
-    arrange(desc(Relative)) %>% 
-    mutate(across(c(Bydel, Kommune, Absolute), ~round(.x, 0)),
-           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
-                                      TRUE ~ round(Relative, 3)))) %>% 
-    select(KOMMUNE, all_of(groupdim), Kommune, Bydel, Absolute, Relative)
+  # If no data on bydel, stop and return NULL
+  if(length(bydelsgeo) < 1){
+    cat("No geo-codes corresponding to bydel, not possible to estimate unspecified bydel.\n")
+    return(invisible(NULL))
+  } 
+  
+  # Create subset, create geolevel and kommune variable
+  data <- copy(data)[GEO %in% c(kommunegeo, bydelsgeo)]
+  data[, `:=` (geolevel = "Bydel",
+               KOMMUNE = character())]
+  data[grep("^301", GEO), KOMMUNE := "Oslo"]
+  data[grep("^1103", GEO), KOMMUNE := "Stavanger"]
+  data[grep("^4601", GEO), KOMMUNE := "Bergen"]
+  data[grep("^5001", GEO), KOMMUNE := "Trondheim"]
+  data[GEO < 9999, geolevel := "Kommune"]
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
-  if(nrow(output %>% 
-          dplyr::filter(Relative < 1)) == 0) {
+  # Sum compare value per strata of geolevel and grouping dims
+  data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("KOMMUNE", "geolevel", groupdim)]
+  
+  # Format output
+  data <- dcast(data, ... ~ geolevel, value.var = "sum")
+  
+  # Estimate absolute and relative difference, format digits
+  data[, `:=` (Absolute = Kommune - Bydel,
+               Relative = round(Kommune/Bydel, 3))]
+  format <- c("Kommune", "Bydel", "Absolute")
+  data[, (format) := lapply(.SD, round, 0), .SDcols = format]
+  
+  if(nrow(data[Relative < 1]) == 0) {
     cat("\nKOMMUNE is always larger than BYDEL") 
   } else {
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with Absolute < 1")
   }
   
-  datatable(output, rownames = F)
+  # Convert KOMMUNE & groupdim to factor and set column order
+  fct_col <- c("KOMMUNE", groupdim)
+  data[, (fct_col) := lapply(.SD, as.factor), .SDcols = fct_col]
+  setcolorder(data, c("KOMMUNE", groupdim, "Kommune", "Bydel", "Absolute", "Relative"))
+  
+  DT::datatable(data[order(-Relative)], 
+                filter = "top",
+                rownames = F,
+                options = list(
+                  columnDefs = list(list(targets = c("Kommune", "Bydel", "Absolute", "Relative"),
+                                         searchable = FALSE)),
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
+                  scrollX = TRUE)
+  )
 }
 
 
