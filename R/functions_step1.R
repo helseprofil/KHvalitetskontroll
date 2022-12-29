@@ -286,7 +286,7 @@ CompareFylkeLand <- function(data = dfnew, groupdim = GROUPdims, compare = COMPA
                   # Show length menu, table, pagination, and information
                   dom = 'ltpi', 
                   scrollX = TRUE)
-  )
+                )
 }
 
 #' CompareKommuneFylke
@@ -340,7 +340,7 @@ CompareKommuneFylke <- function(data = dfnew, groupdim = GROUPdims, compare = CO
                   # Show length menu, table, pagination, and information
                   dom = 'ltpi', 
                   scrollX = TRUE)
-  )
+                )
 }
 
 #' CompareBydelKommune
@@ -408,7 +408,7 @@ CompareBydelKommune <- function(data = dfnew, groupdim = GROUPdims, compare = CO
                   # Show length menu, table, pagination, and information
                   dom = 'ltpi', 
                   scrollX = TRUE)
-  )
+                )
 }
 
 
@@ -423,31 +423,45 @@ CompareBydelKommune <- function(data = dfnew, groupdim = GROUPdims, compare = CO
 #' @export
 #'
 #' @examples
-CompareOslo <- function(data1 = dfnew, groupdim = GROUPdims, compare = COMPAREval){
-  output <- data1 %>% 
-    dplyr::filter(GEO %in% c("3", "301")) %>% 
-    mutate(geolevel = case_when(GEO == 3 ~ "Oslo Fylke",
-                                GEO == 301 ~ "Oslo Kommune")) %>% 
-    group_by(across(c(geolevel, all_of(groupdim)))) %>% 
-    summarise(sum = sum(.data[[compare]], na.rm = T), .groups = "drop") %>% 
-    pivot_wider(names_from = geolevel, 
-                values_from = sum) %>% 
-    mutate(Absolute = `Oslo Fylke`-`Oslo Kommune`,
-           Relative = `Oslo Fylke`/`Oslo Kommune`) %>% 
-    arrange(desc(Relative)) %>% 
-    mutate(across(c(`Oslo Fylke`, `Oslo Kommune`, Absolute), ~round(.x, 0)),
-           across(Relative, ~case_when(Relative == Inf ~ NA_real_,
-                                       TRUE ~ round(Relative, 3))))
-           
+CompareOslo <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval){
   
-  if(nrow(output %>% 
-          dplyr::filter(Relative != 1)) == 0) {
+  # Create subset, remove helseregion
+  data <- copy(data)[GEO %in% c(3, 301)]
+  data[, geolevel := "Oslo Kommune"]
+  data[GEO == 3, geolevel := "Oslo Fylke"]
+  
+  # Sum compare value per strata of geolevel and grouping dims
+  data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
+  
+  # Format output
+  data <- dcast(data, ... ~ geolevel, value.var = "sum")
+  
+  # Estimate absolute and relative difference, format digits
+  data[, `:=` (Absolute = `Oslo Fylke`- `Oslo Kommune`,
+               Relative = round(`Oslo Fylke`/`Oslo Kommune`, 3))]
+  format <- c("Oslo Fylke", "Oslo Kommune", "Absolute")
+  data[, (format) := lapply(.SD, round, 0), .SDcols = format]
+  
+  if(nrow(data[Relative < 1]) == 0) {
     cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
     cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where Absolute does not = 0")
   }
   
-  datatable(output, rownames = F)
+  # Convert groupdim to factor and set column order
+  data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
+  setcolorder(data, c(groupdim, "Oslo Fylke", "Oslo Kommune", "Absolute", "Relative"))
+  
+  DT::datatable(data[order(-Relative)], 
+                filter = "top",
+                rownames = F,
+                options = list(
+                  columnDefs = list(list(targets = c("Oslo Fylke", "Oslo Kommune", "Absolute", "Relative"),
+                                         searchable = FALSE)),
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
+                  scrollX = TRUE)
+                )
 }
 
 #' Plot country-level time series across selected dimensions
