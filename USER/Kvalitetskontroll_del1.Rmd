@@ -8,7 +8,7 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.5.5 (22.12.2022). 
+Version: 1.6.0 (29.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -25,7 +25,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "TRANGBODDHET_2022-12-12-13-36", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -38,7 +38,7 @@ dfnew <- ReadFile(file = "TRANGBODDHET_2022-12-12-13-36", # Matching, if >1 file
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "HKR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -79,7 +79,7 @@ COMPAREval <- "TELLER"
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
-GROUPdims <- c("KODEGRUPPE") 
+GROUPdims <- c("AAR", "KODEGRUPPE") 
 
 # Country-level time series plots
 # Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
@@ -199,7 +199,26 @@ CompareFylkeLand(groupdim = GROUPdims)
 CompareKommuneFylke(groupdim = GROUPdims)
 ```
 
-## 3C. Does BYDEL sum to KOMMUNE?
+## 3C. Oslo KOMMUNE = Oslo FYLKE?
+
+-   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
+-   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
+-   Orders the input according to the relative difference.
+-   Use search bar to filter out rows of interest (e.g. only show specific year)
+
+```{r}
+# Default is to stratify the output by GROUPdims (input)
+
+# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
+# Example: CompareOslo(groupdim = c("AAR", "ALDER", "etc"))
+# To mimic the boxplot table, use: CompareOslo(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
+
+# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
+
+CompareOslo(groupdim = GROUPdims)
+```
+
+## 3D. Does BYDEL sum to KOMMUNE?
 
 -   Summarise the column **`r COMPAREval`** for BYDEL and KOMMUNE, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
@@ -216,26 +235,7 @@ CompareKommuneFylke(groupdim = GROUPdims)
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareBydelKommune(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
-```
-
-## 3D. Oslo KOMMUNE = Oslo FYLKE?
-
--   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
--   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
--   Orders the input according to the relative difference.
--   Use search bar to filter out rows of interest (e.g. only show specific year)
-
-```{r}
-# Default is to stratify the output by GROUPdims (input)
-
-# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
-# Example: CompareOslo(groupdim = c("AAR", "ALDER", "etc"))
-# To mimic the boxplot table, use: CompareOslo(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
-
-# NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-
-CompareOslo(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
+CompareBydelKommune(groupdim = GROUPdims)
 ```
 
 # 4. Proportion of unspecified BYDEL
@@ -265,7 +265,7 @@ PlotTimeseries()
 # If savename = NULL, file name will default to the full cube name (incl date tag)
 
 # NB: 
-# You must run the INPUT section before saving the report, to generate all the objects
+# You must load data files and run the INPUT section before saving the report, to generate all the objects
 # You must ALSO save the document (Ctrl + S) before saving the report using this function!
 
 SaveReport(profileyear = PROFILEYEAR, 
