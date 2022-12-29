@@ -184,8 +184,18 @@ ComparePrikkTS <- function(data1 = dfnew,
   setcolorder(out, c("N_PRIKK",
                      outnames[str_detect(outnames, "New")],
                      outnames[str_detect(outnames, "Old")]))
+  out[, "N_PRIKK" := as.factor(N_PRIKK)]
   
-  DT::datatable(out, rownames = F)
+  DT::datatable(out, 
+                filter = "top", 
+                rownames = F,
+                options = list(
+                  columnDefs = list(list(targets = 2:ncol(out)-1,
+                                         searchable = FALSE)),
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
+                  scrollX = TRUE)
+                )
 }
 
 #' CheckPrikk
