@@ -33,17 +33,17 @@
        ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
                    newrow := 1L])
   
-  cat("\n-For common dimensions, flagged all rows with new levels as new rows")
+  cat("\n- For common dimensions, flagged all rows with new levels as new rows")
   
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(newdims) != 0) {
     walk(newdims,
          ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
                      newrow := 1L])
-    cat("\n-For new dimensions, flagged all rows not representing total numbers as new rows")
+    cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
   } 
   
-  cat("\n-Flagged version of new KUBE created: dfnew_flag")
+  cat("\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
 #' FlagOld
@@ -77,17 +77,17 @@
        ~dfold_flag[!dfold_flag[[.x]] %in% unique(data1[[.x]]) & exprow == 0,
                    exprow := 1L])
   
-  cat("\n-For common dimensions, flagged all rows with expired levels")
+  cat("\n- For common dimensions, flagged all rows with expired levels")
   
   # For expired dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(expdims) != 0) {
     walk(expdims,
          ~dfold_flag[dfold_flag[[.x]] != 0 & exprow == 0,
                      exprow := 1L])
-    cat("\n-For expired dimensions, flagged all rows not representing total numbers")
+    cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
-  cat("\n-Flagged version of old KUBE created: dfold_flag")
+  cat("\n- Flagged version of old KUBE created: dfold_flag\n")
 }
 
 #' FixDecimals
@@ -151,8 +151,8 @@
                            commonvals){
   
   # Format new KUBE
-  cat("\n-Formats new KUBE")
-  cat("\n  -Remove new rows, select common dimensions and values")
+  cat("\n- Formats new KUBE")
+  cat("\n  - Remove new rows, select common dimensions and values")
   comparenew <- copy(data1)
   # Remove new rows, select common columns and values
   comparenew <- comparenew[newrow == 0,
@@ -162,8 +162,8 @@
   setnames(comparenew, commonvals, commonvals_new)
   
   # Format old KUBE
-  cat("\n-Formats old KUBE")
-  cat("\n  -Remove expired rows, select common dimensions and values")
+  cat("\n- Formats old KUBE")
+  cat("\n  - Remove expired rows, select common dimensions and values")
   compareold <- copy(data2)
   # Remove new rows, select common columns and values
   compareold <- compareold[exprow == 0,
@@ -233,7 +233,10 @@
 FormatData <- function(data1 = dfnew,
                        data2 = dfold,
                        dumps = DUMPS,
-                       profileyear = PROFILEYEAR){
+                       profileyear = PROFILEYEAR,
+                       dfnew_flag_name = NULL,
+                       dfold_flag_name = NULL,
+                       compareKUBE_name = NULL){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -308,20 +311,27 @@ FormatData <- function(data1 = dfnew,
            vals = valnew)
   
   # Detect outliers...
-  cat("STARTS outlier detection:")
+  # cat("STARTS outlier detection:")
   # .FlagOutlier()
   
   # Filedump new KUBE
   if("dfnew_flag" %in% dumps){
-    filename <- str_remove(attributes(dfnew)$Filename, ".csv")
+    
+    # Set filename
+    if(!is.null(dfnew_flag_name)){
+      filename <- paste0(str_remove(dfnew_flag_name, ".csv"), ".csv")
+    } else {
+      filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"), "_(new)_FLAGGED.csv")
+      }
+    
     fwrite(dfnew_flag, 
-           file = paste0(dumppath, filename, "_(new)_FLAGGED.csv"),
+           file = paste0(dumppath, filename),
            sep = ";")
-    cat(paste0("\nFILEDUMP: ", filename, "_(new)_FLAGGED.csv\n"))
+    cat(paste0("\nFILEDUMP: ", filename, "\n"))
   }
   
   # Flag old KUBE
-  cat("\n\nSTARTS flagging old kube:")
+  cat("\nSTARTS flagging old kube:")
   cat(msg_commondims)
   cat(msg_expdims)
   cat(msg_commonvals)
@@ -330,34 +340,50 @@ FormatData <- function(data1 = dfnew,
            data2 = data2,
            commondims = commondims,
            expdims = expdims)
-  cat("\n\nCOMPLETED flagging!\n")
   
   # File dump old KUBE
   
   if("dfold_flag" %in% dumps){
-    filename <- str_remove(attributes(dfold)$Filename, ".csv")
+    
+    # Set filename
+    if(!is.null(dfold_flag_name)){
+      filename <- paste0(str_remove(dfold_flag_name, ".csv"), ".csv")
+    } else {
+      filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
+    }
+    
     fwrite(dfold_flag, 
-           file = paste0(dumppath, filename, "_(old)_FLAGGED.csv"),
+           file = paste0(dumppath, filename),
            sep = ";")
-    cat(paste0("\nFILEDUMP: ", filename, "_(old)_FLAGGED.csv\n"))
+    cat(paste0("\nFILEDUMP: ", filename, "\n"))
   }
   
-  cat("\n\nSTARTS create compareKUBE:")
+  cat("\nCOMPLETED flagging!\n")
+  
+  cat("\nSTARTS create compareKUBE:")
   
   .CreateCompare(data1 = dfnew_flag,
                  data2 = dfold_flag,
                  commondims = commondims,
                  commonvals = commonvals)
   
-  cat("\n\n-COMPLETED creating compareKUBE")
+  cat("\n\n-COMPLETED creating compareKUBE\n")
   
   if("compareKUBE" %in% dumps){
     filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
     filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
+    
+    # Set filename
+    if(!is.null(compareKUBE_name)){
+      filename <- paste0(str_remove(compareKUBE_name, ".csv"), ".csv")
+    } else {
+      filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
+    }
+    
     fwrite(compareKUBE, 
-           file = paste0(dumppath, filenamenew, "_vs_", filenameold,"_COMPARE.csv"),
+           file = paste0(dumppath, filename),
            sep = ";")
-    cat(paste0("\nFILEDUMP: ", filenamenew, "_vs_", filenameold, "_COMPARE.csv\n"))
+    cat(paste0("\nFILEDUMP: ", filename, "\n"))
   }
   
   cat("\nDONE!")
@@ -472,8 +498,8 @@ CompareDiffRows <- function(data = compareKUBE) {
                 options = list(
                   columnDefs = list(list(targets = 2:(ncol(difftable)-1),
                                          searchable = FALSE)),
-                  # Show length menu, table and pagination
-                  dom = 'ltp', 
+                  # Show length menu, table, pagination, and information
+                  dom = 'ltpi', 
                   scrollX = TRUE
                   )
                 )
@@ -494,10 +520,10 @@ PlotTimeDiff <- function(data = compareKUBE){
   # Identify value column to plot
   if("MEIS_diff" %in% names(data)){
     val <- "MEIS"
-  } else if ("RATE" %in% names(data)){
-    val <- "RATE_diff"
-  } else if ("SMR" %in% names(data)){
-    val <- "SMR_diff"
+  } else if ("RATE_diff" %in% names(data)){
+    val <- "RATE"
+  } else if ("SMR_diff" %in% names(data)){
+    val <- "SMR"
   } else {
     cat("\n- None of MEIS, RATE, or SMR available for plot")
     return(invisible(NULL))

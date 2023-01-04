@@ -8,7 +8,13 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 0.5 (30.11.2022). 
+<style type="text/css">
+.main-container {
+  max-width: 80% !important;
+  margin: auto;
+}
+</style>
+Version: 1.2 (22.12.2022). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 
@@ -23,7 +29,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "KUHR_2022-11-23-15", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found in folder, specify file name further
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -44,6 +50,14 @@ dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify
 # To get a list of variable names in the old KUBE, uncomment and run the following code: 
 # names(dfold)
 ###
+
+### 
+# Changes old column names to new, for matching with new file. If more columns need renaming, add a new line.
+setnames(dfold, old = "antall", new = "TELLER", skip_absent = TRUE)
+setnames(dfold, old = "Crude", new = "RATE", skip_absent = TRUE)
+setnames(dfold, old = "Adjusted", new = "MEIS", skip_absent = TRUE)
+setnames(dfold, old = "sumteller", new = "sumTELLER", skip_absent = TRUE)
+setnames(dfold, old = "sumnevner", new = "sumNEVNER", skip_absent = TRUE)
 ```
 
 ```{r}
@@ -54,7 +68,7 @@ PROFILEYEAR <- 2023
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <- NULL"
-DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
+DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE")
 ```
 
 # Data formatting
@@ -68,7 +82,10 @@ DUMPS <- NULL #c("dfnew_flag", "compareKUBE", "dfold_flag")
 
 ```{r}
 # No arguments needed, everything is defined in INPUT
-FormatData()
+# If file name is too long, or file name for other reasons should not be the default, the three _name-arguments can be specified. 
+FormatData(dfnew_flag_name = NULL,
+           dfold_flag_name = NULL,
+           compareKUBE_name = NULL)
 ```
 
 # Compare
@@ -89,7 +106,7 @@ CompareDiffRows(data = compareKUBE)
 ```
 
 ## Time trends in diffs
-```{r fig.width=10}
+```{r fig.width=11, }
 PlotTimeDiff(data = compareKUBE)
 ```
 
@@ -100,7 +117,7 @@ PlotTimeDiff(data = compareKUBE)
 # Profile year is defined in input
 # If savename = NULL, file name will default to the full cube name (incl date tag)
 
-# NB: You must save the source file (Ctrl + S) before saving the report using this function!
+# NB: You must load the data files AND save the source file (Ctrl + S) before creating the HTML report using this function!
 
 SaveReport(profileyear = PROFILEYEAR,
            inputfile = "Kvalitetskontroll_del2.Rmd",
