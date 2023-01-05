@@ -487,6 +487,8 @@ PlotTimeseries <- function(data = dfnew){
                             str_c(c(dimexist, "RATE.n", "SPVFLAGG"), collapse = "|"),
                             negate = TRUE)
   
+  # Find plotheight for HTML report
+  .PlotHeight <<- 2 + 2*ceiling(length(.TSplotvals)/2)
   
   # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
@@ -496,29 +498,13 @@ PlotTimeseries <- function(data = dfnew){
   # Organize plotdata according to all dimensions
   setkeyv(plotdata, dimexist)
   
-  # Identify extra dimensions
-  # aggregate TSplotvals to totals, remove extra dimensions, remove duplicated rows
-  dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
-  
-  # if (length(dimextra) > 0 && !dimextra %in% plotdims) {
-  #   plotdata <- .AggregateExtradim(data = plotdata,
-  #                                  dimexist = dimexist,
-  #                                  dimextra = dimextra,
-  #                                  plotvals = plotvals)
-  # }
-  
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
-  
-  
   # Loop through plotdims to generate the plots
-
   .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
                                      dimextra = dimextra,
                                      dimexist = dimexist))
-  
-  .PlotHeight <<- 2 + 2*ceiling(length(.TSplotvals)/2)
 } 
 
 # Plotting function
