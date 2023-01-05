@@ -471,9 +471,7 @@ CompareOslo <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval
 #' @export
 #'
 #' @examples
-PlotTimeseries <- function(data = dfnew,
-                           plotdims = PLOTDIMS,
-                           plotvals = PLOTVALS){
+PlotTimeseries <- function(data = dfnew){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -482,13 +480,18 @@ PlotTimeseries <- function(data = dfnew,
   
   plotdata <- copy(data)
   
-  # Identify all dimensions in the file
+  # Identify all dimensions in the file, plotdims and plotvals
   dimexist <- names(plotdata)[names(plotdata) %in% .ALL_DIMENSIONS]
+  .TSplotdims <<- str_subset(dimexist, "GEO|AAR", negate = TRUE)
+  .TSplotvals <<- str_subset(names(plotdata),
+                            str_c(c(dimexist, "RATE.n", "SPVFLAGG"), collapse = "|"),
+                            negate = TRUE)
+  
   
   # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
-  plotdata <- plotdata[, c(..dimexist, ..plotvals)]
+  plotdata <- plotdata[, .SD, .SDcols = c(dimexist, .TSplotvals)]
   
   # If ALDER is included, only keep total (minALDERl_maxALDERh)
   if ("ALDER" %in% dimexist) {
@@ -499,7 +502,7 @@ PlotTimeseries <- function(data = dfnew,
   setkeyv(plotdata, dimexist)
   
   # Identify extra dimensions
-  # aggregate plotvals to totals, remove extra dimensions, remove duplicated rows
+  # aggregate TSplotvals to totals, remove extra dimensions, remove duplicated rows
   dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
   
   # if (length(dimextra) > 0 && !dimextra %in% plotdims) {
@@ -517,15 +520,14 @@ PlotTimeseries <- function(data = dfnew,
   
   # Loop through plotdims to generate the plots
 
-  plots <- map(plotdims, ~.plot_ts(data = plotdata,
-                                   dim = .x,
-                                   plotvals = plotvals,
-                                   totaldims = totaldims,
-                                   dimextra = dimextra,
-                                   dimexist = dimexist))
-
-  # Print plots without plotting message
-  walk(plots, print)
+  .TS <<- map(.TSplotdims, ~.plot_ts(data = plotdata,
+                                     dim = .x,
+                                     plotvals = .TSplotvals,
+                                     totaldims = totaldims,
+                                     dimextra = dimextra,
+                                     dimexist = dimexist))
+  
+  .PlotHeight <<- 2 + 2*ceiling(length(.TSplotvals)/2)
 } 
 
 .AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
@@ -552,7 +554,7 @@ PlotTimeseries <- function(data = dfnew,
 # create plotting function
 .plot_ts <- function(data = plotdata, 
                      dim,
-                     plotvals = plotvals,
+                     plotvals = .TSplotvals,
                      totaldims = totaldims,
                      dimextra = dimextra,
                      dimexist = dimexist){
@@ -575,33 +577,34 @@ PlotTimeseries <- function(data = dfnew,
   totaldims <- totaldims[!totaldims %in% dim]
   
   data %>%
-    mutate(across(all_of(dim), as.factor)) %>% 
+    mutate(across(all_of(dim), as.factor)) %>%
     filter(if_all(all_of(totaldims), ~ .x == 0)) %>%
     pivot_longer(cols = all_of(plotvals),
                  names_to = "targetnumber",
                  values_to = "yval") %>%
-    ggplot(aes(
-      x = AARx,
-      y = yval,
-      color = .data[[dim]],
-      group = .data[[dim]]
-    )) +
+    ggplot(aes(x = AARx,
+               y = yval,
+               color = .data[[dim]],
+               group = .data[[dim]])) +
     geom_point() +
     geom_line() +
-    facet_grid(rows = vars(targetnumber),
-               scales = "free_y", 
-               switch = "y") + 
+    facet_wrap(~targetnumber,
+                ncol = 2,
+                scales = "free_y") +
     labs(x = "Year",
          y = NULL,
-         title = paste0("Time series according to ", dim)) + 
-    scale_x_continuous(breaks = seq(min(data$AARx), 
+         title = NULL) +
+    scale_x_continuous(breaks = seq(min(data$AARx),
                                     max(data$AARx),
-                                    by = 1),
-                       expand = c(0,0)) + 
-    guides(color = guide_legend(title = NULL, nrow = nrow)) + 
+                                    by = 1), 
+                       labels = sort(unique(data$AAR)), 
+                       expand = expansion(add = 0.2)) +
+    guides(color = guide_legend(title = NULL, 
+                                nrow = nrow, 
+                                byrow = TRUE)) +
     theme(axis.text.x = element_text(angle = 30, vjust = 0.5),
-          panel.spacing = unit(0.5, "cm"))  + 
-    force_panelsizes(rows = unit(4.5, "cm"))
+          panel.spacing = unit(0.5, "cm"))  +
+    force_panelsizes(rows = unit(4, "cm"))
 }
 
 #' UnspecifiedBydel
@@ -696,3 +699,18 @@ UnspecifiedBydel <- function(data = dfnew){
   
 }
 
+PrintTimeseries <- function(dims = .TSplotdims,
+                            plots = .TS){
+  
+  for(i in 1:length(dims)){
+    
+    header <-  paste0("\n\n## Across ", dims[i], "\n")
+    cat(header)
+    
+    print(plots[[i]])
+    
+    cat("\n")
+  }
+  
+  
+}
