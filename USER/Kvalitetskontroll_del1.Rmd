@@ -8,14 +8,22 @@ output:
     toc: true
     toc_float: true
 ---
-Version: 1.6.0 (29.12.2022). 
+<style type="text/css">
+.main-container {
+  max-width: 80% !important;
+  margin: auto;
+}
+</style>
+
+Version: 1.7.0 (05.01.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+source("../R/setup.R")
+source("../R/functions_step1.R")
 ```
 
 # INPUT
@@ -80,13 +88,6 @@ COMPAREval <- "TELLER"
 # Applies to comparisons of censored observations, and between GEOlevels
 # If you only want total numbers, this should be "GROUPdims <- NULL"
 GROUPdims <- c("AAR", "KODEGRUPPE") 
-
-# Country-level time series plots
-# Generates one plot per PLOTDIMS, and each plot contains a panel per PLOTTVALS
-# Currently accepts the following dimensions: "KJONN", "UTDANN", "INNVKAT", "LANDBAK", and all "EXTRAdims"
-# Totals are kept for dimensions other than the one being plotted. For extra dimensions, plotvals are added (TELLER/sumTELLER) or averaged (not TELLER/sumTELLER)
-PLOTDIMS <- c("KJONN", "KODEGRUPPE")
-PLOTVALS <- c("TELLER", "RATE", "SMR", "MEIS")
 ```
 
 ```{r}
@@ -252,10 +253,14 @@ UnspecifiedBydel()
 # 5. Country level time-series plots
 
 - Plots country-level time-series data for `r print_dim(PLOTVALS)`, to check for misclassification across: `r print_dim(PLOTDIMS)`
-
-```{r fig.height=2*length(PLOTVALS) + 2, out.width = "100%"}
-# Default is to use PLOTDIMS and PLOTVALS defined in input. 
+```{r include=FALSE}
+# This function creates the country level time series plots for all value columns across all dimensions
+# The plots are printed in the next code chunk. This is to be able to adjust the figure height according to number of dimensions
 PlotTimeseries()
+```
+```{r fig.height = .PlotHeight, out.width = "90%", results = 'asis'}
+# This 
+PrintTimeseries()
 ```
 
 ```{r eval = F}
