@@ -501,28 +501,11 @@ PlotTimeseries <- function(data = dfnew){
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
-  # Loop through plotdims to generate the plots
-  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
-                                     dimextra = dimextra,
-                                     dimexist = dimexist))
-} 
-
-# Plotting function
-.plot_ts <- function(dim,
-                     dimextra = dimextra,
-                     dimexist = dimexist){
-  
-  # Copy plotdata
-  d <- copy(plotdata)
-  
-  # Find n rows for plot legend
-  nrow_legend <- ceiling(length(unique(d[[dim]]))/3)
-  
-  # Identify dimensions to aggregate or keep total (if containing 0), excluding dim to ble plotted
-  aggdims <- str_subset(.TSplotdims, dim, negate = TRUE)
+  # Identify dimensions to aggregate or keep total (if containing 0), excluding dim to be plotted
+  aggdims <- .TSplotdims
   containtotal <- character()
   for(i in aggdims){
-    if(0 %in% unique(d[[i]])){
+    if(0 %in% unique(plotdata[[i]])){
       # add to containtotal
       containtotal <- c(containtotal, i)
       # remove from aggdims
@@ -530,14 +513,75 @@ PlotTimeseries <- function(data = dfnew){
     }
   }
   
-  # Keep totals for columns with total present
-  for(i in containtotal){
-    d <- d[get(i) == 0]
+  # Find total age group, if existing
+  ALDERtot_tf <- FALSE
+  if("ALDER" %in% names(plotdata)){
+  ALDERl <- min(as.numeric(str_extract(plotdata$ALDER, "[:digit:]*(?=_)")))
+  ALDERh <- max(as.numeric(str_extract(plotdata$ALDER, "(?<=_)[:digit:]*")))
+  ALDERtot <- paste0(ALDERl, "_", ALDERh)
+  ALDERtot_tf <- ALDERtot %in% unique(plotdata$ALDER)
+  
+    if(ALDERtot_tf){
+      containtotal <- c(containtotal, "ALDER")
+      aggdims <- str_subset(aggdims, "ALDER", negate = TRUE)
+    } 
   }
   
-  # Aggregate columns without total present
+  # Identify value columns to average or sum
+  sumcols <- .TSplotvals[str_detect(.TSplotvals, c("TELLER"))]
+  avgcols <- .TSplotvals[!.TSplotvals %in% sumcols]
+  
+  # Feedback messages on aggregation
+  cat("\nAggregation summary:")
+  cat("\n -Dimensions are aggregated to totals when not plotted")
+  
+  cat(paste0("\nTotal group present and kept for: ", print_dim(containtotal)))
+  if(ALDERtot_tf){
+    cat(paste0("\n - Total age group identified: ", ALDERtot))
+  }
+  cat(paste0("\nData aggregated for: ", print_dim(aggdims)))
+  cat(paste0("\n - Value columns aggregated to sum: ", print_dim(sumcols)))
+  cat(paste0("\n - Value columns aggregated to average: ", print_dim(avgcols)))
+  
+  # Loop through plotdims to generate the plots
+  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x))
+  
+} 
+
+# Plotting function
+.plot_ts <- function(dim){
+  
+  # Exclude dim from containtotal/aggdims
+  aggdims <- str_subset(aggdims, dim, negate = TRUE)
+  containtotal <- str_subset(containtotal, dim, negate = TRUE)
+  
+  # Copy plotdata
+  d <- copy(plotdata)
+  
+  # Find n rows for plot legend
+  nrow_legend <- ceiling(length(unique(d[[dim]]))/3)
+  
+  # Keep totals for columns with total present (containtotal). 
+  # For ALDER, rows = aldertot is kept, for other dimensions rows == 0 is kept. 
+  for(i in containtotal){
+    if(i == "ALDER"){
+      d <- d[get(i) == ALDERtot]
+    } else {
+      d <- d[get(i) == 0]
+    }
+  }
+  
+  # Aggregate value columns for all dimensions without total (aggdims)
   for(i in aggdims){
-    d <- .AggregateDim(d, i)
+    
+    # Group by all existing standard dimensions
+    groupcols <- str_subset(dimexist, i, negate = TRUE)
+    d[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
+    d[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+    d[, (i) := "Aggregated"]
+    
+    # Remove duplicates and return data
+    d <- unique(d)
   }
   
   # Convert dim to factor and .TSplotvals to double for plotting
@@ -564,10 +608,10 @@ PlotTimeseries <- function(data = dfnew){
     labs(x = "Year",
          y = NULL,
          title = NULL) +
-    scale_x_continuous(breaks = seq(min(data$AARx),
-                                    max(data$AARx),
+    scale_x_continuous(breaks = seq(min(d$AARx),
+                                    max(d$AARx),
                                     by = 1), 
-                       labels = sort(unique(data$AAR)), 
+                       labels = sort(unique(d$AAR)), 
                        expand = expansion(add = 0.2)) +
     guides(color = guide_legend(title = NULL, 
                                 nrow = nrow_legend, 
@@ -598,33 +642,7 @@ PlotTimeseries <- function(data = dfnew){
   data[ALDER == ALDERtot]
 }
 
-.AggregateDim <- function(data,
-                          aggdim,
-                          dimexist,
-                          plotvals){
-  
-  # If 0 (total) exist in dimension, keep rows == 0
-  if(0 %in% unique(d[[aggdim]])){
-    data <- data[get(dim) == 0]
-  }
-  
-  
-  
-}
-  
-  
-  # Group by all existing standard dimensions
-  groupcols <- str_subset(dimexist, aggdim, negate = TRUE)
-  # Identify value columns to average or sum
-  sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
-  avgcols <- plotvals[!plotvals %in% sumcols]
-  # Aggregate plotvals
-  data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
-  data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-  data[, (aggdim) := "TOTAL"]
-  data <- unique(data)
-  data
-}
+
 
 
 #' UnspecifiedBydel
