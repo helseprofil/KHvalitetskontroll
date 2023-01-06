@@ -544,12 +544,28 @@ PlotTimeseries <- function(data = dfnew){
   cat(paste0("\n - Value columns aggregated to average: ", print_dim(avgcols)))
   
   # Loop through plotdims to generate the plots
-  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x))
+  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
+                                     plotdata = plotdata,
+                                     plotvals = .TSplotvals,
+                                     aggdims = aggdims,
+                                     containtotal = containtotal,
+                                     sumcols = sumcols,
+                                     avgcols = avgcols,
+                                     dimexist = dimexist,
+                                     ALDERtot = ALDERtot))
   
 } 
 
 # Plotting function
-.plot_ts <- function(dim){
+.plot_ts <- function(dim,
+                     plotdata,
+                     plotvals,
+                     aggdims,
+                     containtotal,
+                     sumcols,
+                     avgcols,
+                     dimexist,
+                     ALDERtot){
   
   # Exclude dim from containtotal/aggdims
   aggdims <- str_subset(aggdims, dim, negate = TRUE)
@@ -586,11 +602,11 @@ PlotTimeseries <- function(data = dfnew){
   
   # Convert dim to factor and .TSplotvals to double for plotting
   d[, (dim) := lapply(.SD, as.factor), .SDcols = dim]
-  d[, (.TSplotvals) := lapply(.SD, as.numeric), .SDcols = .TSplotvals]
+  d[, (plotvals) := lapply(.SD, as.numeric), .SDcols = plotvals]
   
   # convert to long format
   d <- melt(d, 
-            measure.vars = .TSplotvals, 
+            measure.vars = plotvals, 
             variable.name = "targetnumber", 
             value.name = "yval")
   
