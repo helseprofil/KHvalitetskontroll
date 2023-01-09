@@ -532,7 +532,7 @@ PlotTimeseries <- function(data = dfnew){
   avgcols <- .TSplotvals[!.TSplotvals %in% sumcols]
   
   # Feedback messages on aggregation
-  cat("\nAggregation summary:")
+  cat("Aggregation summary:")
   cat("\n -Dimensions are aggregated to totals when not plotted")
   
   cat(paste0("\nTotal group present and kept for: ", print_dim(containtotal)))
