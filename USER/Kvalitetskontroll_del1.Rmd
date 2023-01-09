@@ -97,8 +97,7 @@ cat("Standard dimensions: ", print_dim(STANDARDdims),
     "\nValue to check for prikking: ", print_dim(PRIKKval),
     "\nLimit for prikking: ", PRIKKlimit,
     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
-    "\nDimensions to group output by: ", print_dim(GROUPdims),
-    "\nCountry-level time series plotted for: ", print_dim(PLOTVALS), ", across: ", print_dim(PLOTDIMS), sep = "")
+    "\nDimensions to group output by: ", print_dim(GROUPdims))
 ```
 
 # 1. Compare columns and dimensions
@@ -252,14 +251,17 @@ UnspecifiedBydel()
 
 # 5. Country level time-series plots
 
-- Plots country-level time-series data for `r print_dim(PLOTVALS)`, to check for misclassification across: `r print_dim(PLOTDIMS)`
-```{r include=FALSE}
+- Plots country-level time-series data to check for misclassification across dimensions
+- For each plot, all dimensions other than the one plotted is aggregated (if total is not present). 
+
+```{r}
 # This function creates the country level time series plots for all value columns across all dimensions
 # The plots are printed in the next code chunk. This is to be able to adjust the figure height according to number of dimensions
+# Summary of aggregation going into the plots
 PlotTimeseries()
 ```
 ```{r fig.height = .PlotHeight, out.width = "90%", results = 'asis'}
-# This 
+# This prints the time series plots
 PrintTimeseries()
 ```
 
