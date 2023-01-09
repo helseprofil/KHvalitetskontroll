@@ -15,15 +15,14 @@ output:
 }
 </style>
 
-Version: 1.7.0 (05.01.2023). 
+Version: 1.7.0 (09.01.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
-source("../R/setup.R")
-source("../R/functions_step1.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
 # INPUT
