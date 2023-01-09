@@ -471,9 +471,7 @@ CompareOslo <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval
 #' @export
 #'
 #' @examples
-PlotTimeseries <- function(data = dfnew,
-                           plotdims = PLOTDIMS,
-                           plotvals = PLOTVALS){
+PlotTimeseries <- function(data = dfnew){
   
   if(!exists(".ALL_DIMENSIONS")) {
     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
@@ -482,51 +480,162 @@ PlotTimeseries <- function(data = dfnew,
   
   plotdata <- copy(data)
   
-  # Identify all dimensions in the file
+  # Identify all dimensions in the file, plotdims (- GEO and AAR) and plotvals (- RATE.n and SPVFLAGG)
   dimexist <- names(plotdata)[names(plotdata) %in% .ALL_DIMENSIONS]
+  .TSplotdims <<- str_subset(dimexist, "GEO|AAR", negate = TRUE)
+  .TSplotvals <<- str_subset(names(plotdata),
+                            str_c(c(dimexist, "RATE.n", "SPVFLAGG"), collapse = "|"),
+                            negate = TRUE)
+  
+  # Find plotheight for HTML report
+  .PlotHeight <<- 2 + 2*ceiling(length(.TSplotvals)/2)
   
   # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
-  plotdata <- plotdata[, c(..dimexist, ..plotvals)]
-  
-  # If ALDER is included, only keep total (minALDERl_maxALDERh)
-  if ("ALDER" %in% dimexist) {
-    plotdata <- .AggregateAge(data = plotdata)
-  }
+  plotdata <- plotdata[, .SD, .SDcols = c(dimexist, .TSplotvals)]
   
   # Organize plotdata according to all dimensions
   setkeyv(plotdata, dimexist)
   
-  # Identify extra dimensions
-  # aggregate plotvals to totals, remove extra dimensions, remove duplicated rows
-  dimextra <- dimexist[!dimexist %in% c("GEO", "AAR", "KJONN", "ALDER", "UTDANN", "INNVKAT", "LANDBAK")]
-  
-  # if (length(dimextra) > 0 && !dimextra %in% plotdims) {
-  #   plotdata <- .AggregateExtradim(data = plotdata,
-  #                                  dimexist = dimexist,
-  #                                  dimextra = dimextra,
-  #                                  plotvals = plotvals)
-  # }
-  
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
+  # Identify dimensions to aggregate or keep total (if containing 0), excluding dim to be plotted
+  aggdims <- .TSplotdims
+  containtotal <- character()
+  for(i in aggdims){
+    if(0 %in% unique(plotdata[[i]])){
+      # add to containtotal
+      containtotal <- c(containtotal, i)
+      # remove from aggdims
+      aggdims <- str_subset(aggdims, i, negate = T) 
+    }
+  }
   
-  totaldims <- dimexist[!dimexist %in% c("GEO", "AAR", "ALDER", dimextra)]
+  # Find total age group, if existing
+  ALDERtot_tf <- FALSE
+  if("ALDER" %in% names(plotdata)){
+  ALDERl <- min(as.numeric(str_extract(plotdata$ALDER, "[:digit:]*(?=_)")))
+  ALDERh <- max(as.numeric(str_extract(plotdata$ALDER, "(?<=_)[:digit:]*")))
+  ALDERtot <- paste0(ALDERl, "_", ALDERh)
+  ALDERtot_tf <- ALDERtot %in% unique(plotdata$ALDER)
+  
+    if(ALDERtot_tf){
+      containtotal <- c(containtotal, "ALDER")
+      aggdims <- str_subset(aggdims, "ALDER", negate = TRUE)
+    } 
+  }
+  
+  # Identify value columns to average or sum
+  sumcols <- .TSplotvals[str_detect(.TSplotvals, c("TELLER"))]
+  avgcols <- .TSplotvals[!.TSplotvals %in% sumcols]
+  
+  # Feedback messages on aggregation
+  cat("\nAggregation summary:")
+  cat("\n -Dimensions are aggregated to totals when not plotted")
+  
+  cat(paste0("\nTotal group present and kept for: ", print_dim(containtotal)))
+  if(ALDERtot_tf){
+    cat(paste0("\n - Total age group identified: ", ALDERtot))
+  }
+  cat(paste0("\nData aggregated for: ", print_dim(aggdims)))
+  cat(paste0("\n - Value columns aggregated to sum: ", print_dim(sumcols)))
+  cat(paste0("\n - Value columns aggregated to average: ", print_dim(avgcols)))
   
   # Loop through plotdims to generate the plots
-
-  plots <- map(plotdims, ~.plot_ts(data = plotdata,
-                                   dim = .x,
-                                   plotvals = plotvals,
-                                   totaldims = totaldims,
-                                   dimextra = dimextra,
-                                   dimexist = dimexist))
-
-  # Print plots without plotting message
-  walk(plots, print)
+  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
+                                     plotdata = plotdata,
+                                     plotvals = .TSplotvals,
+                                     aggdims = aggdims,
+                                     containtotal = containtotal,
+                                     sumcols = sumcols,
+                                     avgcols = avgcols,
+                                     dimexist = dimexist,
+                                     ALDERtot = ALDERtot))
+  
 } 
+
+# Plotting function
+.plot_ts <- function(dim,
+                     plotdata,
+                     plotvals,
+                     aggdims,
+                     containtotal,
+                     sumcols,
+                     avgcols,
+                     dimexist,
+                     ALDERtot){
+  
+  # Exclude dim from containtotal/aggdims
+  aggdims <- str_subset(aggdims, dim, negate = TRUE)
+  containtotal <- str_subset(containtotal, dim, negate = TRUE)
+  
+  # Copy plotdata
+  d <- copy(plotdata)
+  
+  # Find n rows for plot legend
+  nrow_legend <- ceiling(length(unique(d[[dim]]))/3)
+  
+  # Keep totals for columns with total present (containtotal). 
+  # For ALDER, rows = aldertot is kept, for other dimensions rows == 0 is kept. 
+  for(i in containtotal){
+    if(i == "ALDER"){
+      d <- d[get(i) == ALDERtot]
+    } else {
+      d <- d[get(i) == 0]
+    }
+  }
+  
+  # Aggregate value columns for all dimensions without total (aggdims)
+  for(i in aggdims){
+    
+    # Group by all existing standard dimensions
+    groupcols <- str_subset(dimexist, i, negate = TRUE)
+    d[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
+    d[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+    d[, (i) := "Aggregated"]
+    
+    # Remove duplicates and return data
+    d <- unique(d)
+  }
+  
+  # Convert dim to factor and .TSplotvals to double for plotting
+  d[, (dim) := lapply(.SD, as.factor), .SDcols = dim]
+  d[, (plotvals) := lapply(.SD, as.numeric), .SDcols = plotvals]
+  
+  # convert to long format
+  d <- melt(d, 
+            measure.vars = plotvals, 
+            variable.name = "targetnumber", 
+            value.name = "yval")
+  
+  # Plot time series
+  d %>%
+    ggplot(aes(x = AARx,
+               y = yval,
+               color = .data[[dim]],
+               group = .data[[dim]])) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~targetnumber,
+               ncol = 2,
+               scales = "free_y") +
+    labs(x = "Year",
+         y = NULL,
+         title = NULL) +
+    scale_x_continuous(breaks = seq(min(d$AARx),
+                                    max(d$AARx),
+                                    by = 1), 
+                       labels = sort(unique(d$AAR)), 
+                       expand = expansion(add = 0.2)) +
+    guides(color = guide_legend(title = NULL, 
+                                nrow = nrow_legend, 
+                                byrow = TRUE)) +
+    theme(axis.text.x = element_text(angle = 30, vjust = 0.5),
+          panel.spacing = unit(0.5, "cm"))  +
+    force_panelsizes(rows = unit(4, "cm"))
+}
 
 .AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
   # Group by all existing standard dimensions
@@ -537,7 +646,7 @@ PlotTimeseries <- function(data = dfnew,
   # Aggregate plotvals, remove dimextra column, remove duplicated rows
   data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
   data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-  data[, (dimextra) := NULL]
+  data[, (dimextra) := "TOTAL"]
   data <- unique(data)
   data
 }
@@ -549,60 +658,8 @@ PlotTimeseries <- function(data = dfnew,
   data[ALDER == ALDERtot]
 }
 
-# create plotting function
-.plot_ts <- function(data = plotdata, 
-                     dim,
-                     plotvals = plotvals,
-                     totaldims = totaldims,
-                     dimextra = dimextra,
-                     dimexist = dimexist){
-  
-  data <- copy(data)
-  
-  nrow <- ceiling(length(unique(data[[dim]]))/3)
-  
-  if(dim %in% dimextra){
-    dimextra <- dimextra[!dimextra %in% dim]
-  }
-             
-  if(length(dimextra) > 0 && !dimextra %in% dim){
-    data <- .AggregateExtradim(data = data,
-                               dimextra = dimextra,
-                               dimexist = dimexist,
-                               plotvals = plotvals)
-  }
-  
-  totaldims <- totaldims[!totaldims %in% dim]
-  
-  data %>%
-    mutate(across(all_of(dim), as.factor)) %>% 
-    filter(if_all(all_of(totaldims), ~ .x == 0)) %>%
-    pivot_longer(cols = all_of(plotvals),
-                 names_to = "targetnumber",
-                 values_to = "yval") %>%
-    ggplot(aes(
-      x = AARx,
-      y = yval,
-      color = .data[[dim]],
-      group = .data[[dim]]
-    )) +
-    geom_point() +
-    geom_line() +
-    facet_grid(rows = vars(targetnumber),
-               scales = "free_y", 
-               switch = "y") + 
-    labs(x = "Year",
-         y = NULL,
-         title = paste0("Time series according to ", dim)) + 
-    scale_x_continuous(breaks = seq(min(data$AARx), 
-                                    max(data$AARx),
-                                    by = 1),
-                       expand = c(0,0)) + 
-    guides(color = guide_legend(title = NULL, nrow = nrow)) + 
-    theme(axis.text.x = element_text(angle = 30, vjust = 0.5),
-          panel.spacing = unit(0.5, "cm"))  + 
-    force_panelsizes(rows = unit(4.5, "cm"))
-}
+
+
 
 #' UnspecifiedBydel
 #'
@@ -696,3 +753,18 @@ UnspecifiedBydel <- function(data = dfnew){
   
 }
 
+PrintTimeseries <- function(dims = .TSplotdims,
+                            plots = .TS){
+  
+  for(i in 1:length(dims)){
+    
+    header <-  paste0("\n\n## Across ", dims[i], "\n")
+    cat(header)
+    
+    print(plots[[i]])
+    
+    cat("\n")
+  }
+  
+  
+}

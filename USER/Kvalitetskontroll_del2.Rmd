@@ -106,7 +106,7 @@ CompareDiffRows(data = compareKUBE)
 ```
 
 ## Time trends in diffs
-```{r fig.width=11, }
+```{r fig.width=11}
 PlotTimeDiff(data = compareKUBE)
 ```
 
