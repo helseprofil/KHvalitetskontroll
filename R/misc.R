@@ -205,4 +205,45 @@ SaveReport <- function(profileyear = PROFILEYEAR,
                     output_dir = filepath)
 }
 
-
+#' IdentifyColumns
+#' 
+#' Helper function to identify dimensions and value columns.
+#'
+#' @param data1 One data frame must be provided
+#' @param data2 Optional second data
+#'
+#' @return Hidden variable lists
+#' @export
+#'
+#' @examples
+.IdentifyColumns <- function(data1 = NULL,
+                             data2 = NULL){
+  
+  if(is.null(data1)){
+    stop("data1 not provided in .IdentifyColumns()")
+  }
+  
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+  }
+  
+  .dims1 <<- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
+  .vals1 <<- str_subset(names(data1), str_c(.dims1, collapse = "|"), negate = T)
+  
+  
+  # If second data is provided, find dimensions, values, common, new, and expired columns
+  if(!is.null(data2)){
+    .dims2 <<- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
+    .vals2 <<- str_subset(names(data2), str_c(.dims2, collapse = "|"), negate = T)
+  
+    .commondims <<- .dims1[.dims1 %in% .dims2]
+    .newdims <<- str_subset(.dims1, str_c(.dims2, collapse = "|"), negate = T)
+    .expdims <<- str_subset(.dims2, str_c(.dims1, collapse = "|"), negate = T)
+    
+    .commonvals <<- .vals1[.vals1 %in% .vals2]
+    .newdims <<- str_subset(.vals1, str_c(.vals2, collapse = "|"), negate = T)
+    .expdims <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
+  }
+  
+}
