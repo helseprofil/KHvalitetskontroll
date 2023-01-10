@@ -13,15 +13,14 @@
 CompareCols <- function(data1 = dfnew,
                         data2 = dfold){
   
-  new <- names(data1)[!names(data1) %in% names(data2)]  
+  # Identify dimension and value columns
+  .IdentifyColumns(data1, data2)
   
-  exp <- names(data2)[!names(data2) %in% names(data1)]  
+  msgnew <- case_when(length(.newdims) == 0 ~ "No new columns.",
+                      TRUE ~ paste0("New columns found: ", str_c(.newdims, collapse = ", ")))
   
-  msgnew <- case_when(length(new) == 0 ~ "No new columns.",
-                      TRUE ~ paste0("New columns found: ", str_c(new, collapse = ", ")))
-  
-  msgexp <- case_when(length(exp) == 0 ~ "\nNo expired columns.",
-                      TRUE ~ paste0("\nExpired columns found: ", str_c(exp, collapse = ", ")))
+  msgexp <- case_when(length(.expdims) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(.expdims, collapse = ", ")))
   
   cat(msgnew)
   cat(msgexp)
@@ -35,67 +34,52 @@ CompareCols <- function(data1 = dfnew,
 #'
 #' @param data1 new KUBE, defaults to dfnew
 #' @param data2 old KUBE, defaults to dfold
-#' @param dims Character vector of dimensions to compare
 #'
 #' @return table with 4 columns: Dimension name, N levels, New levels, Expired levels, with one row per input dimension
 #' @export
 #'
 #' @examples
 CompareDims <- function(data1 = dfnew, 
-                        data2 = dfold,
-                        dims = c(STANDARDdims, EXTRAdims)){
+                        data2 = dfold){
   
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-    rm(ALL_DIMENSIONS)
+  # Identify dimension and value columns
+  .IdentifyColumns(data1, data2)
+  
+  # Check if any new or expired dimensions are present
+  if(length(.expdims) != 0 || length(.newdims) != 0){
+  cat(c("The following dimensions are not present in both files: ", print_dim(c(.newdims, .expdims)), "\n"))
   }
   
-  dimnew <- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
-  dimold <- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
-  commondims <- dimnew[dimnew %in% dimold]
-  newdims <- dimnew[!dimnew %in% dimold]
-  expdims <- dimold[!dimold %in% dimnew]
-  
-  if(length(expdims) != 0 || length(newdims) != 0){
-  cat(c("The following dimensions are not present in both files: ", print_dim(c(newdims, expdims)), "\n"))
-  }
-  
-  .CompareDim <- function(data1, 
+  CompareDim <- function(data1, 
                          data2, 
                          dim = NULL){
     
-    .levelsnew <- data1 %>% 
-      pull(dim) %>% 
-      unique()
+    # Identify unique levels of dim, 
+    levels1 <- unique(data1[[dim]])
+    levels2 <- unique(data2[[dim]])
     
-    .levelsold <- data2 %>% 
-      pull(dim) %>% 
-      unique()
+    # Identify new or expired levels
+    newlevels <- str_subset(levels1, str_c(levels2, collapse = "|"), negate = TRUE)
+    explevels <- str_subset(levels2, str_c(levels1, collapse = "|"), negate = TRUE)
     
-    .length <- length(.levelsnew)
+    # Replace with "none" if 0 new/expired levels
+    if(length(newlevels) == 0){
+      newlevels <- "none"
+    } 
     
-    .newdims <- .levelsnew[!(.levelsnew %in% .levelsold)]
-    
-    .expdims <- .levelsold[!(.levelsold %in% .levelsnew)]
-    
-    all <- str_c(.levelsnew, collapse = ", ")
-    newlevels <- ifelse(length(.newdims) > 0,
-                        str_c(.newdims, collapse = ", "),
-                        "none")
-    explevels <- ifelse(length(.expdims) > 0,
-                        str_c(.expdims, collapse = ", "),
-                        "none")
-    
+    if(length(explevels) == 0){
+      explevels <- "none"
+    }
+  
+    # Create output
     tibble("Dimension" = dim,
-           "N levels" = .length,
-           "New levels" = newlevels,
-           "Expired levels" = explevels)
+           "N levels (new)" = length(levels1),
+           "New levels" = str_c(newlevels, collapse = ", "),
+           "Expired levels" = str_c(explevels, collapse = ", "))
   }
   
-  map_df(commondims, ~.CompareDim(data1, data2, dim = .x))
+  map_df(.commondims, ~CompareDim(data1, data2, dim = .x))
 }
-
 
 #' ComparePrikk
 #' 
@@ -103,8 +87,8 @@ CompareDims <- function(data1 = dfnew,
 #'
 #' @param data1 new KUBE, defaults to dfnew set in INPUT
 #' @param data2 old KUBE, defaults to dfold set in INPUT
-#' @param groupdim dimension to group output by, in addition to SPVFLAGG and AAR
-#'
+#' @param groupdim dimension to group output by, in addition to SPVFLAGG
+#' 
 #' @return a table containing the number of flagged rows in the new and old KUBE, and the absolute and relative difference, grouped by type of SPVFLAGG and an additional dimension (optional)
 #' @export
 #'
@@ -131,7 +115,7 @@ ComparePrikk <- function(data1 = dfnew,
   
   DT::datatable(output, 
                 filter = "top",
-                rownames = F,
+                rownames = FALSE,
                 options = list(
                   columnDefs = list(list(targets = c("N (new)", "N (old)", "Absolute", "Relative"),
                                          searchable = FALSE)),
@@ -153,38 +137,33 @@ ComparePrikk <- function(data1 = dfnew,
 ComparePrikkTS <- function(data1 = dfnew,
                            data2 = dfold){
   
-  # Identify common columns, and extract dimensions
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-  }
-  commoncols <- names(data1)[names(data1) %in% names(data2)]
-  dimexist <- commoncols[commoncols %in% .ALL_DIMENSIONS]
-  groupdims <- dimexist[str_detect(dimexist, "AAR", negate = T)]
+  # Identify dimension and value columns
+  .IdentifyColumns(data1, data2)
   
-  # combine data
-  data <- rbindlist(list(copy(data1)[, ..commoncols][, KUBE := "New"], 
-                         copy(data2)[, ..commoncols][, KUBE := "Old"]))
+  # Combine data
+  data <- rbindlist(list(copy(data1)[, .SD, .SDcols = .commoncols][, KUBE := "New"], 
+                         copy(data2)[, .SD, .SDcols = .commoncols][, KUBE := "Old"]))
+  
+  # Identify grouping dimensions
+  groupdims <- str_subset(c(.commondims, "KUBE"), "AAR", negate = TRUE)
   
   # Calculate n censored observations, 
+  data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
+  data <- data[, .(N_PRIKK = sum(FLAGG, na.rm = TRUE)), by = groupdims]
+  
   # Aggregate to N prikk per strata
-  # Calculate proportions of time series with n prikk
-
-  data <- data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
-  data <- data[, .(N_PRIKK = sum(FLAGG)), by = c(groupdims, "KUBE")]
   data <- data[, .(PRIKK = .N), by = .(KUBE, N_PRIKK)]
+  
+  # Calculate proportions of time series with n prikk
   data[, ANDEL := round(PRIKK/sum(PRIKK), 3), by = KUBE]
 
-  
   # Create output table
-  out <- dcast(data, 
-               N_PRIKK~KUBE,
-               value.var = c("PRIKK", "ANDEL"))
-  outnames <- names(out)
+  out <- dcast(data, N_PRIKK~KUBE, value.var = c("PRIKK", "ANDEL"))
   setcolorder(out, c("N_PRIKK",
-                     outnames[str_detect(outnames, "New")],
-                     outnames[str_detect(outnames, "Old")]))
+                     str_subset(names(out), "New"),
+                     str_subset(names(out), "Old")))
   out[, "N_PRIKK" := as.factor(N_PRIKK)]
+  setnames(out, names(out), str_replace(names(out), "_", " "))
   
   DT::datatable(out, 
                 filter = "top", 
