@@ -477,7 +477,7 @@ PlotTimeseries <- function(data = dfnew){
   plotdata <- plotdata[, .SD, .SDcols = c(.dims1, .TSplotvals)]
   
   # Organize plotdata according to all dimensions
-  setkeyv(plotdata, dimexist)
+  setkeyv(plotdata, .dims1)
   
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
@@ -731,11 +731,13 @@ UnspecifiedBydel <- function(data = dfnew){
   d <- dcast(d, ... ~ GEONIV, value.var = "value")
   
   # Estimate unknown bydel
-  d[, `UOPPGITT, %` := round(100* (1 - Bydel/Kommune),1)]
+  d[, `UOPPGITT, %` := 100*(1 - Bydel/Kommune)]
   
   # Convert all dimensions to factor for search function
-  convert <- str_subset(names(d), str_c(vals, collapse = "|"), negate = TRUE)
-  d[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
+  convert <- str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
+  d[, (convert) := lapply(.SD, as.factor), .SDcols = convert]
+  round <- which(sapply(d, is.numeric))
+  d[, (round) := lapply(.SD, round, 1), .SDcols = round]
   
   # Make datatable output
   DT::datatable(d[order(-`UOPPGITT, %`)], 
