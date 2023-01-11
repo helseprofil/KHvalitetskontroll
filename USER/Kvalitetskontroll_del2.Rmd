@@ -29,7 +29,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -37,12 +37,15 @@ dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found i
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
 # names(dfnew)
 ###
+
+# To chance column names, uncomment and edit the following:
+# setnames(dfold, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
 ```
 
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -83,6 +86,7 @@ DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE")
 ```{r}
 # No arguments needed, everything is defined in INPUT
 # If file name is too long, or file name for other reasons should not be the default, the three _name-arguments can be specified. 
+# Example: dfnew_flag_name = "your preferred filename"
 FormatData(dfnew_flag_name = NULL,
            dfold_flag_name = NULL,
            compareKUBE_name = NULL)
