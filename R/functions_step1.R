@@ -196,23 +196,22 @@ CheckPrikk <- function(data1 = dfnew,
   cat(paste0("Controlled column: ", val))
   cat(paste0("\nLimit: ", limit))
 
-  # If val and limit is provided, filter out data. If not, return empty data.table
-  if(!is.na(val)){
+  # If val and limit is provided, filter out data
+  if(!is.na(val) && !is.na(limit)){
     filtered <- data1[data1[[val]] <= limit]
-  } else {
-    filtered <- data1[NULL]
-  }
-  
-  if(nrow(filtered) == 0) {
-    cat("\nNo values < limit")
-  } else {
-    cat(paste0("\nN values <= limit: ", nrow(filtered)))
-    cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
     
-    num <- which(sapply(filtered, is.numeric))
-    filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
-    notcensored <<- filtered
-    View(notcensored)
+    if(nrow(filtered) == 0) {
+      cat("\nNo values < limit")
+    }
+    
+    if(nrow(filtered) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(filtered)))
+      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
+      num <- which(sapply(filtered, is.numeric))
+      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
+      notcensored <<- filtered
+      View(notcensored)
+    }
   }
 }
 
