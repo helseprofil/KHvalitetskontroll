@@ -19,8 +19,7 @@
 .FlagNew <- function(data1, 
                      data2, 
                      commondims,
-                     newdims,
-                     vals){
+                     newdims){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dimensions
@@ -238,12 +237,6 @@ FormatData <- function(data1 = dfnew,
                        dfold_flag_name = NULL,
                        compareKUBE_name = NULL){
   
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-    rm(ALL_DIMENSIONS)
-  }
-
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
   
@@ -264,39 +257,27 @@ FormatData <- function(data1 = dfnew,
                         "FILDUMPER",
                         "/")
 
-  # Identify dimension columns present in new and old KUBE
-  # Separate into common, new, and expired dimensions for flagging, write standard msg
-  dimnew <- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
-  dimold <- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
-  commondims <- dimnew[dimnew %in% dimold]
-  newdims <- dimnew[!dimnew %in% dimold]
-  expdims <- dimold[!dimold %in% dimnew]
+  # Identify dimension and value columns
+  .IdentifyColumns(data1, data2)
   
-  msg_commondims <- case_when(length(commondims) == 0 ~ "\n- No common dimensions found",
-                             TRUE ~ paste0("\n- Common columns found: ", str_c(commondims, collapse = ", ")))
+  # Summary of dimensions and values
+  msg_commondims <- case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
+                             TRUE ~ paste0("\n- Common columns found: ", str_c(.commondims, collapse = ", ")))
   
-  msg_newdims <- case_when(length(newdims) == 0 ~ "\n- No new dimensions.",
-                          TRUE ~ paste0("\n- New dimensions found: ", str_c(newdims, collapse = ", ")))
+  msg_newdims <- case_when(length(.newdims) == 0 ~ "\n- No new dimensions.",
+                          TRUE ~ paste0("\n- New dimensions found: ", str_c(.newdims, collapse = ", ")))
   
-  msg_expdims <- case_when(length(expdims) == 0 ~ "\n- No expired dimensions.",
-                      TRUE ~ paste0("\n- Expired dimensions found: ", str_c(expdims, collapse = ", ")))
+  msg_expdims <- case_when(length(.expdims) == 0 ~ "\n- No expired dimensions.",
+                      TRUE ~ paste0("\n- Expired dimensions found: ", str_c(.expdims, collapse = ", ")))
   
-  # Identify value columns present in new and old KUBE
-  # Separate into common, new, and expired values, write standard msg
-  valnew <- names(data1)[!names(data1) %in% .ALL_DIMENSIONS]
-  valold <- names(data2)[!names(data2) %in% .ALL_DIMENSIONS]
-  commonvals <- valnew[valnew %in% valold]
-  newvals <- valnew[!valnew %in% valold]
-  expvals <- valold[!valold %in% valnew]
+  msg_commonvals <- case_when(length(.commonvals) == 0 ~ "\n- No common value columns found",
+                         TRUE ~ paste0("\n- Common value columns found: ", str_c(.commonvals, collapse = ", ")))
   
-  msg_commonvals <- case_when(length(commonvals) == 0 ~ "\n- No common value columns found",
-                         TRUE ~ paste0("\n- Common value columns found: ", str_c(commonvals, collapse = ", ")))
+  msg_newvals <- case_when(length(.newvals) == 0 ~ "\n- No new value columns.",
+                      TRUE ~ paste0("\n- New value columns found: ", str_c(.newvals, collapse = ", ")))
   
-  msg_newvals <- case_when(length(newvals) == 0 ~ "\n- No new value columns.",
-                      TRUE ~ paste0("\n- New value columns found: ", str_c(newvals, collapse = ", ")))
-  
-  msg_expvals <- case_when(length(expvals) == 0 ~ "\n- No expired value columns.",
-                      TRUE ~ paste0("\n- Expired value columns found: ", str_c(expvals, collapse = ", ")))
+  msg_expvals <- case_when(length(.expvals) == 0 ~ "\n- No expired value columns.",
+                      TRUE ~ paste0("\n- Expired value columns found: ", str_c(.expvals, collapse = ", ")))
   
   # Flag new KUBE
   cat("STARTS flagging new kube:")
@@ -306,9 +287,8 @@ FormatData <- function(data1 = dfnew,
   cat(msg_newvals)
   .FlagNew(data1 = data1, 
            data2 = data2, 
-           commondims = commondims,
-           newdims = newdims,
-           vals = valnew)
+           commondims = .commondims,
+           newdims = .newdims)
   
   # Detect outliers...
   # cat("STARTS outlier detection:")
@@ -338,8 +318,8 @@ FormatData <- function(data1 = dfnew,
   cat(msg_expvals)
   .FlagOld(data1 = data1,
            data2 = data2,
-           commondims = commondims,
-           expdims = expdims)
+           commondims = .commondims,
+           expdims = .expdims)
   
   # File dump old KUBE
   
@@ -364,8 +344,8 @@ FormatData <- function(data1 = dfnew,
   
   .CreateCompare(data1 = dfnew_flag,
                  data2 = dfold_flag,
-                 commondims = commondims,
-                 commonvals = commonvals)
+                 commondims = .commondims,
+                 commonvals = .commonvals)
   
   cat("\n\n-COMPLETED creating compareKUBE\n")
   
