@@ -222,7 +222,9 @@ CheckPrikk <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-CompareFylkeLand <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval){
+CompareFylkeLand <- function(data = dfnew, 
+                             groupdim = GROUPdims, 
+                             compare = COMPAREval){
   
   # Create subset, remove helseregion
   data <- copy(data)[GEO<100 & !GEO %in% 81:84] 
@@ -275,7 +277,9 @@ CompareFylkeLand <- function(data = dfnew, groupdim = GROUPdims, compare = COMPA
 #' @export
 #'
 #' @examples
-CompareKommuneFylke <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval){
+CompareKommuneFylke <- function(data = dfnew, 
+                                groupdim = GROUPdims, 
+                                compare = COMPAREval){
   
   # Create subset, remove helseregion
   data <- copy(data)[GEO > 0 & GEO < 10000 & !GEO %in% 81:84]
@@ -327,7 +331,9 @@ CompareKommuneFylke <- function(data = dfnew, groupdim = GROUPdims, compare = CO
 #' @export
 #'
 #' @examples
-CompareBydelKommune <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval) {
+CompareBydelKommune <- function(data = dfnew, 
+                                groupdim = GROUPdims, 
+                                compare = COMPAREval) {
   
   kommunegeo <- c(301, 1103, 4601, 5001)
   bydelsgeo <- unique(data[GEO>9999]$GEO)
@@ -396,7 +402,9 @@ CompareBydelKommune <- function(data = dfnew, groupdim = GROUPdims, compare = CO
 #' @export
 #'
 #' @examples
-CompareOslo <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval){
+CompareOslo <- function(data = dfnew, 
+                        groupdim = GROUPdims, 
+                        compare = COMPAREval){
   
   # Create subset, remove helseregion
   data <- copy(data)[GEO %in% c(3, 301)]
@@ -449,18 +457,15 @@ CompareOslo <- function(data = dfnew, groupdim = GROUPdims, compare = COMPAREval
 #' @examples
 PlotTimeseries <- function(data = dfnew){
   
-  if(!exists(".ALL_DIMENSIONS")) {
-    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-    .ALL_DIMENSIONS <- ALL_DIMENSIONS
-  }
-  
   plotdata <- copy(data)
   
+  # Identify dimension and value columns
+  .IdentifyColumns(plotdata)
+  
   # Identify all dimensions in the file, plotdims (- GEO and AAR) and plotvals (- RATE.n and SPVFLAGG)
-  dimexist <- names(plotdata)[names(plotdata) %in% .ALL_DIMENSIONS]
-  .TSplotdims <<- str_subset(dimexist, "GEO|AAR", negate = TRUE)
+  .TSplotdims <<- str_subset(.dims1, "GEO|AAR", negate = TRUE)
   .TSplotvals <<- str_subset(names(plotdata),
-                            str_c(c(dimexist, "RATE.n", "SPVFLAGG"), collapse = "|"),
+                            str_c(c(.dims1, "RATE.n", "SPVFLAGG"), collapse = "|"),
                             negate = TRUE)
   
   # Find plotheight for HTML report
@@ -469,7 +474,7 @@ PlotTimeseries <- function(data = dfnew){
   # Extract only country level data,
   plotdata <- plotdata[GEO == 0]
   # Keep all dimensions, but only value columns included in plotval
-  plotdata <- plotdata[, .SD, .SDcols = c(dimexist, .TSplotvals)]
+  plotdata <- plotdata[, .SD, .SDcols = c(.dims1, .TSplotvals)]
   
   # Organize plotdata according to all dimensions
   setkeyv(plotdata, dimexist)
@@ -527,7 +532,7 @@ PlotTimeseries <- function(data = dfnew){
                                      containtotal = containtotal,
                                      sumcols = sumcols,
                                      avgcols = avgcols,
-                                     dimexist = dimexist,
+                                     dimexist = .dims1,
                                      ALDERtot = ALDERtot))
   
 } 
@@ -613,26 +618,40 @@ PlotTimeseries <- function(data = dfnew){
     force_panelsizes(rows = unit(4, "cm"))
 }
 
-.AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
-  # Group by all existing standard dimensions
-  groupcols <- str_subset(dimexist, dimextra, negate = TRUE)
-  # Identify value columns to average or sum
-  sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
-  avgcols <- plotvals[!plotvals %in% sumcols]
-  # Aggregate plotvals, remove dimextra column, remove duplicated rows
-  data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
-  data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-  data[, (dimextra) := "TOTAL"]
-  data <- unique(data)
-  data
+PrintTimeseries <- function(dims = .TSplotdims,
+                            plots = .TS){
+  
+  for(i in 1:length(dims)){
+    
+    header <-  paste0("\n\n## Across ", dims[i], "\n")
+    cat(header)
+    
+    print(plots[[i]])
+    
+    cat("\n")
+  }
 }
 
-.AggregateAge <- function(data){
-  ALDERl <- min(as.numeric(str_extract(data$ALDER, "[:digit:]*(?=_)")))
-  ALDERh <- max(as.numeric(str_extract(data$ALDER, "(?<=_)[:digit:]*")))
-  ALDERtot <- paste0(ALDERl, "_", ALDERh)
-  data[ALDER == ALDERtot]
-}
+# .AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
+#   # Group by all existing standard dimensions
+#   groupcols <- str_subset(dimexist, dimextra, negate = TRUE)
+#   # Identify value columns to average or sum
+#   sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
+#   avgcols <- plotvals[!plotvals %in% sumcols]
+#   # Aggregate plotvals, remove dimextra column, remove duplicated rows
+#   data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
+#   data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+#   data[, (dimextra) := "TOTAL"]
+#   data <- unique(data)
+#   data
+# }
+# 
+# .AggregateAge <- function(data){
+#   ALDERl <- min(as.numeric(str_extract(data$ALDER, "[:digit:]*(?=_)")))
+#   ALDERh <- max(as.numeric(str_extract(data$ALDER, "(?<=_)[:digit:]*")))
+#   ALDERtot <- paste0(ALDERl, "_", ALDERh)
+#   data[ALDER == ALDERtot]
+# }
 
 
 
@@ -665,6 +684,9 @@ UnspecifiedBydel <- function(data = dfnew){
   
   d <- copy(data)
   
+  # Identify dimension and value columns
+  .IdentifyColumns(d)
+  
   # Remove years with no data on bydel
   
   bydelaar <- d[GEO %in% bydelsgeo & SPVFLAGG == 0, .N, by = AAR]$AAR
@@ -677,13 +699,12 @@ UnspecifiedBydel <- function(data = dfnew){
     } 
   
   # Identify dimemsion and value columns
-  dims <- names(d)[names(d) %in% .ALL_DIMENSIONS]
-  vals <- names(d)[!names(d) %in% dims]
-  vals <- str_subset(vals, "TELLER|NEVNER")
+  vals <- str_subset(.vals1, "TELLER|NEVNER")
         
   # Create subset, create geolevel and kommune variable
-  d <- d[GEO %in% c(kommunegeo, bydelsgeo), c(..dims, ..vals, "SPVFLAGG")][, ':=' (KOMMUNE = character(),
-                                                                                      GEONIV = "Bydel")]
+  d <- d[GEO %in% c(kommunegeo, bydelsgeo), .SD, .SDcols = c(.dims1, vals, "SPVFLAGG")]
+  d[, ':=' (KOMMUNE = character(),
+            GEONIV = "Bydel")]
   d[grep("^301", GEO), KOMMUNE := "Oslo"]
   d[grep("^1103", GEO), KOMMUNE := "Stavanger"]
   d[grep("^4601", GEO), KOMMUNE := "Bergen"]
@@ -692,7 +713,7 @@ UnspecifiedBydel <- function(data = dfnew){
   
   # Identify complete strata within kommune and all dims except GEO
   d[, sumSPV := sum(SPVFLAGG), by = c("KOMMUNE", 
-                                      dims[!dims %in% c("GEO")])]
+                                      str_subset(.dims1, "GEO", negate = TRUE))]
   # Only keep complete strata
   d <- d[sumSPV == 0]
   if(nrow(d) < 1){
@@ -702,7 +723,7 @@ UnspecifiedBydel <- function(data = dfnew){
   
   # sum `vals` columns for kommune and bydel
   d <- d[, lapply(.SD, sum, na.rm = T), .SDcols = vals, by = c("KOMMUNE", "GEONIV", 
-                                                               str_subset(dims, "GEO", negate = TRUE))]
+                                                               str_subset(.dims1, "GEO", negate = TRUE))]
   
   # Format table
   d[, (vals) := lapply(.SD, as.numeric, na.rm = T), .SDcols = vals]
@@ -713,7 +734,7 @@ UnspecifiedBydel <- function(data = dfnew){
   d[, `UOPPGITT, %` := round(100* (1 - Bydel/Kommune),1)]
   
   # Convert all dimensions to factor for search function
-  convert <- c("KOMMUNE", names(d)[names(d) %in% dims], "MALTALL")
+  convert <- str_subset(names(d), str_c(vals, collapse = "|"), negate = TRUE)
   d[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
   
   # Make datatable output
@@ -726,21 +747,5 @@ UnspecifiedBydel <- function(data = dfnew){
                   # Show length menu, table, pagination, and information
                   dom = 'ltpi')
                 )
-  
-}
-
-PrintTimeseries <- function(dims = .TSplotdims,
-                            plots = .TS){
-  
-  for(i in 1:length(dims)){
-    
-    header <-  paste0("\n\n## Across ", dims[i], "\n")
-    cat(header)
-    
-    print(plots[[i]])
-    
-    cat("\n")
-  }
-  
   
 }
