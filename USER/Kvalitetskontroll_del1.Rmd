@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.7.0 (09.01.2023). 
+Version: 1.7.1 (11.01.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -32,7 +32,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found in folder, specify file name further
+dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -40,12 +40,15 @@ dfnew <- ReadFile(file = "KUHR_2022-11-23-15-11", # Matching, if >1 file found i
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
 # names(dfnew)
 ###
+
+# To chance column names, uncomment and edit the following:
+# setnames(dfold, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
 ```
 
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify file name further
+dfold <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11"
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -56,6 +59,7 @@ dfold <- ReadFile(file = "KUHR", # Matching, if >1 file found in folder, specify
 
 ### 
 # Changes old column names to new, for matching with new file. If more columns need renaming, add a new line.
+# Default list is set for column names which often needs to be changed.
 setnames(dfold, old = "antall", new = "TELLER", skip_absent = TRUE)
 setnames(dfold, old = "Crude", new = "RATE", skip_absent = TRUE)
 setnames(dfold, old = "Adjusted", new = "MEIS", skip_absent = TRUE)
@@ -64,16 +68,9 @@ setnames(dfold, old = "sumnevner", new = "sumNEVNER", skip_absent = TRUE)
 ```
 
 **Input parameters: **
-```{r include=FALSE}
+```{r echo = T}
 # To save files and report in correct folder
 PROFILEYEAR <- 2023
-
-# Standard dimensions, entered as c("dim1", "dim2", etc).
-STANDARDdims <- c("GEO", "AAR", "KJONN", "ALDER") 
-
-# Extra dimensions, entered as c("dim1", "dim2", etc).
-# If no additional dimensions are present/wanted, this should be "EXTRAdims <- NULL"
-EXTRAdims <- "KODEGRUPPE"
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
@@ -84,19 +81,20 @@ PRIKKlimit <- 12
 COMPAREval <- "TELLER" 
 
 # For grouping output, entered as c("dim1", "dim2", etc).
-# Applies to comparisons of censored observations, and between GEOlevels
+# Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
 # If you only want total numbers, this should be "GROUPdims <- NULL"
+# Can also be edited directly in the code chunks if you want different grouping
 GROUPdims <- c("AAR", "KODEGRUPPE") 
 ```
 
 ```{r}
 # To print input, do not change:
-cat("Standard dimensions: ", print_dim(STANDARDdims), 
-    "\nExtra dimensions: ", print_dim(EXTRAdims),
-    "\nValue to check for prikking: ", print_dim(PRIKKval),
-    "\nLimit for prikking: ", PRIKKlimit,
-    "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
-    "\nDimensions to group output by: ", print_dim(GROUPdims))
+# cat("Standard dimensions: ", print_dim(STANDARDdims), 
+#     "\nExtra dimensions: ", print_dim(EXTRAdims),
+#     "\nValue to check for prikking: ", print_dim(PRIKKval),
+#     "\nLimit for prikking: ", PRIKKlimit,
+#     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
+#     "\nDimensions to group output by: ", print_dim(GROUPdims))
 ```
 
 # 1. Compare columns and dimensions
@@ -110,8 +108,6 @@ CompareCols()
 ```
 
 ## 1B. Compare dimensions
-
-Outputs for the following dimensions: `r print_dim(c(STANDARDdims, EXTRAdims))`
 
 - Number of levels
 - New levels (not found in old KUBE)
@@ -129,7 +125,7 @@ CompareDims()
 
 -   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
 -   If everything is ok, the function returns a confirmation.
--   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection.
+-   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection in a separate window.
 
 ```{r}
 CheckPrikk()
