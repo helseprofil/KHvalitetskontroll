@@ -195,8 +195,13 @@ CheckPrikk <- function(data1 = dfnew,
   
   cat(paste0("Controlled column: ", val))
   cat(paste0("\nLimit: ", limit))
-  
-  filtered <- data1[get(val) <= limit]
+
+  # If val and limit is provided, filter out data. If not, return empty data.table
+  if(!is.na(val)){
+    filtered <- data1[data1[[val]] <= limit]
+  } else {
+    filtered <- data1[NULL]
+  }
   
   if(nrow(filtered) == 0) {
     cat("\nNo values < limit")
