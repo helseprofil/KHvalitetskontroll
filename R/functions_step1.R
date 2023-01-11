@@ -191,27 +191,24 @@ ComparePrikkTS <- function(data1 = dfnew,
 #' @examples
 CheckPrikk <- function(data1 = dfnew,
                        val = PRIKKval, 
-                       limit = PRIKKlimit,
-                       standarddims = STANDARDdims,
-                       extradims = EXTRAdims){
-  
-  filtered <- data1[data1[[val]] <= limit]
+                       limit = PRIKKlimit){
   
   cat(paste0("Controlled column: ", val))
   cat(paste0("\nLimit: ", limit))
   
-  if(!anyNA(c(val, limit))){
+  filtered <- data1[get(val) <= limit]
+  
   if(nrow(filtered) == 0) {
     cat("\nNo values < limit")
   } else {
     cat(paste0("\nN values <= limit: ", nrow(filtered)))
-    output <- filtered %>% 
-      select(any_of(standarddims), any_of(extradims), any_of(val), everything()) %>% 
-      mutate(across(where(is.numeric), ~round(.x, 2)))
-    DT::datatable(output, rownames = F)
+    cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
+    
+    num <- which(sapply(filtered, is.numeric))
+    filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
+    notcensored <<- filtered
+    View(notcensored)
   }
-  }
-
 }
 
 #' CompareFylkeLand
