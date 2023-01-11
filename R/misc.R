@@ -242,8 +242,10 @@ SaveReport <- function(profileyear = PROFILEYEAR,
     .expdims <<- str_subset(.dims2, str_c(.dims1, collapse = "|"), negate = T)
     
     .commonvals <<- .vals1[.vals1 %in% .vals2]
-    .newdims <<- str_subset(.vals1, str_c(.vals2, collapse = "|"), negate = T)
-    .expdims <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
+    .newvals <<- str_subset(.vals1, str_c(.vals2, collapse = "|"), negate = T)
+    .expvals <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
+    
+    .commoncols <<- c(.commondims, .commonvals)
   }
   
 }
