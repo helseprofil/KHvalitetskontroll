@@ -737,14 +737,56 @@ UnspecifiedBydel <- function(data = dfnew){
   # Estimate unknown bydel
   d[, `UOPPGITT, %` := 100*(1 - Bydel/Kommune)]
   
-  # Convert all dimensions to factor for search function
+  # Convert all dimensions to factor for search function, set order
   convert <- str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
   d[, (convert) := lapply(.SD, as.factor), .SDcols = convert]
   round <- which(sapply(d, is.numeric))
   d[, (round) := lapply(.SD, round, 1), .SDcols = round]
+  d <- d[order(-`UOPPGITT, %`)]
   
-  # Make datatable output
-  DT::datatable(d[order(-`UOPPGITT, %`)], 
+  
+  ### Consider saving to environment and make file dump, especially when files are too large for HTML-table
+  # Create file dump
+  # kubename <- .GetKubename(data)
+  # .CreateFolders(profileyear = profileyear,
+  #                kubename = kubename)
+  # dumppath <- file.path("F:", 
+  #                       "Forskningsprosjekter", 
+  #                       "PDB 2455 - Helseprofiler og til_",
+  #                       "PRODUKSJON", 
+  #                       "VALIDERING", 
+  #                       "NESSTAR_KUBER",
+  #                       profileyear,
+  #                       "KVALITETSKONTROLL",
+  #                       kubename,
+  #                       "FILDUMPER",
+  #                       "/")
+  # fwrite(d, paste0(dumppath, "UnspecifiedBydel.csv"), sep = ";")
+  # Save to environment
+  # unspecifiedbydel <<- d
+  
+  # If nrow is > 10 000, show maximum 10 000 observations
+  if(nrow(d) > 10000){
+    
+    # Find number of kommune and maltall
+    n_kommune <- length(unique(d$KOMMUNE))
+    n_maltall <- length(unique(d$MALTALL))
+    # Estimate observations per kommune*maltall to get total < 10 000
+    n_obs <- floor(10000 / (n_kommune*n_maltall))
+    
+    cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)))
+    cat(paste0("\nObservations shown per MALTALL per KOMMUNE: ", n_obs))
+    
+    # Order file by kommune, maltall and unspecified bydel (descending)
+    setorderv(d, c("KOMMUNE", "MALTALL", "UOPPGITT, %"), c(1,1,-1))
+    
+    d <- d[, .SD[1:n_obs], by = c("KOMMUNE", "MALTALL")]
+    setcolorder(d, c("KOMMUNE",
+                     str_subset(.dims1, "GEO", negate = TRUE)))
+  }
+  
+  # Make datatable output (max )
+  DT::datatable(d, 
                 filter = "top",
                 rownames = F,
                 options = list(
