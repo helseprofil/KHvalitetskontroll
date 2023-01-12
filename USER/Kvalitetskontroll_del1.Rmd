@@ -46,7 +46,7 @@ dfnew <- ReadFile(file = "FILNAVN", # Matching, if >1 file found in folder, spec
 
 # Default list is set for column names which often needs to be changed.
 setnames(dfnew, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivÃ¥"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE)
 
