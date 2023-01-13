@@ -230,6 +230,11 @@ CompareFylkeLand <- function(data = dfnew,
                              groupdim = GROUPdims, 
                              compare = COMPAREval){
   
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
+  
   # Create subset, remove helseregion
   data <- copy(data)[GEO<100 & !GEO %in% 81:84] 
   data[, geolevel := "Fylke"]
@@ -285,6 +290,11 @@ CompareKommuneFylke <- function(data = dfnew,
                                 groupdim = GROUPdims, 
                                 compare = COMPAREval){
   
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
+  
   # Create subset, remove helseregion
   data <- copy(data)[GEO > 0 & GEO < 10000 & !GEO %in% 81:84]
   data[, geolevel := "Kommune"]
@@ -338,6 +348,11 @@ CompareKommuneFylke <- function(data = dfnew,
 CompareBydelKommune <- function(data = dfnew, 
                                 groupdim = GROUPdims, 
                                 compare = COMPAREval) {
+  
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
   
   kommunegeo <- c(301, 1103, 4601, 5001)
   bydelsgeo <- unique(data[GEO>9999]$GEO)
@@ -409,6 +424,11 @@ CompareBydelKommune <- function(data = dfnew,
 CompareOslo <- function(data = dfnew, 
                         groupdim = GROUPdims, 
                         compare = COMPAREval){
+  
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
   
   # Create subset, remove helseregion
   data <- copy(data)[GEO %in% c(3, 301)]
