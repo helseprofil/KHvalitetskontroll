@@ -85,7 +85,7 @@ PRIKKval <- "sumTELLER"
 PRIKKlimit <- 12
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
-# If no comparison value is present, set "COMPAREVALUE <- NA". In this case, section 3 A-D will give empty output.
+# If no comparison value is present, set "COMPAREval <- NA". In this case, section 3 A-D will give empty output.
 COMPAREval <- "sumTELLER" 
 
 # For grouping output, entered as c("dim1", "dim2", etc).
