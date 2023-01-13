@@ -675,7 +675,8 @@ PrintTimeseries <- function(dims = .TSplotdims,
 #' @export
 #'
 #' @examples
-UnspecifiedBydel <- function(data = dfnew){
+UnspecifiedBydel <- function(data = dfnew,
+                             maxrows = TRUE){
   
   kommunegeo <- c(301, 1103, 4601, 5001)
   bydelsgeo <- unique(data[GEO>9999]$GEO)
@@ -749,7 +750,7 @@ UnspecifiedBydel <- function(data = dfnew){
   ### Consider saving to environment and make file dump, especially when files are too large for HTML-table
   
   # If nrow is > 10 000, show maximum 10 000 observations
-  if(nrow(d) > 8000){
+  if(maxrows){
     
     # Find number of kommune and maltall
     n_kommune <- length(unique(d$KOMMUNE))
