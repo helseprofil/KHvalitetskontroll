@@ -248,6 +248,11 @@ CompareFylkeLand <- function(data = dfnew,
   # Format output
   data <- dcast(data, ... ~ geolevel, value.var = "sum")
   
+  # If groupdim == NULL, remove column named "."
+  if(is.null(groupdim)){
+  data[, . := NULL]
+  }
+  
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = Land - Fylke,
                Relative = round(Land/Fylke, 3))]
@@ -260,9 +265,11 @@ CompareFylkeLand <- function(data = dfnew,
     cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with Absolute < 1")
   }
    
-  # Convert groupdim to factor and set column order
+  # If any groupdims present, convert to factor and set column order
+  if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Land", "Fylke", "Absolute", "Relative"))
+  }
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
@@ -308,6 +315,11 @@ CompareKommuneFylke <- function(data = dfnew,
   # Format output
   data <- dcast(data, ... ~ geolevel, value.var = "sum")
   
+  # If groupdim == NULL, remove column named "."
+  if(is.null(groupdim)){
+    data[, . := NULL]
+  }
+  
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = Fylke - Kommune,
                Relative = round(Fylke/Kommune, 3))]
@@ -320,9 +332,11 @@ CompareKommuneFylke <- function(data = dfnew,
     cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with Absolute < 1")
   }
   
-  # Convert groupdim to factor and set column order
+  # If any groupdims present, convert to factor and set column order
+  if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Fylke", "Kommune", "Absolute", "Relative"))
+  }
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
@@ -393,7 +407,7 @@ CompareBydelKommune <- function(data = dfnew,
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with Absolute < 1")
   }
   
-  # Convert KOMMUNE & groupdim to factor and set column order
+  # Convert KOMMUNE & groupdim (if present) to factor and set column order
   fct_col <- c("KOMMUNE", groupdim)
   data[, (fct_col) := lapply(.SD, as.factor), .SDcols = fct_col]
   setcolorder(data, c("KOMMUNE", groupdim, "Kommune", "Bydel", "Absolute", "Relative"))
@@ -441,6 +455,11 @@ CompareOslo <- function(data = dfnew,
   # Format output
   data <- dcast(data, ... ~ geolevel, value.var = "sum")
   
+  # If groupdim == NULL, remove column named "."
+  if(is.null(groupdim)){
+    data[, . := NULL]
+  }
+  
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = `Oslo Fylke`- `Oslo Kommune`,
                Relative = round(`Oslo Fylke`/`Oslo Kommune`, 3))]
@@ -453,9 +472,11 @@ CompareOslo <- function(data = dfnew,
     cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where Absolute does not = 0")
   }
   
-  # Convert groupdim to factor and set column order
+  # If any groupdims present, convert to factor and set column order
+  if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Oslo Fylke", "Oslo Kommune", "Absolute", "Relative"))
+  }
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
