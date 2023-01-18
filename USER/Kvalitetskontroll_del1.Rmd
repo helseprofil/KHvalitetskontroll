@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.7.3 (13.01.2023). 
+Version: 1.7.4 (18.01.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -25,6 +25,11 @@ knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
+# KOMMENTARER
+
+- Mindre prikking, skyldes at bare SOES = 0 er med i ny fil. Likt når bare SOES = 0 inkluderes. 
+- Kommune er større enn fylke for 2021. Dette skyldes at bare noen fylker har tall disse årene, og tallene stemmer når bare tilhørende kommuner tas med i sammenligningen. 
+
 # INPUT
 
 **Data files loaded**
@@ -32,7 +37,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "FILNAVN", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
+dfnew <- ReadFile(file = "HASJBRUK_UNGDATA_2023-01-06-15-51", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -45,6 +50,7 @@ dfnew <- ReadFile(file = "FILNAVN", # Matching, if >1 file found in folder, spec
 # setnames(dfnew, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
 
 # Default list is set for column names which often needs to be changed.
+# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
 setnames(dfnew, 
          old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
@@ -54,7 +60,7 @@ setnames(dfnew,
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "FILNAVN", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
+dfold <- ReadFile(file = "HASJBRUK_UNGDATA", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -64,45 +70,39 @@ dfold <- ReadFile(file = "FILNAVN", # Matching, if >1 file found in folder, spec
 ###
 
 ### 
-# Changes old column names to new, for matching with new file.
+
+# To chance column names, uncomment and edit the following:
+# setnames(dfold, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
+
 # Default list is set for column names which often needs to be changed.
+# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
 setnames(dfold, 
          old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE)
-# To chance more column names, uncomment and edit the following code:
-# setnames(dfnew, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
 ```
 
 **Input parameters: **
 ```{r echo = T}
+# UPDATE 18.01.2022: "<-" is replaced with "<<-" to make sure these settings are applied when saving the report. 
+
 # To save files and report in correct folder
-PROFILEYEAR <- 2023
+PROFILEYEAR <<- 2023
 
 # Value column for censoring (PRIKKING), and the limit to check against
-# If no limit is set, the value of these can be NA (missing): "PRIKKval = NA", "PRIKKlimit = NA"
-PRIKKval <- "sumTELLER"
-PRIKKlimit <- 12
+# If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
+PRIKKval <<- "TELLER"
+PRIKKlimit <<- 3
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
-# If no comparison value is present, set "COMPAREVALUE <- NA". In this case, section 3 A-D will give empty output.
-COMPAREval <- "sumTELLER" 
+# If no comparison value is present, set "COMPAREVALUE <<- NA". In this case, section 3 A-D will give empty output.
+COMPAREval <<- "TELLER" 
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
-# If you only want total numbers, this should be "GROUPdims <- NULL"
+# If you only want total numbers, this should be "GROUPdims <<- NULL"
 # Can also be edited directly in the code chunks if you want different grouping
-GROUPdims <- c("AAR") 
-```
-
-```{r}
-# To print input, do not change:
-# cat("Standard dimensions: ", print_dim(STANDARDdims), 
-#     "\nExtra dimensions: ", print_dim(EXTRAdims),
-#     "\nValue to check for prikking: ", print_dim(PRIKKval),
-#     "\nLimit for prikking: ", PRIKKlimit,
-#     "\nValue to compare between geolevels: ", print_dim(COMPAREval), 
-#     "\nDimensions to group output by: ", print_dim(GROUPdims))
+GROUPdims <<- c("AAR") 
 ```
 
 # 1. Compare columns and dimensions
@@ -123,7 +123,6 @@ CompareCols()
 
 ```{r}
 # If any dimensions are identified as new or expired columns (i.e. not present in both files), they will not be evaluated
-
 CompareDims()
 ```
 
@@ -180,7 +179,7 @@ ComparePrikkTS()
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareFylkeLand(groupdim = GROUPdims)
+CompareFylkeLand(dfold, groupdim = GROUPdims)
 ```
 
 ## 3B. Does KOMMUNE sum to FYLKE?
@@ -199,7 +198,8 @@ CompareFylkeLand(groupdim = GROUPdims)
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareKommuneFylke(groupdim = GROUPdims)
+dfnew[grepl(str_c(paste0("^", c(11,18,30,42), collapse = "|")), GEO) & GEO != 301] %>%
+CompareKommuneFylke(groupdim = "AAR")
 ```
 
 ## 3C. Oslo KOMMUNE = Oslo FYLKE?
@@ -218,7 +218,7 @@ CompareKommuneFylke(groupdim = GROUPdims)
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareOslo(groupdim = GROUPdims)
+CompareOslo(groupdim = "AAR")
 ```
 
 ## 3D. Does BYDEL sum to KOMMUNE?
