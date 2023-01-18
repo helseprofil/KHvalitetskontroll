@@ -61,7 +61,7 @@ setnames(dfnew,
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
+dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -151,7 +151,7 @@ CheckPrikk()
 # Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
 # It can be very useful to include dimensions with new levels, to facilitate a direct comparison between common levels
 
-ComparePrikk(groupdim = GROUPdims)
+ComparePrikk(data2 = dfold[SOES == 0], groupdim = GROUPdims)
 ```
 
 ## 2C. Check censoring within each time series
@@ -179,8 +179,7 @@ ComparePrikkTS()
 # To mimic the boxplot table, use: CompareFylkeLand(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-
-CompareFylkeLand(dfold, groupdim = GROUPdims)
+CompareFylkeLand(groupdim = GROUPdims)
 ```
 
 ## 3B. Does KOMMUNE sum to FYLKE?
@@ -198,7 +197,6 @@ CompareFylkeLand(dfold, groupdim = GROUPdims)
 # To mimic the boxplot table, use: CompareKommuneFylke(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-
 CompareKommuneFylke(groupdim = "AAR")
 ```
 
