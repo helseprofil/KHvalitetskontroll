@@ -199,7 +199,6 @@ CompareFylkeLand(dfold, groupdim = GROUPdims)
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-dfnew[grepl(str_c(paste0("^", c(11,18,30,42), collapse = "|")), GEO) & GEO != 301] %>%
 CompareKommuneFylke(groupdim = "AAR")
 ```
 
