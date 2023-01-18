@@ -100,10 +100,10 @@ ComparePrikk <- function(data1 = dfnew,
   
   # Calculate number of observations per strata of SPV-flagg + groupdim
   new <- data1[, .("N (new)" = .N), keyby = c("SPVFLAGG", groupdim)]
-  old <- data2[, .("N (old)" = .N), keyby = c("SPVFLAGG", groupdim)]
+  old <- data2[SOES == 0, .("N (old)" = .N), keyby = c("SPVFLAGG", groupdim)]
   
   # merge tables
-  output <- new[old]
+  output <- merge.data.table(new, old, all = TRUE)
   
   # Calculate absolute and relative difference
   output[, `:=` (Absolute = `N (new)`-`N (old)`,
