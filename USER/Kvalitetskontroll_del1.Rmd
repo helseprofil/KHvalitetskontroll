@@ -27,8 +27,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # KOMMENTARER
 
-- Mindre prikking, skyldes at bare SOES = 0 er med i ny fil. Likt når bare SOES = 0 inkluderes. 
-- Kommune er større enn fylke for 2021. Dette skyldes at bare noen fylker har tall disse årene, og tallene stemmer når bare tilhørende kommuner tas med i sammenligningen. 
+-
+-
+-
 
 # INPUT
 
