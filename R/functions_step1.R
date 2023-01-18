@@ -790,24 +790,24 @@ UnspecifiedBydel <- function(data = dfnew,
 
   ### Consider saving to environment and make file dump, especially when files are too large for HTML-table
   
-  # If nrow is > 10 000, show maximum 10 000 observations
-  if(maxrows){
+  # Find number of kommune and maltall
+  n_kommune <- length(unique(d$KOMMUNE))
+  n_maltall <- length(unique(d$MALTALL))
+  
+  # Print sumary information
+  cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)/n_maltall))
+  cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])/n_maltall))
+  cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])/n_maltall))
+  cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])/n_maltall))
+  cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])/n_maltall))
+  
+  # If nrow is > 8 000, show maximum 10 000 observations
+  if(maxrows && nrow(d) > 8000){
     
-    # Find number of kommune and maltall
-    n_kommune <- length(unique(d$KOMMUNE))
-    n_maltall <- length(unique(d$MALTALL))
     # Estimate observations per kommune*maltall to get total < 10 000
     n_obs <- floor(8000 / (n_kommune*n_maltall))
     
-    cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)))
-    cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])))
-    cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])))
-    cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])))
-    cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])))
     cat(paste0("\nTop ", n_obs, " observations shown per MALTALL per KOMMUNE: "))
-    
-    # Order file by kommune, maltall and unspecified bydel (descending)
-    # setorderv(d, c("KOMMUNE", "MALTALL", "UOPPGITT, %"), c(1,1,-1))
     
     d <- d[, .SD[1:n_obs], by = c("KOMMUNE", "MALTALL")]
   }
