@@ -37,6 +37,6 @@ theme_update(legend.position = "top",
 
 # Set global options
 PROFILEYEAR <- 2023  # For saving in correct folder
-DUMPS <- NULL        # Default is to not create file dumps
+DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE") # Default is to create all file dumps
 
       

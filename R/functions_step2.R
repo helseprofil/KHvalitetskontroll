@@ -302,12 +302,19 @@ FormatData <- function(data1 = dfnew,
       filename <- paste0(str_remove(dfnew_flag_name, ".csv"), ".csv")
     } else {
       filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"), "_(new)_FLAGGED.csv")
-      }
+    }
     
-    fwrite(dfnew_flag, 
-           file = paste0(dumppath, filename),
-           sep = ";")
-    cat(paste0("\nFILEDUMP: ", filename, "\n"))
+    file <- paste0(dumppath, filename)
+    
+    # Write file if it doesn't exist
+    if(!file.exists(file)) {
+      fwrite(dfnew_flag,
+             file = file,
+             sep = ";")
+      cat(paste0("\nFILEDUMP: ", filename, "\n"))
+    } else {
+      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+    }
   }
   
   # Flag old KUBE
@@ -332,10 +339,17 @@ FormatData <- function(data1 = dfnew,
       filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
     }
     
-    fwrite(dfold_flag, 
-           file = paste0(dumppath, filename),
-           sep = ";")
-    cat(paste0("\nFILEDUMP: ", filename, "\n"))
+    file <- paste0(dumppath, filename)
+    
+    # Write file if it doesn't exist
+    if(!file.exists(file)){
+      fwrite(dfold_flag,
+             file = paste0(dumppath, filename),
+             sep = ";")
+      cat(paste0("\nFILEDUMP: ", filename, "\n"))
+    } else {
+      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+    }
   }
   
   cat("\nCOMPLETED flagging!\n")
@@ -360,10 +374,17 @@ FormatData <- function(data1 = dfnew,
       filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
     }
     
-    fwrite(compareKUBE, 
-           file = paste0(dumppath, filename),
-           sep = ";")
-    cat(paste0("\nFILEDUMP: ", filename, "\n"))
+    file <- paste0(dumppath, filename)
+    
+    # Write file if it doesn't exist
+    if(!file.exists(file)){
+      fwrite(compareKUBE,
+             file = paste0(dumppath, filename),
+             sep = ";")
+      cat(paste0("\nFILEDUMP: ", filename, "\n"))
+    } else {
+      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+    }   
   }
   
   cat("\nDONE!")

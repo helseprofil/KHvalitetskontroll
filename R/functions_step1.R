@@ -195,19 +195,23 @@ CheckPrikk <- function(data1 = dfnew,
   
   cat(paste0("Controlled column: ", val))
   cat(paste0("\nLimit: ", limit))
-  
-  filtered <- data1[get(val) <= limit]
-  
-  if(nrow(filtered) == 0) {
-    cat("\nNo values < limit")
-  } else {
-    cat(paste0("\nN values <= limit: ", nrow(filtered)))
-    cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
+
+  # If val and limit is provided, filter out data
+  if(!is.na(val) && !is.na(limit)){
+    filtered <- data1[data1[[val]] <= limit]
     
-    num <- which(sapply(filtered, is.numeric))
-    filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
-    notcensored <<- filtered
-    View(notcensored)
+    if(nrow(filtered) == 0) {
+      cat("\nNo values < limit")
+    }
+    
+    if(nrow(filtered) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(filtered)))
+      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
+      num <- which(sapply(filtered, is.numeric))
+      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
+      notcensored <<- filtered
+      View(notcensored)
+    }
   }
 }
 
@@ -226,6 +230,11 @@ CompareFylkeLand <- function(data = dfnew,
                              groupdim = GROUPdims, 
                              compare = COMPAREval){
   
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
+  
   # Create subset, remove helseregion
   data <- copy(data)[GEO<100 & !GEO %in% 81:84] 
   data[, geolevel := "Fylke"]
@@ -239,6 +248,11 @@ CompareFylkeLand <- function(data = dfnew,
   # Format output
   data <- dcast(data, ... ~ geolevel, value.var = "sum")
   
+  # If groupdim == NULL, remove column named "."
+  if(is.null(groupdim)){
+  data[, . := NULL]
+  }
+  
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = Land - Fylke,
                Relative = round(Land/Fylke, 3))]
@@ -251,9 +265,11 @@ CompareFylkeLand <- function(data = dfnew,
     cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with Absolute < 1")
   }
    
-  # Convert groupdim to factor and set column order
+  # If any groupdims present, convert to factor and set column order
+  if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Land", "Fylke", "Absolute", "Relative"))
+  }
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
@@ -281,6 +297,11 @@ CompareKommuneFylke <- function(data = dfnew,
                                 groupdim = GROUPdims, 
                                 compare = COMPAREval){
   
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
+  
   # Create subset, remove helseregion
   data <- copy(data)[GEO > 0 & GEO < 10000 & !GEO %in% 81:84]
   data[, geolevel := "Kommune"]
@@ -294,6 +315,11 @@ CompareKommuneFylke <- function(data = dfnew,
   # Format output
   data <- dcast(data, ... ~ geolevel, value.var = "sum")
   
+  # If groupdim == NULL, remove column named "."
+  if(is.null(groupdim)){
+    data[, . := NULL]
+  }
+  
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = Fylke - Kommune,
                Relative = round(Fylke/Kommune, 3))]
@@ -306,9 +332,11 @@ CompareKommuneFylke <- function(data = dfnew,
     cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with Absolute < 1")
   }
   
-  # Convert groupdim to factor and set column order
+  # If any groupdims present, convert to factor and set column order
+  if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Fylke", "Kommune", "Absolute", "Relative"))
+  }
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
@@ -334,6 +362,11 @@ CompareKommuneFylke <- function(data = dfnew,
 CompareBydelKommune <- function(data = dfnew, 
                                 groupdim = GROUPdims, 
                                 compare = COMPAREval) {
+  
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
   
   kommunegeo <- c(301, 1103, 4601, 5001)
   bydelsgeo <- unique(data[GEO>9999]$GEO)
@@ -374,7 +407,7 @@ CompareBydelKommune <- function(data = dfnew,
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with Absolute < 1")
   }
   
-  # Convert KOMMUNE & groupdim to factor and set column order
+  # Convert KOMMUNE & groupdim (if present) to factor and set column order
   fct_col <- c("KOMMUNE", groupdim)
   data[, (fct_col) := lapply(.SD, as.factor), .SDcols = fct_col]
   setcolorder(data, c("KOMMUNE", groupdim, "Kommune", "Bydel", "Absolute", "Relative"))
@@ -406,6 +439,11 @@ CompareOslo <- function(data = dfnew,
                         groupdim = GROUPdims, 
                         compare = COMPAREval){
   
+  if(is.na(compare)){
+    cat("\nCompare column = NA, no output\n")
+    return(invisible(NULL))
+  }
+  
   # Create subset, remove helseregion
   data <- copy(data)[GEO %in% c(3, 301)]
   data[, geolevel := "Oslo Kommune"]
@@ -417,21 +455,28 @@ CompareOslo <- function(data = dfnew,
   # Format output
   data <- dcast(data, ... ~ geolevel, value.var = "sum")
   
+  # If groupdim == NULL, remove column named "."
+  if(is.null(groupdim)){
+    data[, . := NULL]
+  }
+  
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = `Oslo Fylke`- `Oslo Kommune`,
                Relative = round(`Oslo Fylke`/`Oslo Kommune`, 3))]
   format <- c("Oslo Fylke", "Oslo Kommune", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
+  if(nrow(data[Relative != 0]) == 0) {
     cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
     cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where Absolute does not = 0")
   }
   
-  # Convert groupdim to factor and set column order
+  # If any groupdims present, convert to factor and set column order
+  if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
   setcolorder(data, c(groupdim, "Oslo Fylke", "Oslo Kommune", "Absolute", "Relative"))
+  }
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
@@ -613,7 +658,7 @@ PlotTimeseries <- function(data = dfnew){
     guides(color = guide_legend(title = NULL, 
                                 nrow = nrow_legend, 
                                 byrow = TRUE)) +
-    theme(axis.text.x = element_text(angle = 30, vjust = 0.5),
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8),
           panel.spacing = unit(0.5, "cm"))  +
     force_panelsizes(rows = unit(4, "cm"))
 }
@@ -671,7 +716,8 @@ PrintTimeseries <- function(dims = .TSplotdims,
 #' @export
 #'
 #' @examples
-UnspecifiedBydel <- function(data = dfnew){
+UnspecifiedBydel <- function(data = dfnew,
+                             maxrows = TRUE){
   
   kommunegeo <- c(301, 1103, 4601, 5001)
   bydelsgeo <- unique(data[GEO>9999]$GEO)
@@ -733,18 +779,50 @@ UnspecifiedBydel <- function(data = dfnew){
   # Estimate unknown bydel
   d[, `UOPPGITT, %` := 100*(1 - Bydel/Kommune)]
   
-  # Convert all dimensions to factor for search function
+  # Convert all dimensions to factor for search function, set order
   convert <- str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
   d[, (convert) := lapply(.SD, as.factor), .SDcols = convert]
   round <- which(sapply(d, is.numeric))
   d[, (round) := lapply(.SD, round, 1), .SDcols = round]
   
-  # Make datatable output
-  DT::datatable(d[order(-`UOPPGITT, %`)], 
+  # Order according to unspecified bydel
+  d <- d[order(-`UOPPGITT, %`)]
+
+  ### Consider saving to environment and make file dump, especially when files are too large for HTML-table
+  
+  # If nrow is > 10 000, show maximum 10 000 observations
+  if(maxrows){
+    
+    # Find number of kommune and maltall
+    n_kommune <- length(unique(d$KOMMUNE))
+    n_maltall <- length(unique(d$MALTALL))
+    # Estimate observations per kommune*maltall to get total < 10 000
+    n_obs <- floor(8000 / (n_kommune*n_maltall))
+    
+    cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)))
+    cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])))
+    cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])))
+    cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])))
+    cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])))
+    cat(paste0("\nTop ", n_obs, " observations shown per MALTALL per KOMMUNE: "))
+    
+    # Order file by kommune, maltall and unspecified bydel (descending)
+    # setorderv(d, c("KOMMUNE", "MALTALL", "UOPPGITT, %"), c(1,1,-1))
+    
+    d <- d[, .SD[1:n_obs], by = c("KOMMUNE", "MALTALL")]
+  }
+  
+  # Set column order output
+  setcolorder(d, c("KOMMUNE",
+                   str_subset(.dims1, "GEO", negate = TRUE),
+                   "MALTALL", "Kommune", "Bydel"))
+  
+  # Make datatable output (max )
+  DT::datatable(d, 
                 filter = "top",
                 rownames = F,
                 options = list(
-                  columnDefs = list(list(targets = c("Bydel", "Kommune", "UOPPGITT, %"),
+                  columnDefs = list(list(targets = c("Bydel", "Kommune"),
                                          searchable = FALSE)),
                   # Show length menu, table, pagination, and information
                   dom = 'ltpi')
