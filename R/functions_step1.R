@@ -103,7 +103,7 @@ ComparePrikk <- function(data1 = dfnew,
   old <- data2[, .("N (old)" = .N), keyby = c("SPVFLAGG", groupdim)]
   
   # merge tables
-  output <- new[old]
+  output <- merge.data.table(new, old, all = TRUE)
   
   # Calculate absolute and relative difference
   output[, `:=` (Absolute = `N (new)`-`N (old)`,
@@ -259,8 +259,10 @@ CompareFylkeLand <- function(data = dfnew,
   format <- c("Land", "Fylke", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
-    cat("\nLAND is always larger than FYLKE")
+  if(nrow(data[Absolute != 0]) == 0) {
+    cat("\nLAND and FYLKE are identical")
+  } else if(nrow(data[Relative < 1]) == 0) {
+    cat("\nLAND is always equal to or larger than FYLKE")
   } else {
     cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with Absolute < 1")
   }
@@ -326,8 +328,10 @@ CompareKommuneFylke <- function(data = dfnew,
   format <- c("Fylke", "Kommune", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
-    cat("\nFYLKE is always larger than KOMMUNE")
+  if (nrow(data[Absolute != 0]) == 0){
+    cat("\nFYLKE and KOMMUNE are identical")
+  } else if (nrow(data[Relative < 1]) == 0) {
+    cat("\nFYLKE is always equal to or larger than KOMMUNE")
   } else {
     cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with Absolute < 1")
   }
@@ -401,8 +405,10 @@ CompareBydelKommune <- function(data = dfnew,
   format <- c("Kommune", "Bydel", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
-    cat("\nKOMMUNE is always larger than BYDEL") 
+  if(nrow(data[Absolute != 0]) == 0) {
+    cat("\nKOMMUNE and BYDEL are identical")
+  } else if(nrow(data[Relative < 1]) == 0) {
+    cat("\nKOMMUNE is always equal to or larger than BYDEL") 
   } else {
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with Absolute < 1")
   }
@@ -466,7 +472,7 @@ CompareOslo <- function(data = dfnew,
   format <- c("Oslo Fylke", "Oslo Kommune", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative != 0]) == 0) {
+  if(nrow(data[Absolute != 0]) == 0) {
     cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
     cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where Absolute does not = 0")
@@ -790,24 +796,24 @@ UnspecifiedBydel <- function(data = dfnew,
 
   ### Consider saving to environment and make file dump, especially when files are too large for HTML-table
   
-  # If nrow is > 10 000, show maximum 10 000 observations
-  if(maxrows){
+  # Find number of kommune and maltall
+  n_kommune <- length(unique(d$KOMMUNE))
+  n_maltall <- length(unique(d$MALTALL))
+  
+  # Print sumary information
+  cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)/n_maltall))
+  cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])/n_maltall))
+  cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])/n_maltall))
+  cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])/n_maltall))
+  cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])/n_maltall))
+  
+  # If nrow is > 8 000, show maximum 10 000 observations
+  if(maxrows && nrow(d) > 8000){
     
-    # Find number of kommune and maltall
-    n_kommune <- length(unique(d$KOMMUNE))
-    n_maltall <- length(unique(d$MALTALL))
     # Estimate observations per kommune*maltall to get total < 10 000
     n_obs <- floor(8000 / (n_kommune*n_maltall))
     
-    cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)))
-    cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])))
-    cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])))
-    cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])))
-    cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])))
     cat(paste0("\nTop ", n_obs, " observations shown per MALTALL per KOMMUNE: "))
-    
-    # Order file by kommune, maltall and unspecified bydel (descending)
-    # setorderv(d, c("KOMMUNE", "MALTALL", "UOPPGITT, %"), c(1,1,-1))
     
     d <- d[, .SD[1:n_obs], by = c("KOMMUNE", "MALTALL")]
   }

@@ -27,8 +27,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # KOMMENTARER
 
-- Mindre prikking, skyldes at bare SOES = 0 er med i ny fil. Likt når bare SOES = 0 inkluderes. 
-- Kommune er større enn fylke for 2021. Dette skyldes at bare noen fylker har tall disse årene, og tallene stemmer når bare tilhørende kommuner tas med i sammenligningen. 
+-
+-
+-
 
 # INPUT
 
@@ -37,7 +38,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 *New file:* 
 ```{r echo = F}
 ## Load new data file
-dfnew <- ReadFile(file = "HASJBRUK_UNGDATA_2023-01-06-15-51", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
+dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -60,7 +61,7 @@ setnames(dfnew,
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "HASJBRUK_UNGDATA", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
+dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -178,8 +179,7 @@ ComparePrikkTS()
 # To mimic the boxplot table, use: CompareFylkeLand(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-
-CompareFylkeLand(dfold, groupdim = GROUPdims)
+CompareFylkeLand(groupdim = GROUPdims)
 ```
 
 ## 3B. Does KOMMUNE sum to FYLKE?
@@ -197,8 +197,6 @@ CompareFylkeLand(dfold, groupdim = GROUPdims)
 # To mimic the boxplot table, use: CompareKommuneFylke(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-
-dfnew[grepl(str_c(paste0("^", c(11,18,30,42), collapse = "|")), GEO) & GEO != 301] %>%
 CompareKommuneFylke(groupdim = "AAR")
 ```
 

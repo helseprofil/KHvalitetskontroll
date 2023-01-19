@@ -52,7 +52,7 @@ setnames(dfnew,
 *Old file for comparison:*
 ```{r}
 # Load old data file
-dfold <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
+dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
