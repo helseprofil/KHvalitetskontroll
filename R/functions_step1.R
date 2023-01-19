@@ -466,7 +466,7 @@ CompareOslo <- function(data = dfnew,
   format <- c("Oslo Fylke", "Oslo Kommune", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative != 0]) == 0) {
+  if(nrow(data[Absolute != 0]) == 0) {
     cat("Oslo kommune is identical to Oslo fylke!") 
   } else {
     cat("Oslo fylke is not identical to Oslo fylke.\nSee rows where Absolute does not = 0")
