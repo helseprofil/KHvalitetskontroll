@@ -151,7 +151,7 @@ CheckPrikk()
 # Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
 # It can be very useful to include dimensions with new levels, to facilitate a direct comparison between common levels
 
-ComparePrikk(data2 = dfold[SOES == 0], groupdim = GROUPdims)
+ComparePrikk(groupdim = GROUPdims)
 ```
 
 ## 2C. Check censoring within each time series
