@@ -259,8 +259,10 @@ CompareFylkeLand <- function(data = dfnew,
   format <- c("Land", "Fylke", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
-    cat("\nLAND is always larger than FYLKE")
+  if(nrow(data[Absolute != 0]) == 0) {
+    cat("\nLAND and FYLKE are identical")
+  } else if(nrow(data[Relative < 1]) == 0) {
+    cat("\nLAND is always equal to or larger than FYLKE")
   } else {
     cat("\nIn some rows, FYLKE is larger than LAND.\n See rows with Absolute < 1")
   }
@@ -326,8 +328,10 @@ CompareKommuneFylke <- function(data = dfnew,
   format <- c("Fylke", "Kommune", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
-    cat("\nFYLKE is always larger than KOMMUNE")
+  if (nrow(data[Absolute != 0]) == 0){
+    cat("\nFYLKE and KOMMUNE are identical")
+  } else if (nrow(data[Relative < 1]) == 0) {
+    cat("\nFYLKE is always equal to or larger than KOMMUNE")
   } else {
     cat("\nIn some rows, KOMMUNE is larger than FYLKE.\n See rows with Absolute < 1")
   }
@@ -401,8 +405,10 @@ CompareBydelKommune <- function(data = dfnew,
   format <- c("Kommune", "Bydel", "Absolute")
   data[, (format) := lapply(.SD, round, 0), .SDcols = format]
   
-  if(nrow(data[Relative < 1]) == 0) {
-    cat("\nKOMMUNE is always larger than BYDEL") 
+  if(nrow(data[Absolute != 0]) == 0) {
+    cat("\nKOMMUNE and BYDEL are identical")
+  } else if(nrow(data[Relative < 1]) == 0) {
+    cat("\nKOMMUNE is always equal to or larger than BYDEL") 
   } else {
     cat("\nIn some rows, BYDEL is larger than KOMMUNE.\nSee rows with Absolute < 1")
   }
