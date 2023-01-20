@@ -111,6 +111,9 @@ ComparePrikk <- function(data1 = dfnew,
   allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
   output <- output[allcomb, on = bycols]
   
+  # Set N new and old = 0 if missing
+  walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
+  
   # Calculate absolute and relative difference
   output[, `:=` (Absolute = `N (new)`-`N (old)`,
                  Relative = round(`N (new)`/`N (old)`, 3))]
