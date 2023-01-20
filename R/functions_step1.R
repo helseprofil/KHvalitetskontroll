@@ -98,12 +98,18 @@ ComparePrikk <- function(data1 = dfnew,
                          data2 = dfold, 
                          groupdim = GROUPdims){
   
+  bycols <- c("SPVFLAGG", groupdim)
+  
   # Calculate number of observations per strata of SPV-flagg + groupdim
-  new <- data1[, .("N (new)" = .N), keyby = c("SPVFLAGG", groupdim)]
-  old <- data2[, .("N (old)" = .N), keyby = c("SPVFLAGG", groupdim)]
+  new <- data1[, .("N (new)" = .N), keyby = bycols]
+  old <- data2[, .("N (old)" = .N), keyby = bycols]
   
   # merge tables
   output <- merge.data.table(new, old, all = TRUE)
+  
+  # Rectangularize output to get all combinations of SPVFLAGG and groupdims
+  allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
+  output <- output[allcomb, on = bycols]
   
   # Calculate absolute and relative difference
   output[, `:=` (Absolute = `N (new)`-`N (old)`,
