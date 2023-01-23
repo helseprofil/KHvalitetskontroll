@@ -24,9 +24,9 @@ source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R"
 rm(ALL_DIMENSIONS)
 
 # Checks folder structure and create a folder for local files
-if(!dir.exists("USER/Lokale filer, overskrives ikke")){
-  dir.create("USER/Lokale filer, overskrives ikke")
-}
+# if(!dir.exists("USER/Lokale filer, overskrives ikke")){
+#   dir.create("USER/Lokale filer, overskrives ikke")
+# }
 
 # Set ggplot theme and color palette
 theme_set(theme_bw())
