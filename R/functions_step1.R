@@ -50,7 +50,18 @@ CompareCols <- function(data1 = dfnew,
 CompareDims <- function(data1 = dfnew, 
                         data2 = dfold){
   
-  # Identify dimension and value columns
+  if(is.null(data2)){
+    
+    .IdentifyColumns(data1)
+    
+    map_df(.dims1, 
+           \(x)
+           tibble("Dimension" = x,
+                  "N (levels)" = length(data1[, unique(get(x))])))
+    
+  } else {
+  
+    # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
   # Check if any new or expired dimensions are present
@@ -87,6 +98,8 @@ CompareDims <- function(data1 = dfnew,
   }
   
   map_df(.commondims, ~CompareDim(data1, data2, dim = .x))
+  }
+  
 }
 
 #' ComparePrikk
@@ -112,49 +125,57 @@ ComparePrikk <- function(data1 = dfnew,
   new <- data1[, .("N (new)" = .N), keyby = bycols]
   
   # If only new file available (new indicator), return table of new file
-  if(is.null(data2)){
-    DT::datatable(new, 
-                  filter = "top",
-                  rownames = FALSE,
-                  options = list(
-                    columnDefs = list(list(targets = c("N (new)"),
-                                           searchable = FALSE)),
-                    # Show length menu, table, pagination, and information
-                    dom = 'ltpi', 
-                    scrollX = TRUE)
-                  )
-    } else {
-      old <- data2[, .("N (old)" = .N), keyby = bycols]
-      
-      # merge tables
-      output <- merge.data.table(new, old, all = TRUE)
-  
-  # Rectangularize output to get all combinations of SPVFLAGG and groupdims
-  allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
-  output <- output[allcomb, on = bycols]
-  
-  # Set N new and old = 0 if missing
-  walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
-  
-  # Calculate absolute and relative difference
-  output[, `:=` (Absolute = `N (new)`-`N (old)`,
-                 Relative = round(`N (new)`/`N (old)`, 3))]
-  
-  # Convert dimensions to factor
-  convert <- names(output)[!names(output) %in% c("N (new)", "N (old)", "Absolute", "Relative")]
-  output[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
-  
-  DT::datatable(output, 
-                filter = "top",
-                rownames = FALSE,
-                options = list(
-                  columnDefs = list(list(targets = c("N (new)", "N (old)", "Absolute", "Relative"),
-                                         searchable = FALSE)),
-                  # Show length menu, table, pagination, and information
-                  dom = 'ltpi', 
-                  scrollX = TRUE)
-                )
-    }
+  if (is.null(data2)) {
+    DT::datatable(
+      new,
+      filter = "top",
+      rownames = FALSE,
+      options = list(
+        columnDefs = list(list(
+          targets = c("N (new)"),
+          searchable = FALSE
+        )),
+        # Show length menu, table, pagination, and information
+        dom = 'ltpi',
+        scrollX = TRUE
+      )
+    )
+  } else {
+    old <- data2[, .("N (old)" = .N), keyby = bycols]
+    
+    # merge tables
+    output <- merge.data.table(new, old, all = TRUE)
+    
+    # Rectangularize output to get all combinations of SPVFLAGG and groupdims
+    allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
+    output <- output[allcomb, on = bycols]
+    
+    # Set N new and old = 0 if missing
+    walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
+    
+    # Calculate absolute and relative difference
+    output[, `:=` (Absolute = `N (new)` - `N (old)`,
+                   Relative = round(`N (new)` / `N (old)`, 3))]
+    
+    # Convert dimensions to factor
+    convert <- names(output)[!names(output) %in% c("N (new)", "N (old)", "Absolute", "Relative")]
+    output[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
+    
+    DT::datatable(
+      output,
+      filter = "top",
+      rownames = FALSE,
+      options = list(
+        columnDefs = list(list(
+          targets = c("N (new)", "N (old)", "Absolute", "Relative"),
+          searchable = FALSE
+        )),
+        # Show length menu, table, pagination, and information
+        dom = 'ltpi',
+        scrollX = TRUE
+      )
+    )
+  }
 }
 
 #' Compare censored observations across strata
@@ -169,6 +190,27 @@ ComparePrikk <- function(data1 = dfnew,
 ComparePrikkTS <- function(data1 = dfnew,
                            data2 = dfold){
   
+  if(is.null(data2)){
+    
+    # Identify dimension and value columns
+    .IdentifyColumns(data1)
+    
+    data <- copy(data1)
+    
+    # Identify grouping dimensions
+    groupdims <- str_subset(.dims1, "AAR", negate = TRUE)
+    
+    # Calculate n censored observations, 
+    data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
+    data <- data[, .(N_PRIKK = sum(FLAGG, na.rm = TRUE)), by = groupdims]
+    
+    # Aggregate to N prikk per strata
+    out <- data[, .(`N STRATA` = .N), by = .(N_PRIKK)]
+    
+    # Calculate proportions of time series with n prikk
+    out[, ANDEL := round(`N STRATA`/sum(`N STRATA`), 3)]
+    
+  } else {
   # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
@@ -194,7 +236,10 @@ ComparePrikkTS <- function(data1 = dfnew,
   setcolorder(out, c("N_PRIKK",
                      str_subset(names(out), "New"),
                      str_subset(names(out), "Old")))
-  out[, "N_PRIKK" := as.factor(N_PRIKK)]
+  }
+  
+  # Format and print output table
+  out <- out[, "N_PRIKK" := as.factor(N_PRIKK)][order(N_PRIKK)]
   setnames(out, names(out), str_replace(names(out), "_", " "))
   
   DT::datatable(out, 
