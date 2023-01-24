@@ -27,7 +27,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # KOMMENTARER
 
-- Ny fil, de ulike sjekkene er tilpasset.
+- 
+-
+-
 
 # INPUT
 
