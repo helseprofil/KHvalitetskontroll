@@ -98,12 +98,21 @@ ComparePrikk <- function(data1 = dfnew,
                          data2 = dfold, 
                          groupdim = GROUPdims){
   
+  bycols <- c("SPVFLAGG", groupdim)
+  
   # Calculate number of observations per strata of SPV-flagg + groupdim
-  new <- data1[, .("N (new)" = .N), keyby = c("SPVFLAGG", groupdim)]
-  old <- data2[, .("N (old)" = .N), keyby = c("SPVFLAGG", groupdim)]
+  new <- data1[, .("N (new)" = .N), keyby = bycols]
+  old <- data2[, .("N (old)" = .N), keyby = bycols]
   
   # merge tables
   output <- merge.data.table(new, old, all = TRUE)
+  
+  # Rectangularize output to get all combinations of SPVFLAGG and groupdims
+  allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
+  output <- output[allcomb, on = bycols]
+  
+  # Set N new and old = 0 if missing
+  walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
   
   # Calculate absolute and relative difference
   output[, `:=` (Absolute = `N (new)`-`N (old)`,
@@ -152,13 +161,13 @@ ComparePrikkTS <- function(data1 = dfnew,
   data <- data[, .(N_PRIKK = sum(FLAGG, na.rm = TRUE)), by = groupdims]
   
   # Aggregate to N prikk per strata
-  data <- data[, .(PRIKK = .N), by = .(KUBE, N_PRIKK)]
+  data <- data[, .(`N STRATA` = .N), by = .(KUBE, N_PRIKK)]
   
   # Calculate proportions of time series with n prikk
-  data[, ANDEL := round(PRIKK/sum(PRIKK), 3), by = KUBE]
+  data[, ANDEL := round(`N STRATA`/sum(`N STRATA`), 3), by = KUBE]
 
   # Create output table
-  out <- dcast(data, N_PRIKK~KUBE, value.var = c("PRIKK", "ANDEL"))
+  out <- dcast(data, N_PRIKK~KUBE, value.var = c("N STRATA", "ANDEL"))
   setcolorder(out, c("N_PRIKK",
                      str_subset(names(out), "New"),
                      str_subset(names(out), "Old")))
