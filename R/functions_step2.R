@@ -648,6 +648,7 @@ CompareNewOld <- function(data = compareKUBE,
 #' *_outlier: Within all strata (total GEO and AAR)
 #' *_outlierTS: Within time series (all strata, total AAR)
 #' 
+#' Definition: x < Q1-1.5IQR or x > Q3 + 1.5IQR
 #'
 #' @param data 
 #'
