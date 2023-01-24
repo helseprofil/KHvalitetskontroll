@@ -760,29 +760,6 @@ PrintTimeseries <- function(dims = .TSplotdims,
   }
 }
 
-# .AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
-#   # Group by all existing standard dimensions
-#   groupcols <- str_subset(dimexist, dimextra, negate = TRUE)
-#   # Identify value columns to average or sum
-#   sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
-#   avgcols <- plotvals[!plotvals %in% sumcols]
-#   # Aggregate plotvals, remove dimextra column, remove duplicated rows
-#   data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
-#   data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-#   data[, (dimextra) := "TOTAL"]
-#   data <- unique(data)
-#   data
-# }
-# 
-# .AggregateAge <- function(data){
-#   ALDERl <- min(as.numeric(str_extract(data$ALDER, "[:digit:]*(?=_)")))
-#   ALDERh <- max(as.numeric(str_extract(data$ALDER, "(?<=_)[:digit:]*")))
-#   ALDERtot <- paste0(ALDERl, "_", ALDERh)
-#   data[ALDER == ALDERtot]
-# }
-
-
-
 
 #' UnspecifiedBydel
 #'
