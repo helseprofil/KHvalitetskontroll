@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.7.4 (18.01.2023). 
+Version: 1.8.0 (24.01.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -27,9 +27,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # KOMMENTARER
 
--
--
--
+- Ny fil, de ulike sjekkene er tilpasset.
 
 # INPUT
 
@@ -40,7 +38,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 ## Load new data file
 dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
                   modus = "KH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+                  folder = "2023") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
 # To get a list of variable names in the new KUBE, uncomment and run the following code: 
@@ -60,8 +58,11 @@ setnames(dfnew,
 
 *Old file for comparison:*
 ```{r}
+# If no old file exists (new indicator), uncomment the next line and delete the rest of this code chunk.
+# dfold <<- NULL
+
 # Load old data file
-dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
+dfold <<- ReadFile(file = "MOBBING_UNGDATA", # Matching, if >1 file found in folder, specify file name further. Example "KUHR_2022-11-23-15-11""
                   modus = "KH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
@@ -123,7 +124,6 @@ CompareCols()
 - Expired levels (not found in new KUBE)
 
 ```{r}
-# If any dimensions are identified as new or expired columns (i.e. not present in both files), they will not be evaluated
 CompareDims()
 ```
 
@@ -145,13 +145,7 @@ CheckPrikk()
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
 
 ```{r}
-# Default is to stratify the output by SPVFLAGG, AAR, and GROUPdims (input)
-
-# If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
-# Example: ComparePrikk(groupdim = c("AAR", "ALDER", "etc"))
-# It can be very useful to include dimensions with new levels, to facilitate a direct comparison between common levels
-
-ComparePrikk(groupdim = GROUPdims)
+ComparePrikk()
 ```
 
 ## 2C. Check censoring within each time series
@@ -197,7 +191,7 @@ CompareFylkeLand(groupdim = GROUPdims)
 # To mimic the boxplot table, use: CompareKommuneFylke(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-CompareKommuneFylke(groupdim = "AAR")
+CompareKommuneFylke(groupdim = GROUPdims)
 ```
 
 ## 3C. Oslo KOMMUNE = Oslo FYLKE?
@@ -216,7 +210,7 @@ CompareKommuneFylke(groupdim = "AAR")
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
 
-CompareOslo(groupdim = "AAR")
+CompareOslo(groupdim = GROUPdims)
 ```
 
 ## 3D. Does BYDEL sum to KOMMUNE?
