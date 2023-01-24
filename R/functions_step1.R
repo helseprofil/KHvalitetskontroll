@@ -102,6 +102,44 @@ CompareDims <- function(data1 = dfnew,
   
 }
 
+#' CheckPrikk
+#' 
+#' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. If any number below the limit is detected, all rows containing unacceptable values are returned for inspection. 
+#'
+#' @param data1 New KUBE, defaults to dfnew 
+#' @param dim Dimension you want to check, defaults to sumTELLER
+#' @param limit Censor limit, the highest unacceptable value of dim. Defaults to `PRIKKlimit`, defined in input section of the Rmarkdown file. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CheckPrikk <- function(data1 = dfnew,
+                       val = PRIKKval, 
+                       limit = PRIKKlimit){
+  
+  cat(paste0("Controlled column: ", val))
+  cat(paste0("\nLimit: ", limit))
+  
+  # If val and limit is provided, filter out data
+  if(!is.na(val) && !is.na(limit)){
+    filtered <- data1[data1[[val]] <= limit]
+    
+    if(nrow(filtered) == 0) {
+      cat("\nNo values < limit")
+    }
+    
+    if(nrow(filtered) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(filtered)))
+      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
+      num <- which(sapply(filtered, is.numeric))
+      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
+      notcensored <<- filtered
+      View(notcensored)
+    }
+  }
+}
+
 #' ComparePrikk
 #' 
 #' Calculate the number of censored observations in the new and old KUBE, and calculate the absolute and relative difference. Results can be further grouped by an additional dimension. 
@@ -126,20 +164,9 @@ ComparePrikk <- function(data1 = dfnew,
   
   # If only new file available (new indicator), return table of new file
   if (is.null(data2)) {
-    DT::datatable(
-      new,
-      filter = "top",
-      rownames = FALSE,
-      options = list(
-        columnDefs = list(list(
-          targets = c("N (new)"),
-          searchable = FALSE
-        )),
-        # Show length menu, table, pagination, and information
-        dom = 'ltpi',
-        scrollX = TRUE
-      )
-    )
+    
+    output <- new
+
   } else {
     old <- data2[, .("N (old)" = .N), keyby = bycols]
     
@@ -156,18 +183,21 @@ ComparePrikk <- function(data1 = dfnew,
     # Calculate absolute and relative difference
     output[, `:=` (Absolute = `N (new)` - `N (old)`,
                    Relative = round(`N (new)` / `N (old)`, 3))]
+  }
     
-    # Convert dimensions to factor
-    convert <- names(output)[!names(output) %in% c("N (new)", "N (old)", "Absolute", "Relative")]
-    output[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
-    
-    DT::datatable(
+  # Convert bycols to factor
+  output[, (bycols) := lapply(.SD, as.factor), .SDcols = bycols]
+  
+  # Print output table  
+  DT::datatable(
       output,
       filter = "top",
       rownames = FALSE,
       options = list(
         columnDefs = list(list(
-          targets = c("N (new)", "N (old)", "Absolute", "Relative"),
+          targets =  str_subset(names(output), 
+                                str_c(bycols, collapse = "|"), 
+                                negate = TRUE),
           searchable = FALSE
         )),
         # Show length menu, table, pagination, and information
@@ -175,7 +205,6 @@ ComparePrikk <- function(data1 = dfnew,
         scrollX = TRUE
       )
     )
-  }
 }
 
 #' Compare censored observations across strata
@@ -254,43 +283,6 @@ ComparePrikkTS <- function(data1 = dfnew,
                 )
 }
 
-#' CheckPrikk
-#' 
-#' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. If any number below the limit is detected, all rows containing unacceptable values are returned for inspection. 
-#'
-#' @param data1 New KUBE, defaults to dfnew 
-#' @param dim Dimension you want to check, defaults to sumTELLER
-#' @param limit Censor limit, the highest unacceptable value of dim. Defaults to `PRIKKlimit`, defined in input section of the Rmarkdown file. 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-CheckPrikk <- function(data1 = dfnew,
-                       val = PRIKKval, 
-                       limit = PRIKKlimit){
-  
-  cat(paste0("Controlled column: ", val))
-  cat(paste0("\nLimit: ", limit))
-
-  # If val and limit is provided, filter out data
-  if(!is.na(val) && !is.na(limit)){
-    filtered <- data1[data1[[val]] <= limit]
-    
-    if(nrow(filtered) == 0) {
-      cat("\nNo values < limit")
-    }
-    
-    if(nrow(filtered) > 0){
-      cat(paste0("\nN values <= limit: ", nrow(filtered)))
-      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
-      num <- which(sapply(filtered, is.numeric))
-      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
-      notcensored <<- filtered
-      View(notcensored)
-    }
-  }
-}
 
 #' CompareFylkeLand
 #' 
