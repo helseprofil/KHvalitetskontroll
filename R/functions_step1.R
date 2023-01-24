@@ -104,7 +104,7 @@ ComparePrikk <- function(data1 = dfnew,
   new <- data1[, .("N (new)" = .N), keyby = bycols]
   
   # If only new file available (new indicator), return table of new file
-  if(is.null(data2)){
+  if(missing(data2)){
     DT::datatable(new, 
                   filter = "top",
                   rownames = FALSE,
