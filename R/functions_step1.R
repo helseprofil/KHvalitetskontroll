@@ -89,7 +89,7 @@ CompareDims <- function(data1 = dfnew,
 #' @param data2 old KUBE, defaults to dfold set in INPUT
 #' @param groupdim dimension to group output by, in addition to SPVFLAGG
 #' 
-#' @return a table containing the number of flagged rows in the new and old KUBE, and the absolute and relative difference, grouped by type of SPVFLAGG and an additional dimension (optional)
+#' @return a table containing the number of censored rows in the new and old KUBE, and the absolute and relative difference, grouped by type of SPVFLAGG and an additional dimension (optional)
 #' @export
 #'
 #' @examples
@@ -102,10 +102,24 @@ ComparePrikk <- function(data1 = dfnew,
   
   # Calculate number of observations per strata of SPV-flagg + groupdim
   new <- data1[, .("N (new)" = .N), keyby = bycols]
-  old <- data2[, .("N (old)" = .N), keyby = bycols]
   
-  # merge tables
-  output <- merge.data.table(new, old, all = TRUE)
+  # If only new file available (new indicator), return table of new file
+  if(is.null(data2)){
+    DT::datatable(new, 
+                  filter = "top",
+                  rownames = FALSE,
+                  options = list(
+                    columnDefs = list(list(targets = c("N (new)"),
+                                           searchable = FALSE)),
+                    # Show length menu, table, pagination, and information
+                    dom = 'ltpi', 
+                    scrollX = TRUE)
+                  )
+    } else {
+      old <- data2[, .("N (old)" = .N), keyby = bycols]
+      
+      # merge tables
+      output <- merge.data.table(new, old, all = TRUE)
   
   # Rectangularize output to get all combinations of SPVFLAGG and groupdims
   allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
@@ -132,6 +146,7 @@ ComparePrikk <- function(data1 = dfnew,
                   dom = 'ltpi', 
                   scrollX = TRUE)
                 )
+    }
 }
 
 #' Compare censored observations across strata
