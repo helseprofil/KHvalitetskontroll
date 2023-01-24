@@ -13,17 +13,25 @@
 CompareCols <- function(data1 = dfnew,
                         data2 = dfold){
   
+  if(is.null(data2)){
+  
+    .IdentifyColumns(data1)
+    
+    cat(paste0("Columns in file: ", str_c(c(.dims1, .vals1), collapse = ", ")))
+    
+  } else {
   # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
-  msgnew <- case_when(length(.newdims) == 0 ~ "No new columns.",
-                      TRUE ~ paste0("New columns found: ", str_c(.newdims, collapse = ", ")))
+  msgnew <- case_when(length(c(.newdims, .newvals)) == 0 ~ "No new columns.",
+                      TRUE ~ paste0("New columns found: ", str_c(c(.newdims, .newvals), collapse = ", ")))
   
-  msgexp <- case_when(length(.expdims) == 0 ~ "\nNo expired columns.",
-                      TRUE ~ paste0("\nExpired columns found: ", str_c(.expdims, collapse = ", ")))
+  msgexp <- case_when(length(c(.expdims, .expvals)) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(c(.expdims, .expvals), collapse = ", ")))
   
   cat(msgnew)
   cat(msgexp)
+  }
   
 }
 
@@ -104,7 +112,7 @@ ComparePrikk <- function(data1 = dfnew,
   new <- data1[, .("N (new)" = .N), keyby = bycols]
   
   # If only new file available (new indicator), return table of new file
-  if(missing(data2)){
+  if(is.null(data2)){
     DT::datatable(new, 
                   filter = "top",
                   rownames = FALSE,
