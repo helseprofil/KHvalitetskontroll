@@ -161,13 +161,13 @@ ComparePrikkTS <- function(data1 = dfnew,
   data <- data[, .(N_PRIKK = sum(FLAGG, na.rm = TRUE)), by = groupdims]
   
   # Aggregate to N prikk per strata
-  data <- data[, .(PRIKK = .N), by = .(KUBE, N_PRIKK)]
+  data <- data[, .(`N STRATA` = .N), by = .(KUBE, N_PRIKK)]
   
   # Calculate proportions of time series with n prikk
-  data[, ANDEL := round(PRIKK/sum(PRIKK), 3), by = KUBE]
+  data[, ANDEL := round(`N STRATA`/sum(`N STRATA`), 3), by = KUBE]
 
   # Create output table
-  out <- dcast(data, N_PRIKK~KUBE, value.var = c("PRIKK", "ANDEL"))
+  out <- dcast(data, N_PRIKK~KUBE, value.var = c("N STRATA", "ANDEL"))
   setcolorder(out, c("N_PRIKK",
                      str_subset(names(out), "New"),
                      str_subset(names(out), "Old")))
