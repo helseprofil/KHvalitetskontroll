@@ -855,7 +855,7 @@ UnspecifiedBydel <- function(data = dfnew,
   n_maltall <- length(unique(d$MALTALL))
   
   # Print sumary information
-  cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)/n_maltall))
+  cat(paste0("Total number of strata with complete bydel: ", nrow(d)/n_maltall))
   cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])/n_maltall))
   cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])/n_maltall))
   cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])/n_maltall))
