@@ -26,6 +26,10 @@
   dfnew_flag <<- copy(data1)[, `:=` (newrow = 0L)]
   setkeyv(dfnew_flag, c(commondims, newdims))
   
+  if(is.null(data2)){
+    dfnew_flag[, newrow := 1]
+    cat("\n- No old file, all rows flagged as new")
+  } else {
   # For common dimensions, flag all rows with new levels 
   # Loops over common dimensions. Flags previously unflagged rows for new levels 
   walk(commondims, 
@@ -40,9 +44,11 @@
          ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
                      newrow := 1L])
     cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
-  } 
+  }
   
-  cat("\n- Flagged version of new KUBE created: dfnew_flag\n")
+  }
+  
+  cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
 #' FlagOld
@@ -86,7 +92,7 @@
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
-  cat("\n- Flagged version of old KUBE created: dfold_flag\n")
+  cat("\n\n- Flagged version of old KUBE created: dfold_flag\n")
 }
 
 #' FixDecimals
@@ -258,11 +264,16 @@ FormatData <- function(data1 = dfnew,
                         "/")
 
   # Identify dimension and value columns
-  .IdentifyColumns(data1, data2)
+  if(is.null(data2)){
+    .IdentifyColumns(data1)
+  } else {
+    .IdentifyColumns(data1, data2)
+  }
   
-  # Summary of dimensions and values
+  # Summary of dimensions and values, if data2 provided
+  if(!is.null(data2)){
   msg_commondims <- case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
-                             TRUE ~ paste0("\n- Common columns found: ", str_c(.commondims, collapse = ", ")))
+                              TRUE ~ paste0("\n- Common columns found: ", str_c(.commondims, collapse = ", ")))
   
   msg_newdims <- case_when(length(.newdims) == 0 ~ "\n- No new dimensions.",
                           TRUE ~ paste0("\n- New dimensions found: ", str_c(.newdims, collapse = ", ")))
@@ -278,13 +289,16 @@ FormatData <- function(data1 = dfnew,
   
   msg_expvals <- case_when(length(.expvals) == 0 ~ "\n- No expired value columns.",
                       TRUE ~ paste0("\n- Expired value columns found: ", str_c(.expvals, collapse = ", ")))
+  }
   
   # Flag new KUBE
   cat("STARTS flagging new kube:")
-  cat(msg_commondims)
-  cat(msg_newdims)
-  cat(msg_commonvals)
-  cat(msg_newvals)
+  if(!is.null(data2)){
+    cat(msg_commondims)
+    cat(msg_newdims)
+    cat(msg_commonvals)
+    cat(msg_newvals)
+  }
   .FlagNew(data1 = data1, 
            data2 = data2, 
            commondims = .commondims,
@@ -317,74 +331,81 @@ FormatData <- function(data1 = dfnew,
     }
   }
   
-  # Flag old KUBE
+  # Flag old KUBE (if data2 provided)
   cat("\nSTARTS flagging old kube:")
-  cat(msg_commondims)
-  cat(msg_expdims)
-  cat(msg_commonvals)
-  cat(msg_expvals)
-  .FlagOld(data1 = data1,
-           data2 = data2,
-           commondims = .commondims,
-           expdims = .expdims)
+  if(!is.null(data2)){
+    cat(msg_commondims)
+    cat(msg_expdims)
+    cat(msg_commonvals)
+    cat(msg_expvals)
+    .FlagOld(data1 = data1,
+             data2 = data2,
+             commondims = .commondims,
+             expdims = .expdims)
   
-  # File dump old KUBE
+    # File dump old KUBE
   
-  if("dfold_flag" %in% dumps){
+    if("dfold_flag" %in% dumps){
+      # Set filename
+      if(!is.null(dfold_flag_name)){
+        filename <- paste0(str_remove(dfold_flag_name, ".csv"), ".csv")
+        } else {
+          filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
+          }
     
-    # Set filename
-    if(!is.null(dfold_flag_name)){
-      filename <- paste0(str_remove(dfold_flag_name, ".csv"), ".csv")
-    } else {
-      filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
+      file <- paste0(dumppath, filename)
+      
+      # Write file if it doesn't exist
+      if(!file.exists(file)){
+        fwrite(dfold_flag,
+               file = paste0(dumppath, filename),
+               sep = ";")
+        cat(paste0("\nFILEDUMP: ", filename, "\n"))
+        } else {
+          cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+        }
     }
-    
-    file <- paste0(dumppath, filename)
-    
-    # Write file if it doesn't exist
-    if(!file.exists(file)){
-      fwrite(dfold_flag,
-             file = paste0(dumppath, filename),
-             sep = ";")
-      cat(paste0("\nFILEDUMP: ", filename, "\n"))
-    } else {
-      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-    }
+  } else {
+    cat("\n- No old file to be flagged\n")
   }
   
   cat("\nCOMPLETED flagging!\n")
   
   cat("\nSTARTS create compareKUBE:")
   
-  .CreateCompare(data1 = dfnew_flag,
-                 data2 = dfold_flag,
-                 commondims = .commondims,
-                 commonvals = .commonvals)
-  
-  cat("\n\n-COMPLETED creating compareKUBE\n")
-  
-  if("compareKUBE" %in% dumps){
-    filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
-    filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
+  if(!is.null(data2)){
+    .CreateCompare(data1 = dfnew_flag,
+                   data2 = dfold_flag,
+                   commondims = .commondims,
+                   commonvals = .commonvals)
     
-    # Set filename
-    if(!is.null(compareKUBE_name)){
-      filename <- paste0(str_remove(compareKUBE_name, ".csv"), ".csv")
-    } else {
-      filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
+    cat("\n\n-COMPLETED creating compareKUBE\n")
+    
+    if("compareKUBE" %in% dumps){
+      filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
+      filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
+      
+      # Set filename
+      if(!is.null(compareKUBE_name)){
+        filename <- paste0(str_remove(compareKUBE_name, ".csv"), ".csv")
+      } else {
+        filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
+      }
+      
+      file <- paste0(dumppath, filename)
+      
+      # Write file if it doesn't exist
+      if(!file.exists(file)){
+        fwrite(compareKUBE,
+               file = paste0(dumppath, filename),
+               sep = ";")
+        cat(paste0("\nFILEDUMP: ", filename, "\n"))
+      } else {
+        cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+      }   
     }
-    
-    file <- paste0(dumppath, filename)
-    
-    # Write file if it doesn't exist
-    if(!file.exists(file)){
-      fwrite(compareKUBE,
-             file = paste0(dumppath, filename),
-             sep = ";")
-      cat(paste0("\nFILEDUMP: ", filename, "\n"))
-    } else {
-      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-    }   
+  } else {
+    cat("\n- No old file, compareKUBE not created\n")
   }
   
   cat("\nDONE!")
