@@ -73,7 +73,7 @@ ShowTS <- function(data = NULL,
   }
   
   # Create plot title
-  caption <- paste0(if("GEO" %in% dims){paste0("GEO = ", geo)},
+  caption <- paste0(if("GEO" %in% dims){paste0("GEO = ", geo, ", ", FindGeo(geo)$name)},
                     if("ALDER" %in% dims){paste0("\nALDER = ", alder)},
                     if("KJONN" %in% dims){paste0("\nKJONN = ", kjonn)},
                     if("UTDANN" %in% dims){paste0("\nUTDANN = ", utdann)},
@@ -308,4 +308,27 @@ ShowBydel <- function(data = NULL,
   }
   
   data
+}
+
+#' Helper function to find geo name from code
+#'
+#' @param geo 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+FindGeo <- function(geo){
+  
+  if(geo < 99){
+    type <- "f"
+  } else if(geo<9999){
+    type <- "k"
+  } else {
+    type <- "b"
+  }
+  
+  geolist <- get_code(type = type)
+  
+  geolist[as.numeric(code) == geo, .(code, name)]
 }
