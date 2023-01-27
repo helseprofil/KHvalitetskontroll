@@ -664,12 +664,8 @@ CompareNewOld <- function(data = compareKUBE,
   walk(tables, print)
 }
 
+
 #' Flag outliers
-#' 
-#' *_outlier: Within all strata (total GEO and AAR)
-#' *_outlierTS: Within time series (all strata, total AAR)
-#' 
-#' Definition: x < Q1-1.5IQR or x > Q3 + 1.5IQR
 #'
 #' @param data 
 #'
@@ -677,58 +673,50 @@ CompareNewOld <- function(data = compareKUBE,
 #' @export
 #'
 #' @examples
-# .FlagOutlier <- function(data = dfnew_flag,
-#                          dims = dimnew){
-#   
-#   d <- copy(data)
-#   
-#   # Init required columns for outlier detection
-#   d[, ':=' (geoniv = NA_character_,
-#             low = NA_real_,
-#             high = NA_real_)]
-#   
-#   d[GEO == 0, geoniv := "L"]
-#   d[GEO > 0 & GEO < 100, ':=' (geoniv = "F")]
-#   d[GEO > 100 & GEO < 10000, ':=' (geoniv = "K")]
-#   d[GEO > 10000, ':=' (geoniv = "B")]
-#   
-#   
-#   # Detect strata for outlier detection
-#   groupdims <- str_subset(dims, "GEO|AAR", negate = TRUE)
-# 
-#   # Identify value columns to detect outlier
-#   if("MEIS" %in% names(d)){
-#     outlierval <- "MEIS"
-#     cat("\n- Outliers detected based on MEIS")
-#   } else if ("RATE" %in% names(d)){
-#     outlierval <- "RATE"
-#     cat("\n- Outliers detected based on RATE")
-#   } else if ("SMR" %in% names(d)){
-#     outlierval <- "SMR"
-#     cat("\n- Outliers detected based on SMR")
-#   } else {
-#     cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
-#   }
-#   
-  # if()
-  # 
-  # 
-  # for(i in outliervals){
-  # 
-  #   dfnew_flag[, ':=' (low = quantile(.SD, 0.25, na.rm = T) - 1.5*IQR(subset[[i]], na.rm = T),
-  #                      high = quantile(.SD, 0.75, na.rm = T) + 1.5*IQR(subset[[i]], na.rm = T)),
-  #              by = c("geoniv", groupdims),
-  #              .SDcols = i]
-  # 
-  #   dfnew_flag[, paste0(i, "_outlier") := NA_real_]
-  #   dfnew_flag[, c("low", "high") := list(NULL)]
-  # }
-
+.FlagOutlier <- function(data){
   
-# }
-
-# PlotDiffTime <- function(data = compareKUBE){
-#  
-# }
-
+  # Identify dimension and value columns
+  .IdentifyColumns(data)
+  
+  # Select value column for outlier detection
+  if("MEIS" %in% .vals1){
+    val <- "MEIS"
+    cat("\nOutliers detection based on MEIS")
+  } else if ("RATE" %in% .vals1){
+    val <- "RATE"
+    cat("\nOutliers detection based on RATE")
+  } else if ("SMR" %in% .vals1){
+    val <- "SMR"
+    cat("\nOutliers detection based on SMR")
+  } else {
+    cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
+    return(invisible(NULL))
+  }
+  
+  # Add geoniv, low, high, outlier, and highlow column
+  
+  data[, GEONIV := NA_character_, keyby = GEO]
+  data[GEO == 0, GEONIV := "Land"]
+  data[between(GEO, 1, 99), GEONIV := "Fylke"]
+  data[between(GEO, 100, 9999), GEONIV := "Kommune"]
+  data[GEO > 9999, GEONIV := "Bydel"]
+  data[, LOW := NA_real_]
+  data[, HIGH := NA_real_]
+  data[, OUTLIER := 0]
+  data[, HIGHLOW := NA_character_]
+  
+  # Set bycols (geoniv and all dims except GEO/AAR,)
+  bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
+  
+  # Estimate low and high cutoff for outlier detection, 
+  
+  data[, LOW := quantile(get(val), 0.25, na.rm = T) - 1.5*IQR(get(val), na.rm = T), by = bycols]
+  data[, HIGH := quantile(get(val), 0.75, na.rm = T) + 1.5*IQR(get(val), na.rm = T), by = bycols]
+  
+  # Flag outliers
+  data[get(val) < LOW, `:=` (OUTLIER = 1,
+                             HIGHLOW = "low")]
+  data[get(val) > HIGH, `:=` (OUTLIER = 1,
+                              HIGHLOW = "high")]
+}
   
