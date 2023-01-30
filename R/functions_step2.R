@@ -26,6 +26,10 @@
   dfnew_flag <<- copy(data1)[, `:=` (newrow = 0L)]
   setkeyv(dfnew_flag, c(commondims, newdims))
   
+  if(is.null(data2)){
+    dfnew_flag[, newrow := 1]
+    cat("\n- No old file, all rows flagged as new")
+  } else {
   # For common dimensions, flag all rows with new levels 
   # Loops over common dimensions. Flags previously unflagged rows for new levels 
   walk(commondims, 
@@ -40,9 +44,11 @@
          ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
                      newrow := 1L])
     cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
-  } 
+  }
   
-  cat("\n- Flagged version of new KUBE created: dfnew_flag\n")
+  }
+  
+  cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
 #' FlagOld
@@ -86,7 +92,7 @@
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
-  cat("\n- Flagged version of old KUBE created: dfold_flag\n")
+  cat("\n\n- Flagged version of old KUBE created: dfold_flag\n")
 }
 
 #' FixDecimals
@@ -258,11 +264,16 @@ FormatData <- function(data1 = dfnew,
                         "/")
 
   # Identify dimension and value columns
-  .IdentifyColumns(data1, data2)
+  if(is.null(data2)){
+    .IdentifyColumns(data1)
+  } else {
+    .IdentifyColumns(data1, data2)
+  }
   
-  # Summary of dimensions and values
+  # Summary of dimensions and values, if data2 provided
+  if(!is.null(data2)){
   msg_commondims <- case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
-                             TRUE ~ paste0("\n- Common columns found: ", str_c(.commondims, collapse = ", ")))
+                              TRUE ~ paste0("\n- Common columns found: ", str_c(.commondims, collapse = ", ")))
   
   msg_newdims <- case_when(length(.newdims) == 0 ~ "\n- No new dimensions.",
                           TRUE ~ paste0("\n- New dimensions found: ", str_c(.newdims, collapse = ", ")))
@@ -278,13 +289,16 @@ FormatData <- function(data1 = dfnew,
   
   msg_expvals <- case_when(length(.expvals) == 0 ~ "\n- No expired value columns.",
                       TRUE ~ paste0("\n- Expired value columns found: ", str_c(.expvals, collapse = ", ")))
+  }
   
   # Flag new KUBE
   cat("STARTS flagging new kube:")
-  cat(msg_commondims)
-  cat(msg_newdims)
-  cat(msg_commonvals)
-  cat(msg_newvals)
+  if(!is.null(data2)){
+    cat(msg_commondims)
+    cat(msg_newdims)
+    cat(msg_commonvals)
+    cat(msg_newvals)
+  }
   .FlagNew(data1 = data1, 
            data2 = data2, 
            commondims = .commondims,
@@ -317,74 +331,81 @@ FormatData <- function(data1 = dfnew,
     }
   }
   
-  # Flag old KUBE
+  # Flag old KUBE (if data2 provided)
   cat("\nSTARTS flagging old kube:")
-  cat(msg_commondims)
-  cat(msg_expdims)
-  cat(msg_commonvals)
-  cat(msg_expvals)
-  .FlagOld(data1 = data1,
-           data2 = data2,
-           commondims = .commondims,
-           expdims = .expdims)
+  if(!is.null(data2)){
+    cat(msg_commondims)
+    cat(msg_expdims)
+    cat(msg_commonvals)
+    cat(msg_expvals)
+    .FlagOld(data1 = data1,
+             data2 = data2,
+             commondims = .commondims,
+             expdims = .expdims)
   
-  # File dump old KUBE
+    # File dump old KUBE
   
-  if("dfold_flag" %in% dumps){
+    if("dfold_flag" %in% dumps){
+      # Set filename
+      if(!is.null(dfold_flag_name)){
+        filename <- paste0(str_remove(dfold_flag_name, ".csv"), ".csv")
+        } else {
+          filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
+          }
     
-    # Set filename
-    if(!is.null(dfold_flag_name)){
-      filename <- paste0(str_remove(dfold_flag_name, ".csv"), ".csv")
-    } else {
-      filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
+      file <- paste0(dumppath, filename)
+      
+      # Write file if it doesn't exist
+      if(!file.exists(file)){
+        fwrite(dfold_flag,
+               file = paste0(dumppath, filename),
+               sep = ";")
+        cat(paste0("\nFILEDUMP: ", filename, "\n"))
+        } else {
+          cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+        }
     }
-    
-    file <- paste0(dumppath, filename)
-    
-    # Write file if it doesn't exist
-    if(!file.exists(file)){
-      fwrite(dfold_flag,
-             file = paste0(dumppath, filename),
-             sep = ";")
-      cat(paste0("\nFILEDUMP: ", filename, "\n"))
-    } else {
-      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-    }
+  } else {
+    cat("\n- No old file to be flagged\n")
   }
   
   cat("\nCOMPLETED flagging!\n")
   
   cat("\nSTARTS create compareKUBE:")
   
-  .CreateCompare(data1 = dfnew_flag,
-                 data2 = dfold_flag,
-                 commondims = .commondims,
-                 commonvals = .commonvals)
-  
-  cat("\n\n-COMPLETED creating compareKUBE\n")
-  
-  if("compareKUBE" %in% dumps){
-    filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
-    filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
+  if(!is.null(data2)){
+    .CreateCompare(data1 = dfnew_flag,
+                   data2 = dfold_flag,
+                   commondims = .commondims,
+                   commonvals = .commonvals)
     
-    # Set filename
-    if(!is.null(compareKUBE_name)){
-      filename <- paste0(str_remove(compareKUBE_name, ".csv"), ".csv")
-    } else {
-      filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
+    cat("\n\n-COMPLETED creating compareKUBE\n")
+    
+    if("compareKUBE" %in% dumps){
+      filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
+      filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
+      
+      # Set filename
+      if(!is.null(compareKUBE_name)){
+        filename <- paste0(str_remove(compareKUBE_name, ".csv"), ".csv")
+      } else {
+        filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
+      }
+      
+      file <- paste0(dumppath, filename)
+      
+      # Write file if it doesn't exist
+      if(!file.exists(file)){
+        fwrite(compareKUBE,
+               file = paste0(dumppath, filename),
+               sep = ";")
+        cat(paste0("\nFILEDUMP: ", filename, "\n"))
+      } else {
+        cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
+      }   
     }
-    
-    file <- paste0(dumppath, filename)
-    
-    # Write file if it doesn't exist
-    if(!file.exists(file)){
-      fwrite(compareKUBE,
-             file = paste0(dumppath, filename),
-             sep = ";")
-      cat(paste0("\nFILEDUMP: ", filename, "\n"))
-    } else {
-      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-    }   
+  } else {
+    cat("\n- No old file, compareKUBE not created\n")
   }
   
   cat("\nDONE!")
@@ -643,11 +664,8 @@ CompareNewOld <- function(data = compareKUBE,
   walk(tables, print)
 }
 
+
 #' Flag outliers
-#' 
-#' *_outlier: Within all strata (total GEO and AAR)
-#' *_outlierTS: Within time series (all strata, total AAR)
-#' 
 #'
 #' @param data 
 #'
@@ -655,58 +673,50 @@ CompareNewOld <- function(data = compareKUBE,
 #' @export
 #'
 #' @examples
-# .FlagOutlier <- function(data = dfnew_flag,
-#                          dims = dimnew){
-#   
-#   d <- copy(data)
-#   
-#   # Init required columns for outlier detection
-#   d[, ':=' (geoniv = NA_character_,
-#             low = NA_real_,
-#             high = NA_real_)]
-#   
-#   d[GEO == 0, geoniv := "L"]
-#   d[GEO > 0 & GEO < 100, ':=' (geoniv = "F")]
-#   d[GEO > 100 & GEO < 10000, ':=' (geoniv = "K")]
-#   d[GEO > 10000, ':=' (geoniv = "B")]
-#   
-#   
-#   # Detect strata for outlier detection
-#   groupdims <- str_subset(dims, "GEO|AAR", negate = TRUE)
-# 
-#   # Identify value columns to detect outlier
-#   if("MEIS" %in% names(d)){
-#     outlierval <- "MEIS"
-#     cat("\n- Outliers detected based on MEIS")
-#   } else if ("RATE" %in% names(d)){
-#     outlierval <- "RATE"
-#     cat("\n- Outliers detected based on RATE")
-#   } else if ("SMR" %in% names(d)){
-#     outlierval <- "SMR"
-#     cat("\n- Outliers detected based on SMR")
-#   } else {
-#     cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
-#   }
-#   
-  # if()
-  # 
-  # 
-  # for(i in outliervals){
-  # 
-  #   dfnew_flag[, ':=' (low = quantile(.SD, 0.25, na.rm = T) - 1.5*IQR(subset[[i]], na.rm = T),
-  #                      high = quantile(.SD, 0.75, na.rm = T) + 1.5*IQR(subset[[i]], na.rm = T)),
-  #              by = c("geoniv", groupdims),
-  #              .SDcols = i]
-  # 
-  #   dfnew_flag[, paste0(i, "_outlier") := NA_real_]
-  #   dfnew_flag[, c("low", "high") := list(NULL)]
-  # }
-
+.FlagOutlier <- function(data){
   
-# }
-
-# PlotDiffTime <- function(data = compareKUBE){
-#  
-# }
-
+  # Identify dimension and value columns
+  .IdentifyColumns(data)
+  
+  # Select value column for outlier detection
+  if("MEIS" %in% .vals1){
+    val <- "MEIS"
+    cat("\nOutliers detection based on MEIS")
+  } else if ("RATE" %in% .vals1){
+    val <- "RATE"
+    cat("\nOutliers detection based on RATE")
+  } else if ("SMR" %in% .vals1){
+    val <- "SMR"
+    cat("\nOutliers detection based on SMR")
+  } else {
+    cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
+    return(invisible(NULL))
+  }
+  
+  # Add geoniv, low, high, outlier, and highlow column
+  
+  data[, GEONIV := NA_character_, keyby = GEO]
+  data[GEO == 0, GEONIV := "Land"]
+  data[between(GEO, 1, 99), GEONIV := "Fylke"]
+  data[between(GEO, 100, 9999), GEONIV := "Kommune"]
+  data[GEO > 9999, GEONIV := "Bydel"]
+  data[, LOW := NA_real_]
+  data[, HIGH := NA_real_]
+  data[, OUTLIER := 0]
+  data[, HIGHLOW := NA_character_]
+  
+  # Set bycols (geoniv and all dims except GEO/AAR,)
+  bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
+  
+  # Estimate low and high cutoff for outlier detection, 
+  
+  data[, LOW := quantile(get(val), 0.25, na.rm = T) - 1.5*IQR(get(val), na.rm = T), by = bycols]
+  data[, HIGH := quantile(get(val), 0.75, na.rm = T) + 1.5*IQR(get(val), na.rm = T), by = bycols]
+  
+  # Flag outliers
+  data[get(val) < LOW, `:=` (OUTLIER = 1,
+                             HIGHLOW = "low")]
+  data[get(val) > HIGH, `:=` (OUTLIER = 1,
+                              HIGHLOW = "high")]
+}
   

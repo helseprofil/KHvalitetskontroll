@@ -13,17 +13,25 @@
 CompareCols <- function(data1 = dfnew,
                         data2 = dfold){
   
+  if(is.null(data2)){
+  
+    .IdentifyColumns(data1)
+    
+    cat(paste0("Columns in file: ", str_c(c(.dims1, .vals1), collapse = ", ")))
+    
+  } else {
   # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
-  msgnew <- case_when(length(.newdims) == 0 ~ "No new columns.",
-                      TRUE ~ paste0("New columns found: ", str_c(.newdims, collapse = ", ")))
+  msgnew <- case_when(length(c(.newdims, .newvals)) == 0 ~ "No new columns.",
+                      TRUE ~ paste0("New columns found: ", str_c(c(.newdims, .newvals), collapse = ", ")))
   
-  msgexp <- case_when(length(.expdims) == 0 ~ "\nNo expired columns.",
-                      TRUE ~ paste0("\nExpired columns found: ", str_c(.expdims, collapse = ", ")))
+  msgexp <- case_when(length(c(.expdims, .expvals)) == 0 ~ "\nNo expired columns.",
+                      TRUE ~ paste0("\nExpired columns found: ", str_c(c(.expdims, .expvals), collapse = ", ")))
   
   cat(msgnew)
   cat(msgexp)
+  }
   
 }
 
@@ -42,7 +50,18 @@ CompareCols <- function(data1 = dfnew,
 CompareDims <- function(data1 = dfnew, 
                         data2 = dfold){
   
-  # Identify dimension and value columns
+  if(is.null(data2)){
+    
+    .IdentifyColumns(data1)
+    
+    map_df(.dims1, 
+           \(x)
+           tibble("Dimension" = x,
+                  "N (levels)" = length(data1[, unique(get(x))])))
+    
+  } else {
+  
+    # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
   # Check if any new or expired dimensions are present
@@ -79,6 +98,46 @@ CompareDims <- function(data1 = dfnew,
   }
   
   map_df(.commondims, ~CompareDim(data1, data2, dim = .x))
+  }
+  
+}
+
+#' CheckPrikk
+#' 
+#' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. If any number below the limit is detected, all rows containing unacceptable values are returned for inspection. 
+#'
+#' @param data1 New KUBE, defaults to dfnew 
+#' @param dim Dimension you want to check, defaults to sumTELLER
+#' @param limit Censor limit, the highest unacceptable value of dim. Defaults to `PRIKKlimit`, defined in input section of the Rmarkdown file. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CheckPrikk <- function(data1 = dfnew,
+                       val = PRIKKval, 
+                       limit = PRIKKlimit){
+  
+  cat(paste0("Controlled column: ", val))
+  cat(paste0("\nLimit: ", limit))
+  
+  # If val and limit is provided, filter out data
+  if(!is.na(val) && !is.na(limit)){
+    filtered <- data1[data1[[val]] <= limit]
+    
+    if(nrow(filtered) == 0) {
+      cat("\nNo values < limit")
+    }
+    
+    if(nrow(filtered) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(filtered)))
+      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
+      num <- which(sapply(filtered, is.numeric))
+      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
+      notcensored <<- filtered
+      View(notcensored)
+    }
+  }
 }
 
 #' ComparePrikk
@@ -89,7 +148,7 @@ CompareDims <- function(data1 = dfnew,
 #' @param data2 old KUBE, defaults to dfold set in INPUT
 #' @param groupdim dimension to group output by, in addition to SPVFLAGG
 #' 
-#' @return a table containing the number of flagged rows in the new and old KUBE, and the absolute and relative difference, grouped by type of SPVFLAGG and an additional dimension (optional)
+#' @return a table containing the number of censored rows in the new and old KUBE, and the absolute and relative difference, grouped by type of SPVFLAGG and an additional dimension (optional)
 #' @export
 #'
 #' @examples
@@ -102,36 +161,50 @@ ComparePrikk <- function(data1 = dfnew,
   
   # Calculate number of observations per strata of SPV-flagg + groupdim
   new <- data1[, .("N (new)" = .N), keyby = bycols]
-  old <- data2[, .("N (old)" = .N), keyby = bycols]
   
-  # merge tables
-  output <- merge.data.table(new, old, all = TRUE)
+  # If only new file available (new indicator), return table of new file
+  if (is.null(data2)) {
+    
+    output <- new
+
+  } else {
+    old <- data2[, .("N (old)" = .N), keyby = bycols]
+    
+    # merge tables
+    output <- merge.data.table(new, old, all = TRUE)
+    
+    # Rectangularize output to get all combinations of SPVFLAGG and groupdims
+    allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
+    output <- output[allcomb, on = bycols]
+    
+    # Set N new and old = 0 if missing
+    walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
+    
+    # Calculate absolute and relative difference
+    output[, `:=` (Absolute = `N (new)` - `N (old)`,
+                   Relative = round(`N (new)` / `N (old)`, 3))]
+  }
+    
+  # Convert bycols to factor
+  output[, (bycols) := lapply(.SD, as.factor), .SDcols = bycols]
   
-  # Rectangularize output to get all combinations of SPVFLAGG and groupdims
-  allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
-  output <- output[allcomb, on = bycols]
-  
-  # Set N new and old = 0 if missing
-  walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
-  
-  # Calculate absolute and relative difference
-  output[, `:=` (Absolute = `N (new)`-`N (old)`,
-                 Relative = round(`N (new)`/`N (old)`, 3))]
-  
-  # Convert dimensions to factor
-  convert <- names(output)[!names(output) %in% c("N (new)", "N (old)", "Absolute", "Relative")]
-  output[, (convert) := lapply(.SD, as.factor), .SDcols = c(convert)]
-  
-  DT::datatable(output, 
-                filter = "top",
-                rownames = FALSE,
-                options = list(
-                  columnDefs = list(list(targets = c("N (new)", "N (old)", "Absolute", "Relative"),
-                                         searchable = FALSE)),
-                  # Show length menu, table, pagination, and information
-                  dom = 'ltpi', 
-                  scrollX = TRUE)
-                )
+  # Print output table  
+  DT::datatable(
+      output,
+      filter = "top",
+      rownames = FALSE,
+      options = list(
+        columnDefs = list(list(
+          targets =  str_subset(names(output), 
+                                str_c(bycols, collapse = "|"), 
+                                negate = TRUE),
+          searchable = FALSE
+        )),
+        # Show length menu, table, pagination, and information
+        dom = 'ltpi',
+        scrollX = TRUE
+      )
+    )
 }
 
 #' Compare censored observations across strata
@@ -146,6 +219,27 @@ ComparePrikk <- function(data1 = dfnew,
 ComparePrikkTS <- function(data1 = dfnew,
                            data2 = dfold){
   
+  if(is.null(data2)){
+    
+    # Identify dimension and value columns
+    .IdentifyColumns(data1)
+    
+    data <- copy(data1)
+    
+    # Identify grouping dimensions
+    groupdims <- str_subset(.dims1, "AAR", negate = TRUE)
+    
+    # Calculate n censored observations, 
+    data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
+    data <- data[, .(N_PRIKK = sum(FLAGG, na.rm = TRUE)), by = groupdims]
+    
+    # Aggregate to N prikk per strata
+    out <- data[, .(`N STRATA` = .N), by = .(N_PRIKK)]
+    
+    # Calculate proportions of time series with n prikk
+    out[, ANDEL := round(`N STRATA`/sum(`N STRATA`), 3)]
+    
+  } else {
   # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
@@ -171,7 +265,10 @@ ComparePrikkTS <- function(data1 = dfnew,
   setcolorder(out, c("N_PRIKK",
                      str_subset(names(out), "New"),
                      str_subset(names(out), "Old")))
-  out[, "N_PRIKK" := as.factor(N_PRIKK)]
+  }
+  
+  # Format and print output table
+  out <- out[, "N_PRIKK" := as.factor(N_PRIKK)][order(N_PRIKK)]
   setnames(out, names(out), str_replace(names(out), "_", " "))
   
   DT::datatable(out, 
@@ -186,43 +283,6 @@ ComparePrikkTS <- function(data1 = dfnew,
                 )
 }
 
-#' CheckPrikk
-#' 
-#' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. If any number below the limit is detected, all rows containing unacceptable values are returned for inspection. 
-#'
-#' @param data1 New KUBE, defaults to dfnew 
-#' @param dim Dimension you want to check, defaults to sumTELLER
-#' @param limit Censor limit, the highest unacceptable value of dim. Defaults to `PRIKKlimit`, defined in input section of the Rmarkdown file. 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-CheckPrikk <- function(data1 = dfnew,
-                       val = PRIKKval, 
-                       limit = PRIKKlimit){
-  
-  cat(paste0("Controlled column: ", val))
-  cat(paste0("\nLimit: ", limit))
-
-  # If val and limit is provided, filter out data
-  if(!is.na(val) && !is.na(limit)){
-    filtered <- data1[data1[[val]] <= limit]
-    
-    if(nrow(filtered) == 0) {
-      cat("\nNo values < limit")
-    }
-    
-    if(nrow(filtered) > 0){
-      cat(paste0("\nN values <= limit: ", nrow(filtered)))
-      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
-      num <- which(sapply(filtered, is.numeric))
-      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
-      notcensored <<- filtered
-      View(notcensored)
-    }
-  }
-}
 
 #' CompareFylkeLand
 #' 
@@ -692,29 +752,6 @@ PrintTimeseries <- function(dims = .TSplotdims,
   }
 }
 
-# .AggregateExtradim <- function(data, dimextra, dimexist, plotvals){
-#   # Group by all existing standard dimensions
-#   groupcols <- str_subset(dimexist, dimextra, negate = TRUE)
-#   # Identify value columns to average or sum
-#   sumcols <- plotvals[str_detect(plotvals, c("TELLER"))]
-#   avgcols <- plotvals[!plotvals %in% sumcols]
-#   # Aggregate plotvals, remove dimextra column, remove duplicated rows
-#   data[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
-#   data[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
-#   data[, (dimextra) := "TOTAL"]
-#   data <- unique(data)
-#   data
-# }
-# 
-# .AggregateAge <- function(data){
-#   ALDERl <- min(as.numeric(str_extract(data$ALDER, "[:digit:]*(?=_)")))
-#   ALDERh <- max(as.numeric(str_extract(data$ALDER, "(?<=_)[:digit:]*")))
-#   ALDERtot <- paste0(ALDERl, "_", ALDERh)
-#   data[ALDER == ALDERtot]
-# }
-
-
-
 
 #' UnspecifiedBydel
 #'
@@ -810,7 +847,7 @@ UnspecifiedBydel <- function(data = dfnew,
   n_maltall <- length(unique(d$MALTALL))
   
   # Print sumary information
-  cat(paste0("\nTotal number of strata with complete bydel: ", nrow(d)/n_maltall))
+  cat(paste0("Total number of strata with complete bydel: ", nrow(d)/n_maltall))
   cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])/n_maltall))
   cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])/n_maltall))
   cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])/n_maltall))

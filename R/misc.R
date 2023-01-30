@@ -135,6 +135,7 @@ print_dim <- function(...){
   kubedir <- file.path(kvalkontrolldir, kubename)
   filedumpdir <- file.path(kubedir, "FILDUMPER")
   plotdir <- file.path(kubedir, "PLOTT")
+  arkivdir <- file.path(kubedir, "ARKIV")
   
   if(!dir.exists(profileyeardir)){
     dir.create(profileyeardir)
@@ -154,6 +155,10 @@ print_dim <- function(...){
   
   if(!dir.exists(plotdir)){
     dir.create(plotdir)
+  }
+  
+  if(!dir.exists(arkivdir)){
+    dir.create(arkivdir)
   }
 }
 
@@ -231,20 +236,29 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   .dims1 <<- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
   .vals1 <<- str_subset(names(data1), str_c(.dims1, collapse = "|"), negate = T)
   
+  # Create objects relevant for data2
+  .dims2 <<- NULL
+  .vals2 <<- NULL
+  .commondims <<- NULL
+  .newdims <<- NULL
+  .expdims <<- NULL
+  .commonvals <<- NULL
+  .newvals <<- NULL
+  .expvals <<- NULL
+  .commoncols <<- NULL
   
-  # If second data is provided, find dimensions, values, common, new, and expired columns
+  
+  # If second data is provided, replace objects above
   if(!is.null(data2)){
+    
     .dims2 <<- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
     .vals2 <<- str_subset(names(data2), str_c(.dims2, collapse = "|"), negate = T)
-  
     .commondims <<- .dims1[.dims1 %in% .dims2]
     .newdims <<- str_subset(.dims1, str_c(.dims2, collapse = "|"), negate = T)
     .expdims <<- str_subset(.dims2, str_c(.dims1, collapse = "|"), negate = T)
-    
     .commonvals <<- .vals1[.vals1 %in% .vals2]
     .newvals <<- str_subset(.vals1, str_c(.vals2, collapse = "|"), negate = T)
     .expvals <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
-    
     .commoncols <<- c(.commondims, .commonvals)
   }
   
