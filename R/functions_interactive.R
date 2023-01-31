@@ -332,3 +332,21 @@ FindGeo <- function(geo){
   
   geolist[as.numeric(code) == geo, .(code, name)]
 }
+
+#' Helper function to find geo code from name
+#'
+#' @param name 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+FindGeoName <- function(geoname){
+ 
+  geolist <- rbindlist(list(get_code("b"),
+                            get_code("k"),
+                            get_code("f")))
+  
+  geolist[grepl(geoname, name), .(code, name)]
+   
+}
