@@ -272,10 +272,16 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   
   # Read file and filter out last year
   pop <- fread(popfile)
-  pop <- pop[between(GEO, 99, 9999) & KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
+  .IdentifyColumns(pop)
+  setkeyv(pop, .dims1)
+  pop <- pop[KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
+  
+  pop[, WEIGHTS := TELLER]
+  .popweights <- pop[, .(GEO, WEIGHTS)]
+  .allgeos <<- .popweights$GEO
+  .allweights <<- .popweights$WEIGHTS
   
   # Export lists of large and small kommune
-  .largekommune <<- pop[TELLER >= 10000, unique(GEO)]
-  .smallkommune <<- pop[TELLER < 10000, unique(GEO)]
-  
+  .largekommune <<- pop[between(GEO, 99, 9999) & TELLER >= 10000, unique(GEO)]
+  .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
 }
