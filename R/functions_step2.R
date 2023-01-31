@@ -47,7 +47,7 @@
   }
   
   }
-  
+
   cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
@@ -696,10 +696,11 @@ CompareNewOld <- function(data = compareKUBE,
   # Add geoniv, low, high, outlier, and highlow column
   
   data[, GEONIV := NA_character_, keyby = GEO]
-  data[GEO == 0, GEONIV := "Land"]
-  data[between(GEO, 1, 99), GEONIV := "Fylke"]
-  data[between(GEO, 100, 9999), GEONIV := "Kommune"]
-  data[GEO > 9999, GEONIV := "Bydel"]
+  data[GEO == 0, GEONIV := "L"]
+  data[between(GEO, 1, 99), GEONIV := "F"]
+  data[GEO %in% .largekommune, GEONIV := "K"]
+  data[GEO %in% .smallkommune, GEONIV := "k"]
+  data[GEO > 9999, GEONIV := "B"]
   data[, LOW := NA_real_]
   data[, HIGH := NA_real_]
   data[, OUTLIER := 0]

@@ -61,31 +61,6 @@ ReadFile <- function(file = NULL,
   outdata
 }
 
-# .IdentifyVariables <- function(data1 = NULL,
-#                                data2 = NULL){
-#   
-#   # Identify common columns, and extract dimensions
-#   if(!exists(".ALL_DIMENSIONS")) {
-#     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-#     .ALL_DIMENSIONS <- ALL_DIMENSIONS
-#   }
-#   
-#   if(is.null(data1) && is.null(data2)){
-#     NULL
-#   }
-#   
-# }
-
-#' Print dim
-#' 
-#' Wrapper around str_c for nice printing of variable names in .Rmd-reports
-#' 
-#' @param ... 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 print_dim <- function(...){
   
   if(is.null(...)){
@@ -261,5 +236,46 @@ SaveReport <- function(profileyear = PROFILEYEAR,
     .expvals <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
     .commoncols <<- c(.commondims, .commonvals)
   }
+  
+}
+
+#' Loads current BEFOLK_GK file, and separates out small and large kommune
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.SmallLargeKommune <- function(){
+  
+  basepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "PRODUKTER", 
+                        "KUBER",
+                        "KOMMUNEHELSA")
+  
+  thisyear <- file.path(basepath, paste0("KH", PROFILEYEAR, "NESSTAR"))
+  popfile <- list.files(thisyear, pattern = "BEFOLK_GK", full.names = T)
+  
+  # If no file for current profileyear, use file from last year
+  if(length(popfile) == 0){
+    cat(paste0("Population file from ", PROFILEYEAR, " does not exist, file from ", PROFILEYEAR - 1, " is used to identify small and large KOMMUNE"))
+    lastyear <- file.path(basepath, paste0("KH", PROFILEYEAR - 1, "NESSTAR"))
+    popfile <- list.files(lastyear, pattern = "BEFOLK_GK", full.names = T)
+  }
+  
+  # Select the "24aarg" file if present, because this is smaller
+  if(length(popfile) > 1){
+    popfile <-  grep("24aarg", file, value = T)
+  }
+  
+  # Read file and filter out last year
+  pop <- fread(popfile)
+  pop <- pop[between(GEO, 99, 9999) & KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
+  
+  # Export lists of large and small kommune
+  .largekommune <<- pop[TELLER >= 10000, unique(GEO)]
+  .smallkommune <<- pop[TELLER < 10000, unique(GEO)]
   
 }
