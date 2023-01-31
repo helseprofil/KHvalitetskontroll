@@ -48,6 +48,7 @@
   
   }
   
+  dfnew_flag[]
   cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
@@ -92,6 +93,7 @@
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
+  dfold_flag[]
   cat("\n\n- Flagged version of old KUBE created: dfold_flag\n")
 }
 
@@ -178,10 +180,14 @@
   setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
-  compareKUBE <- comparenew[compareold, on = commondims]  %>% 
-    select(all_of(commondims),
-           starts_with(paste0(commonvals, "_")),
-           everything()) 
+  compareKUBE <- comparenew[compareold, on = commondims] 
+  
+  colorder <- commondims
+  for(i in commonvals){
+    colorder <- c(colorder, paste0(i, c("_new", "_old")))
+  }
+  setcolorder(compareKUBE, colorder)
+  
   setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
   
   # Create diff columns
