@@ -699,6 +699,9 @@ CompareNewOld <- function(data = compareKUBE,
     return(invisible(NULL))
   }
   
+  # Add weights (maybe add conditional if(exists(".weightsdata")), else use .SmallLargeKommune() to generate
+  data <- data[.weightsdata, on = "GEO"]
+  
   # Add geoniv, low, high, outlier, and highlow column
   
   data[, GEONIV := NA_character_, keyby = GEO]
@@ -715,10 +718,29 @@ CompareNewOld <- function(data = compareKUBE,
   # Set bycols (geoniv and all dims except GEO/AAR,)
   bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
   
-  # Estimate low and high cutoff for outlier detection, 
+  # Estimate low and high cutoff for outlier detection.
   
-  data[, LOW := quantile(get(val), 0.25, na.rm = T) - 1.5*IQR(get(val), na.rm = T), by = bycols]
-  data[, HIGH := quantile(get(val), 0.75, na.rm = T) + 1.5*IQR(get(val), na.rm = T), by = bycols]
+  
+  # USE Hmisc::wtd.quantile()
+  # Fails if all rows for val or weights is NA, wrapper function handles this
+
+    WeightedQuantile <- function(value, weights, probs){
+      
+      if(all(is.na(value)) || all(is.na(weights))){
+        weights <- NULL
+      }
+      
+      wtd.quantile(value, weights, probs)
+    }
+    
+    WeightedIQR <- function(value, weights){
+      
+      WeightedQuantile(value, weights, 0.75) - WeightedQuantile(value, weights, 0.25)
+
+    }
+ 
+  data[, LOW := WeightedQuantile(get(val), WEIGHTS, 0.25) - 1.5*WeightedIQR(get(val), WEIGHTS), by = bycols]
+  data[, HIGH := WeightedQuantile(get(val), WEIGHTS, 0.75) + 1.5*WeightedIQR(get(val), WEIGHTS), by = bycols]
   
   # Flag outliers
   data[get(val) < LOW, `:=` (OUTLIER = 1,
