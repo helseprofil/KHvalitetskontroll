@@ -679,19 +679,21 @@ CompareNewOld <- function(data = compareKUBE,
 #' @export
 #'
 #' @examples
-.FlagOutlier <- function(data){
+.FlagOutlier <- function(data,
+                         dims,
+                         vals){
   
   # Identify dimension and value columns
   .IdentifyColumns(data)
   
   # Select value column for outlier detection
-  if("MEIS" %in% .vals1){
+  if("MEIS" %in% vals){
     val <- "MEIS"
     cat("\nOutliers detection based on MEIS")
-  } else if ("RATE" %in% .vals1){
+  } else if ("RATE" %in% vals){
     val <- "RATE"
     cat("\nOutliers detection based on RATE")
-  } else if ("SMR" %in% .vals1){
+  } else if ("SMR" %in% vals){
     val <- "SMR"
     cat("\nOutliers detection based on SMR")
   } else {
@@ -699,24 +701,22 @@ CompareNewOld <- function(data = compareKUBE,
     return(invisible(NULL))
   }
   
-  # Add weights (maybe add conditional if(exists(".weightsdata")), else use .SmallLargeKommune() to generate
-  data <- data[.weightsdata, on = "GEO"]
-  
-  # Add geoniv, low, high, outlier, and highlow column
-  
+  # Add VALUE, GEONIV, LOW, HIGH, OUTLIER, and HIGHLOW columns
+  data[, VALUE := get(val)]
   data[, GEONIV := NA_character_, keyby = GEO]
-  data[GEO == 0, GEONIV := "L"]
-  data[between(GEO, 1, 99), GEONIV := "F"]
-  data[GEO %in% .largekommune, GEONIV := "K"]
-  data[GEO %in% .smallkommune, GEONIV := "k"]
-  data[GEO > 9999, GEONIV := "B"]
+    data[GEO == 0, GEONIV := "L"]
+    data[between(GEO, 1, 99), GEONIV := "F"]
+    data[GEO %in% .largekommune, GEONIV := "K"]
+    data[GEO %in% .smallkommune, GEONIV := "k"]
+    data[GEO > 9999, GEONIV := "B"]
+    data[, GEONIV := factor(GEONIV, levels = c("L", "F", "K", "k", "B"))]
   data[, LOW := NA_real_]
   data[, HIGH := NA_real_]
   data[, OUTLIER := 0]
   data[, HIGHLOW := NA_character_]
   
   # Set bycols (geoniv and all dims except GEO/AAR,)
-  bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
+  bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
   
   # Estimate low and high cutoff for outlier detection.
   
@@ -726,7 +726,7 @@ CompareNewOld <- function(data = compareKUBE,
 
     WeightedQuantile <- function(value, weights, probs){
       
-      if(all(is.na(value)) || all(is.na(weights))){
+      if(all(is.na(value)) || all(is.na(weights)) || all(weights == 0)){
         weights <- NULL
       }
       
@@ -738,14 +738,58 @@ CompareNewOld <- function(data = compareKUBE,
       WeightedQuantile(value, weights, 0.75) - WeightedQuantile(value, weights, 0.25)
 
     }
- 
-  data[, LOW := WeightedQuantile(get(val), WEIGHTS, 0.25) - 1.5*WeightedIQR(get(val), WEIGHTS), by = bycols]
-  data[, HIGH := WeightedQuantile(get(val), WEIGHTS, 0.75) + 1.5*WeightedIQR(get(val), WEIGHTS), by = bycols]
+    
+  # Add weights
+  if(!exists(".weightsdata")){
+    .SmallLargeKommune()
+    .weightsdata <- data.table(GEO = .allgeos, WEIGHTS = .allweights)
+  }
+  
+  data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
+  
+  # Estimate weighted cutoffs
+  data[, wq25 := WeightedQuantile(VALUE, WEIGHTS, 0.25), by = bycols]
+  data[, wq50 := WeightedQuantile(VALUE, WEIGHTS, 0.50), by = bycols]
+  data[, wq75 := WeightedQuantile(VALUE, WEIGHTS, 0.75), by = bycols]
+  data[, LOW := wq25 - 1.5*(wq75-wq25)]
+  data[, HIGH := wq75 + 1.5*(wq75-wq25)]
   
   # Flag outliers
-  data[get(val) < LOW, `:=` (OUTLIER = 1,
-                             HIGHLOW = "low")]
-  data[get(val) > HIGH, `:=` (OUTLIER = 1,
-                              HIGHLOW = "high")]
+  data[VALUE < LOW, `:=` (OUTLIER = 1,
+                          HIGHLOW = "low")]
+  
+  data[VALUE > HIGH, `:=` (OUTLIER = 1,
+                           HIGHLOW = "high")]
+  
+  # Estimate minimum and maximum non-outlier for boxplot whiskers
+  data[, minabove := ifelse(!all(is.na(VALUE)), 
+                            min(VALUE[OUTLIER == 0], na.rm = T),
+                            NA_real_), by = bycols]
+  data[, maxbelow := ifelse(!all(is.na(get(val))), 
+                            max(get(val)[OUTLIER == 0], na.rm = T),
+                            NA_real_), by = bycols]
+}
+
+PlotOutlier <- function(data,
+                        dims){
+  
+  bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
+  baseplotdata <- data[ALDER == "0_120" & KJONN == 0 & KODEGRUPPE == "Dod_med_hjerneslag", .SD[1], by = bycols]
+  outlierdata <- data[ALDER == "0_120" & KJONN == 0 & KODEGRUPPE == "Dod_med_hjerneslag" &OUTLIER == 1] # & newrow == 1
+  
+  baseplotdata %>% 
+    ggplot(aes(x = fct_rev(GEONIV),
+               ymin = minabove,
+               lower = wq25,
+               middle = wq50,
+               upper = wq75,
+               ymax = maxbelow)) + 
+    geom_errorbar(width = 0.5) + 
+    geom_boxplot(stat = "identity") +
+    geom_text(data = outlierdata,
+               aes(y = VALUE, label = paste0(GEO, ", ", AAR)), angle = 45) + 
+    coord_flip()
+  
+  
 }
   
