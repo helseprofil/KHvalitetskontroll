@@ -12,6 +12,7 @@ library(tools)
 library(ggplot2)
 library(ggh4x)
 library(norgeo)
+library(collapse)
 library(Hmisc)
 
 # Load internal functions
