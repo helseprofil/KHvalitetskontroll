@@ -19,7 +19,9 @@
 .FlagNew <- function(data1, 
                      data2, 
                      commondims,
-                     newdims){
+                     newdims,
+                     dims,
+                     vals){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dimensions
@@ -47,8 +49,11 @@
   }
   
   }
-
-  dfnew_flag[]
+  
+  dfnew_flag <<- .FlagOutlier(data = dfnew_flag, 
+                              dims = dims, 
+                              vals = vals)
+  
   cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
@@ -308,11 +313,9 @@ FormatData <- function(data1 = dfnew,
   .FlagNew(data1 = data1, 
            data2 = data2, 
            commondims = .commondims,
-           newdims = .newdims)
-  
-  # Detect outliers...
-  # cat("STARTS outlier detection:")
-  # .FlagOutlier()
+           newdims = .newdims,
+           dims = .dims1,
+           vals = .vals1)
   
   # Filedump new KUBE
   if("dfnew_flag" %in% dumps){
@@ -664,14 +667,14 @@ CompareNewOld <- function(data = compareKUBE,
   
   tables <- map(vals, 
                 ~.CompareValue(data = data,
-                              dims = dims,
-                              val = .x))
+                               dims = dims,
+                               val = .x))
   
   walk(tables, print)
 }
 
 
-#' Flag outliers
+#' Flag outliers in dfnew_flag
 #'
 #' @param data 
 #'
@@ -683,97 +686,134 @@ CompareNewOld <- function(data = compareKUBE,
                          dims,
                          vals){
   
-  # Identify dimension and value columns
-  .IdentifyColumns(data)
+  # Check if weights and lists of small and large kommune exists, and create if not. 
+  if(!all(exists(".weightsdata"), exists(".smallkommune"), exists(".largekommune"))){
+    .SmallLargeKommune()
+    .weightsdata <- data.table(GEO = .allgeos, WEIGHTS = .allweights)
+  }
   
   # Select value column for outlier detection
   if("MEIS" %in% vals){
     val <- "MEIS"
-    cat("\nOutliers detection based on MEIS")
+    cat("\n- Outliers detection based on MEIS")
   } else if ("RATE" %in% vals){
     val <- "RATE"
-    cat("\nOutliers detection based on RATE")
+    cat("\n- Outliers detection based on RATE")
   } else if ("SMR" %in% vals){
     val <- "SMR"
-    cat("\nOutliers detection based on SMR")
+    cat("\n- Outliers detection based on SMR")
   } else {
     cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
     return(invisible(NULL))
   }
   
-  # Add VALUE, GEONIV, LOW, HIGH, OUTLIER, and HIGHLOW columns
-  data[, VALUE := get(val)]
-  data[, GEONIV := NA_character_, keyby = GEO]
-    data[GEO == 0, GEONIV := "L"]
-    data[between(GEO, 1, 99), GEONIV := "F"]
-    data[GEO %in% .largekommune, GEONIV := "K"]
-    data[GEO %in% .smallkommune, GEONIV := "k"]
-    data[GEO > 9999, GEONIV := "B"]
-    data[, GEONIV := factor(GEONIV, levels = c("L", "F", "K", "k", "B"))]
-  data[, LOW := NA_real_]
-  data[, HIGH := NA_real_]
-  data[, OUTLIER := 0]
-  data[, HIGHLOW := NA_character_]
-  
-  # Set bycols (geoniv and all dims except GEO/AAR,)
+  # Add GEONIV, OUTLIER, and HIGHLOW columns
+  settransform(data, 
+               GEONIV = qF(fcase(GEO == 0, "L",
+                                 GEO %in% 81:84, "H",
+                                 GEO < 99, "F",
+                                 GEO %in% .largekommune, "K",
+                                 GEO %in% .smallkommune, "k",
+                                 GEO > 9999, "B"), sort = FALSE))
+
+  # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
   bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
+  g <- GRP(data, bycols)
   
-  # Estimate low and high cutoff for outlier detection.
-  
-  
-  # USE Hmisc::wtd.quantile()
-  # Fails if all rows for val or weights is NA, wrapper function handles this
-
-    WeightedQuantile <- function(value, weights, probs){
-      
-      if(all(is.na(value)) || all(is.na(weights)) || all(weights == 0)){
-        weights <- NULL
-      }
-      
-      wtd.quantile(value, weights, probs)
-    }
-    
-    WeightedIQR <- function(value, weights){
-      
-      WeightedQuantile(value, weights, 0.75) - WeightedQuantile(value, weights, 0.25)
-
-    }
-    
-  # Add weights
-  if(!exists(".weightsdata")){
-    .SmallLargeKommune()
-    .weightsdata <- data.table(GEO = .allgeos, WEIGHTS = .allweights)
-  }
-  
+  # Add WEIGHTS, and set to NULL if all values are missing in a strata
   data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
+  data[, WEIGHTS := if(all(is.na(get(val)))){ NA_real_ }, by = bycols]
+  w <- data$WEIGHTS
   
-  # Estimate weighted cutoffs
-  data[, wq25 := WeightedQuantile(VALUE, WEIGHTS, 0.25), by = bycols]
-  data[, wq50 := WeightedQuantile(VALUE, WEIGHTS, 0.50), by = bycols]
-  data[, wq75 := WeightedQuantile(VALUE, WEIGHTS, 0.75), by = bycols]
-  data[, LOW := wq25 - 1.5*(wq75-wq25)]
-  data[, HIGH := wq75 + 1.5*(wq75-wq25)]
+  # Estimate weighted quantiles, and low and high cutoffs
+  cutoffs <- fmutate(g[["groups"]], 
+                     MIN = fmin(data[, get(val)], g = g),
+                     wq25 = fnth(data[, get(val)], n = 0.25, g = g, w = w),
+                     wq50 = fnth(data[, get(val)], n = 0.50, g = g, w = w),
+                     wq75 = fnth(data[, get(val)], n = 0.75, g = g, w = w),
+                     MAX = fmax(data[, get(val)], g = g),
+                     LOW = wq25 - 1.5*(wq75-wq25),
+                     HIGH = wq75 + 1.5*(wq75-wq25))
   
-  # Flag outliers
-  data[VALUE < LOW, `:=` (OUTLIER = 1,
-                          HIGHLOW = "low")]
+  # Merge cutoffs onto data for 
+  data[cutoffs, `:=` (MIN = i.MIN,
+                      wq25 = i.wq25,
+                      wq50 = i.wq50,
+                      wq75 = i.wq75,
+                      MAX = i.MAX,
+                      LOW = i.LOW,
+                      HIGH = i.HIGH),
+             on = bycols]
   
-  data[VALUE > HIGH, `:=` (OUTLIER = 1,
-                           HIGHLOW = "high")]
+  # Flag outliers and define HIGHLOW
+  settransform(data, 
+               OUTLIER = fcase(get(val) < LOW | get(val) > HIGH, 1, 
+                               get(val) >= LOW & get(val) <= HIGH, 0,
+                               default = NA),
+               HIGHLOW = fcase(get(val) < LOW, "Low",
+                               get(val) > HIGH, "High",
+                               default = NA)) 
   
-  # Estimate minimum and maximum non-outlier for boxplot whiskers
-  data[, minabove := ifelse(!all(is.na(VALUE)), 
-                            min(VALUE[OUTLIER == 0], na.rm = T),
-                            NA_real_), by = bycols]
-  data[, maxbelow := ifelse(!all(is.na(get(val))), 
-                            max(get(val)[OUTLIER == 0], na.rm = T),
-                            NA_real_), by = bycols]
+  data[]
 }
 
-PlotOutlier <- function(data,
-                        dims){
+#' PlotOutlier
+#' 
+#' Make boxplots for outlier checks
+#' 
+#' @param data 
+#' @param dims 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+PlotOutlier <- function(data){
+
+  # Identify dimension and value columns  
+  .IdentifyColumns(data)
   
-  bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
+  if("MEIS" %in% .vals1){
+    val <- "MEIS"
+    cat("\n- MEIS plotted")
+  } else if ("RATE" %in% .vals1){
+    val <- "RATE"
+    cat("\n- RATE plotted")
+  } else if ("SMR" %in% .vals1){
+    val <- "SMR"
+    cat("\n- SMR plotted")
+  } else {
+    cat("\n- None of MEIS, RATE, or SMR available for boxplot")
+    return(invisible(NULL))
+  }
+  
+  # Estimate N observations per strata
+  data[, N := sum(!is.na(get(val))), by = bycols]
+  
+  # Estimate minimum and maximum non-outlier
+  settransform(data, 
+               MINABOVELOW = NA_real_,
+               MAXBELOWHIGH = NA_real_)
+  
+  # DENNNE MÅ FIKSES
+  data[N >= 2, `:=` (MINABOVELOW = fmin(data[OUTLIER == 0, get(val)]),
+                     MAXBELOWHIGH = fmax(data[OUTLIER == 0, get(val)])), 
+       by = bycols]
+  
+  bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
+  g <- GRP(data, c(bycols, 
+                   "MIN", 
+                   "wq25", "wq50", "wq75", 
+                   "MAX", 
+                   "LOW", "HIGH", 
+                   "MINABOVELOW", "MAXBELOWHIGH"))
+  
+  
+  baseplotdata <- g[["groups"]][ALDER == "45_74" & KJONN == 1 & KODEGRUPPE == "Pas_Med_hjerte_og_karsykdom"]
+
+
+  
+  
   baseplotdata <- data[ALDER == "0_120" & KJONN == 0 & KODEGRUPPE == "Dod_med_hjerneslag", .SD[1], by = bycols]
   outlierdata <- data[ALDER == "0_120" & KJONN == 0 & KODEGRUPPE == "Dod_med_hjerneslag" &OUTLIER == 1] # & newrow == 1
   
