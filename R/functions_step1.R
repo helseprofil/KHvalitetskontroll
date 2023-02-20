@@ -602,11 +602,11 @@ PlotTimeseries <- function(data = dfnew){
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
-  # Identify dimensions to aggregate or keep total (if containing 0), excluding dim to be plotted
+  # Identify dimensions to aggregate or keep total (if containing 0 or only 1 unique value), excluding dim to be plotted
   aggdims <- .TSplotdims
   containtotal <- character()
   for(i in aggdims){
-    if(0 %in% unique(plotdata[[i]])){
+    if(0 %in% plotdata[, unique(get(i))] | plotdata[, length(unique(get(i)))] == 1){
       # add to containtotal
       containtotal <- c(containtotal, i)
       # remove from aggdims
@@ -683,8 +683,10 @@ PlotTimeseries <- function(data = dfnew){
   for(i in containtotal){
     if(i == "ALDER"){
       d <- d[get(i) == ALDERtot]
-    } else {
+    } else if (0 %in% d[, unique(get(i))]) {
       d <- d[get(i) == 0]
+    } else {
+      d
     }
   }
   
