@@ -616,6 +616,7 @@ PlotTimeseries <- function(data = dfnew){
   
   # Find total age group, if existing
   ALDERtot_tf <- FALSE
+  ALDERtot <- NULL
   if("ALDER" %in% names(plotdata)){
   ALDERl <- min(as.numeric(str_extract(plotdata$ALDER, "[:digit:]*(?=_)")))
   ALDERh <- max(as.numeric(str_extract(plotdata$ALDER, "(?<=_)[:digit:]*")))
@@ -697,8 +698,10 @@ PlotTimeseries <- function(data = dfnew){
     groupcols <- str_subset(dimexist, i, negate = TRUE)
     d[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     d[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+    if(!is.character(d[[i]])){
+      d[, (i) := lapply(.SD, as.character), .SDcols = i]
+    }
     d[, (i) := "Aggregated"]
-    
     # Remove duplicates and return data
     d <- unique(d)
   }
