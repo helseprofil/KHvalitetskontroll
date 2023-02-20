@@ -602,11 +602,11 @@ PlotTimeseries <- function(data = dfnew){
   # Create AARx for plotting on x-axis
   plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
   
-  # Identify dimensions to aggregate or keep total (if containing 0), excluding dim to be plotted
+  # Identify dimensions to aggregate or keep total (if containing 0 or only 1 unique value), excluding dim to be plotted
   aggdims <- .TSplotdims
   containtotal <- character()
   for(i in aggdims){
-    if(0 %in% unique(plotdata[[i]])){
+    if(0 %in% plotdata[, unique(get(i))] | plotdata[, length(unique(get(i)))] == 1){
       # add to containtotal
       containtotal <- c(containtotal, i)
       # remove from aggdims
@@ -616,6 +616,7 @@ PlotTimeseries <- function(data = dfnew){
   
   # Find total age group, if existing
   ALDERtot_tf <- FALSE
+  ALDERtot <- NULL
   if("ALDER" %in% names(plotdata)){
   ALDERl <- min(as.numeric(str_extract(plotdata$ALDER, "[:digit:]*(?=_)")))
   ALDERh <- max(as.numeric(str_extract(plotdata$ALDER, "(?<=_)[:digit:]*")))
@@ -683,8 +684,10 @@ PlotTimeseries <- function(data = dfnew){
   for(i in containtotal){
     if(i == "ALDER"){
       d <- d[get(i) == ALDERtot]
-    } else {
+    } else if (0 %in% d[, unique(get(i))]) {
       d <- d[get(i) == 0]
+    } else {
+      d
     }
   }
   
@@ -695,8 +698,10 @@ PlotTimeseries <- function(data = dfnew){
     groupcols <- str_subset(dimexist, i, negate = TRUE)
     d[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     d[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
+    if(!is.character(d[[i]])){
+      d[, (i) := lapply(.SD, as.character), .SDcols = i]
+    }
     d[, (i) := "Aggregated"]
-    
     # Remove duplicates and return data
     d <- unique(d)
   }
