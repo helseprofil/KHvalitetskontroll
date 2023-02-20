@@ -726,16 +726,16 @@ CompareNewOld <- function(data = compareKUBE,
   w <- data$WEIGHTS
   
   # Estimate weighted quantiles, and low and high cutoffs
-  cutoffs <- fmutate(g[["groups"]], 
+  cutoffs <- fmutate(g[["groups"]],
                      MIN = fmin(data[, get(val)], g = g),
-                     wq25 = fnth(data[, get(val)], n = 0.25, g = g, w = w),
-                     wq50 = fnth(data[, get(val)], n = 0.50, g = g, w = w),
-                     wq75 = fnth(data[, get(val)], n = 0.75, g = g, w = w),
+                     wq25 = fnth(data[, get(val)], n = 0.25, g = g, w = w, ties = 1),
+                     wq50 = fnth(data[, get(val)], n = 0.50, g = g, w = w, ties = 1),
+                     wq75 = fnth(data[, get(val)], n = 0.75, g = g, w = w, ties = 1),
                      MAX = fmax(data[, get(val)], g = g),
                      LOW = wq25 - 1.5*(wq75-wq25),
                      HIGH = wq75 + 1.5*(wq75-wq25))
   
-  # Merge cutoffs onto data for 
+  # Merge cutoffs onto data for
   data[cutoffs, `:=` (MIN = i.MIN,
                       wq25 = i.wq25,
                       wq50 = i.wq50,
@@ -744,7 +744,7 @@ CompareNewOld <- function(data = compareKUBE,
                       LOW = i.LOW,
                       HIGH = i.HIGH),
              on = bycols]
-  
+
   # Flag outliers and define HIGHLOW
   settransform(data, 
                OUTLIER = fcase(get(val) < LOW | get(val) > HIGH, 1, 
@@ -787,17 +787,10 @@ PlotOutlier <- function(data){
     return(invisible(NULL))
   }
   
-  # Estimate N observations per strata
-  data[, N := sum(!is.na(get(val))), by = bycols]
-  
-  # Estimate minimum and maximum non-outlier
-  settransform(data, 
-               MINABOVELOW = NA_real_,
-               MAXBELOWHIGH = NA_real_)
-  
-  # DENNNE MÅ FIKSES
-  data[N >= 2, `:=` (MINABOVELOW = fmin(data[OUTLIER == 0, get(val)]),
-                     MAXBELOWHIGH = fmax(data[OUTLIER == 0, get(val)])), 
+  # Estimate N observations per strata, and maximum and minimum non-outlier
+  data[, `:=` (N_obs = sum(!is.na(get(val))),
+               MINABOVELOW = fmin(get(val)[get(val) > LOW]),
+               MAXBELOWHIGH = fmax(get(val)[get(val) < HIGH])), 
        by = bycols]
   
   bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
@@ -805,11 +798,10 @@ PlotOutlier <- function(data){
                    "MIN", 
                    "wq25", "wq50", "wq75", 
                    "MAX", 
-                   "LOW", "HIGH", 
-                   "MINABOVELOW", "MAXBELOWHIGH"))
+                   "LOW", "HIGH", "N_obs", "MINABOVELOW", "MAXBELOWHIGH"))
   
   
-  baseplotdata <- g[["groups"]][ALDER == "45_74" & KJONN == 1 & KODEGRUPPE == "Pas_Med_hjerte_og_karsykdom"]
+  baseplotdata <- g[["groups"]]
 
 
   
