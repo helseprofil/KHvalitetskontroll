@@ -633,6 +633,9 @@ PlotTimeseries <- function(data = dfnew){
   sumcols <- .TSplotvals[str_detect(.TSplotvals, c("TELLER"))]
   avgcols <- .TSplotvals[!.TSplotvals %in% sumcols]
   
+  # Convert avgcols to numeric to avoid warning
+  plotdata[, (avgcols) := lapply(.SD, as.numeric), .SDcols = avgcols]
+  
   # Feedback messages on aggregation
   cat("Aggregation summary:")
   cat("\n -Dimensions are aggregated to totals when not plotted")
