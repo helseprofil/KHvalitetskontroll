@@ -50,8 +50,8 @@
   
   }
   
-  dfnew_flag <<- .FlagOutlier(data = dfnew_flag, 
-                              dims = dims, 
+  dfnew_flag <<- .FlagOutlier(data = dfnew_flag,
+                              dims = dims,
                               vals = vals)
   
   cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
@@ -695,13 +695,13 @@ CompareNewOld <- function(data = compareKUBE,
   # Select value column for outlier detection
   if("MEIS" %in% vals){
     val <- "MEIS"
-    cat("\n- Outliers detection based on MEIS")
+    cat("\n- Outlier detection based on MEIS")
   } else if ("RATE" %in% vals){
     val <- "RATE"
-    cat("\n- Outliers detection based on RATE")
+    cat("\n- Outlier detection based on RATE")
   } else if ("SMR" %in% vals){
     val <- "SMR"
-    cat("\n- Outliers detection based on SMR")
+    cat("\n- Outlier detection based on SMR")
   } else {
     cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
     return(invisible(NULL))
@@ -759,10 +759,11 @@ CompareNewOld <- function(data = compareKUBE,
 
 #' PlotOutlier
 #' 
-#' Make boxplots for outlier checks
+#' Creates boxplots to visualize outliers, 
+#' and for each boxplot time series plots of all outliers are also produced
 #' 
-#' @param data 
-#' @param dims 
+#' 
+#' @param data Dataset flagged for outliers
 #'
 #' @return
 #' @export
@@ -787,41 +788,47 @@ PlotOutlier <- function(data){
     return(invisible(NULL))
   }
   
-  # Estimate N observations per strata, and maximum and minimum non-outlier
-  data[, `:=` (N_obs = sum(!is.na(get(val))),
-               MINABOVELOW = fmin(get(val)[get(val) > LOW]),
-               MAXBELOWHIGH = fmax(get(val)[get(val) < HIGH])), 
-       by = bycols]
-  
   bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
-  g <- GRP(data, c(bycols, 
-                   "MIN", 
-                   "wq25", "wq50", "wq75", 
-                   "MAX", 
-                   "LOW", "HIGH", "N_obs", "MINABOVELOW", "MAXBELOWHIGH"))
+  
+  # Estimate N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
+  data[, `:=` (N_obs = sum(!is.na(get(val))),
+               MINABOVELOW = fmin(get(val)[get(val) >= LOW]),
+               MAXBELOWHIGH = fmax(get(val)[get(val) <= HIGH])), 
+       keyby = bycols]
+  
+  # Extract data to construct boxplots
+  baseplotdata <- GRP(data, c(bycols, 
+                              "MIN", 
+                              "wq25", "wq50", "wq75", 
+                              "MAX", 
+                              "LOW", "HIGH", "N_obs", "MINABOVELOW", "MAXBELOWHIGH"))[["groups"]]
+  
+  # Extract data containing only outliers
+  outlierdata <- data[OUTLIER == 1][, label := paste0(GEO, "'",str_sub(AAR, -2L, -1L))]
+  
+  # Create vector of boxplot filenames
+  namecols <- str_subset(bycols, "GEONIV", negate = TRUE)
+  boxplot_names <- GRP(baseplotdata, namecols)[["groups"]][, do.call(paste, c(.SD, sep = ","))]
   
   
-  baseplotdata <- g[["groups"]]
-
-
-  
-  
-  baseplotdata <- data[ALDER == "0_120" & KJONN == 0 & KODEGRUPPE == "Dod_med_hjerneslag", .SD[1], by = bycols]
-  outlierdata <- data[ALDER == "0_120" & KJONN == 0 & KODEGRUPPE == "Dod_med_hjerneslag" &OUTLIER == 1] # & newrow == 1
-  
-  baseplotdata %>% 
+  baseplotdata[!is.na(wq50) & KJONN == 0 & ALDER == "0_44"] %>% 
     ggplot(aes(x = fct_rev(GEONIV),
-               ymin = minabove,
+               ymin = MINABOVELOW,
                lower = wq25,
                middle = wq50,
                upper = wq75,
-               ymax = maxbelow)) + 
+               ymax = MAXBELOWHIGH)) + 
+    scale_x_discrete(drop = F) + 
+    coord_flip() + 
+    facet_wrap(namecols, labeller = labeller(.multi_line = F),scales = "free_x") + 
     geom_errorbar(width = 0.5) + 
-    geom_boxplot(stat = "identity") +
-    geom_text(data = outlierdata,
-               aes(y = VALUE, label = paste0(GEO, ", ", AAR)), angle = 45) + 
+    geom_boxplot(stat = "identity") 
+    geom_text(data = outlierdata[ALDER == "0_44" & KODEGRUPPE == "Pas_med_hjerneslag" & KJONN == 2],
+               aes(y = get(val), label = label), angle = 45, size = 12/.pt) + 
     coord_flip()
   
+    
+    # En bildefil per plott. Tittel = namecols, inneholder boxplot + tidsserier for alle nye uteliggere
   
 }
   
