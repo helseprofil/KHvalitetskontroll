@@ -78,8 +78,8 @@ CompareDims <- function(data1 = dfnew,
     levels2 <- unique(data2[[dim]])
     
     # Identify new or expired levels
-    newlevels <- str_subset(levels1, str_c(levels2, collapse = "|"), negate = TRUE)
-    explevels <- str_subset(levels2, str_c(levels1, collapse = "|"), negate = TRUE)
+    newlevels <- str_subset(levels1, str_c("\\b", levels2, "\\b", collapse = "|"), negate = TRUE)
+    explevels <- str_subset(levels2, str_c("\\b", levels1, "\\b", collapse = "|"), negate = TRUE)
     
     # Replace with "none" if 0 new/expired levels
     if(length(newlevels) == 0){
