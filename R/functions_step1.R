@@ -78,8 +78,8 @@ CompareDims <- function(data1 = dfnew,
     levels2 <- unique(data2[[dim]])
     
     # Identify new or expired levels
-    newlevels <- str_subset(levels1, str_c(levels2, collapse = "|"), negate = TRUE)
-    explevels <- str_subset(levels2, str_c(levels1, collapse = "|"), negate = TRUE)
+    newlevels <- str_subset(levels1, str_c("\\b", levels2, "\\b", collapse = "|"), negate = TRUE)
+    explevels <- str_subset(levels2, str_c("\\b", levels1, "\\b", collapse = "|"), negate = TRUE)
     
     # Replace with "none" if 0 new/expired levels
     if(length(newlevels) == 0){
@@ -380,6 +380,16 @@ CompareKommuneFylke <- function(data = dfnew,
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
+  # Check if both Fylke and Kommune is present
+  if(!"Fylke" %in% data$geolevel){
+    cat("No rows corresponding to Fylke, comparison not possible")
+    return(invisible(NULL))
+  }
+  if(!"Kommune" %in% data$geolevel){
+    cat("No rows corresponding to Kommune, comparison not possible")
+    return(invisible(NULL))
+  }
+  
   # Sum compare value per strata of geolevel and grouping dims
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
   
@@ -446,7 +456,7 @@ CompareBydelKommune <- function(data = dfnew,
   
   # If no data on bydel, stop and return NULL
   if(length(bydelsgeo) < 1){
-    cat("No geo-codes corresponding to bydel, not possible to estimate unspecified bydel.\n")
+    cat("No geo-codes corresponding to bydel, comparison not possible.\n")
     return(invisible(NULL))
   } 
   
@@ -461,6 +471,12 @@ CompareBydelKommune <- function(data = dfnew,
   data[GEO < 9999, geolevel := "Kommune"]
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  
+  # Check if Kommune is present
+  if(!"Kommune" %in% data$geolevel){
+    cat("No rows corresponding to Kommune, comparison not possible")
+    return(invisible(NULL))
+  }
   
   # Sum compare value per strata of geolevel and grouping dims
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("KOMMUNE", "geolevel", groupdim)]
@@ -498,8 +514,6 @@ CompareBydelKommune <- function(data = dfnew,
                 )
 }
 
-
-
 #' CompareOslo
 #'
 #' @param data1 
@@ -523,6 +537,16 @@ CompareOslo <- function(data = dfnew,
   data <- copy(data)[GEO %in% c(3, 301)]
   data[, geolevel := "Oslo Kommune"]
   data[GEO == 3, geolevel := "Oslo Fylke"]
+  
+  # Check if both Oslo Fylke and Kommune is present
+  if(!"Oslo Fylke" %in% data$geolevel){
+    cat("No rows corresponding to Oslo Fylke, comparison not possible")
+    return(invisible(NULL))
+  }
+  if(!"Oslo Kommune" %in% data$geolevel){
+    cat("No rows corresponding to Oslo Kommune, comparison not possible")
+    return(invisible(NULL))
+  }
   
   # Sum compare value per strata of geolevel and grouping dims
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
@@ -649,7 +673,7 @@ PlotTimeseries <- function(data = dfnew){
   cat(paste0("\n - Value columns aggregated to average: ", print_dim(avgcols)))
   
   # Loop through plotdims to generate the plots
-  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
+  TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
                                      plotdata = plotdata,
                                      plotvals = .TSplotvals,
                                      aggdims = aggdims,
@@ -747,7 +771,7 @@ PlotTimeseries <- function(data = dfnew){
 }
 
 PrintTimeseries <- function(dims = .TSplotdims,
-                            plots = .TS){
+                            plots = TS){
   
   for(i in 1:length(dims)){
     
