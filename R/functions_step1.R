@@ -673,7 +673,7 @@ PlotTimeseries <- function(data = dfnew){
   cat(paste0("\n - Value columns aggregated to average: ", print_dim(avgcols)))
   
   # Loop through plotdims to generate the plots
-  .TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
+  TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
                                      plotdata = plotdata,
                                      plotvals = .TSplotvals,
                                      aggdims = aggdims,
@@ -771,7 +771,7 @@ PlotTimeseries <- function(data = dfnew){
 }
 
 PrintTimeseries <- function(dims = .TSplotdims,
-                            plots = .TS){
+                            plots = TS){
   
   for(i in 1:length(dims)){
     
