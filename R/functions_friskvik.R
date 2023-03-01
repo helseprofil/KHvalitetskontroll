@@ -11,25 +11,25 @@
 #'
 #' @examples
 ReadFriskvik <- function(datotag = NULL, 
-                         geolevel = c("B", "K", "F"),
                          profile = c("FHP", "OVP"),
-                         friskvikyear = 2023,
-                         modus = "KH"){
+                         geolevel = c("B", "K", "F"),
+                         profileyear = NULL,
+                         modus = c("KH", "NH")){
   
   # Check arguments
   if(is.null(datotag)) {
     stop("file not selected")
   }
   
+  if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
+    stop("profile must be either 'FHP' or 'OVP'")
+  }
+  
   if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
     stop("geolevel must be either 'B', 'K', or 'F'")
   }
   
-  if(!profile %in% c("FHP",) | length(profile) != 1){
-    stop("profile must be either 'FHP' or 'OVP'")
-  }
-  
-  if(nchar(friskvikyear) != 4){
+  if(nchar(profileyear) != 4){
     stop("friskvikyear must be a 4 digit number")
   }
   
@@ -65,36 +65,67 @@ ReadFriskvik <- function(datotag = NULL,
     "NORGESHELSA"
   }
   
-  # Construct file path to NESSTAR kube
-  nesstarpath <- file.path(basepath,
-                           MODUS,
-                           "DATERT/csv")
-  
-  nesstarfile <- list.files(nesstarpath, pattern = datotag)
-  
-  # construct file path to FRISKVIK file
+  # Construct file path to FRISKVIK file, most recent GODKJENT folder
   friskvikpath <- file.path(basepath,
                             paste(PROFILE, GEOLEVEL, sep = "_"),
-                            friskvikyear,
+                            profileyear,
                             "GODKJENT")
+  godkjentdir <- max(list.dirs(friskvikpath, full.names = F, recursive = F))
   
-
+  friskvikfile <- list.files(file.path(friskvikpath, godkjentdir),
+                             pattern = datotag)
   
-  
-  
-  if(length(filename) == 0){
-    stop("File not found, check spelling")
-  } else if(length(filename) > 1){
-    message("More than 1 file found:")
-    stop("Please specify file name to only select one file", 
-         cat(filename, sep = "\n"))
+  if(length(friskvikfile) == 0){
+    stop("FRISKVIK file not found, check arguments (datotag, profile, geolevel, profileyear)")
+  } else if(length(friskvikfile) > 1){
+    stop("> 1 FRISKVIK files with the same dato tag identified", 
+         cat(friskvikfile, sep = "\n"))
   } else {
-    filepath <- file.path(basepath, filename)
+    friskvikpath <- file.path(friskvikpath, godkjentdir, friskvikfile)
   }
   
-  outdata <- fread(filepath)
-  setattr(outdata, "Filename", basename(filepath))
-  cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
+  FRISKVIK <- fread(friskvikpath)
+  setattr(FRISKVIK, "Filename", basename(friskvikpath))
+  cat(paste0("FRISKVIK loaded: ", PROFILE, "_", GEOLEVEL, "/", 
+             profileyear, "/GODKJENT/", godkjentdir,"/", basename(friskvikpath)))
   
-  outdata
+  # Construct file path to KUBE and load file
+  kubepath <- file.path(basepath,
+                        MODUS,
+                        "DATERT/csv")
+  
+  kubefile <- list.files(kubepath, 
+                         pattern = datotag)
+  
+  if(length(kubefile) == 0){
+    stop("KUBE file not found, check arguments (datotag, modus)")
+  } else if(length(kubefile) > 1){
+    stop("> 1 KUBE files with the same dato tag identified", 
+         cat(kubefile, sep = "\n"))
+  } else {
+    kubepath <- file.path(kubepath, kubefile)
+  }
+  
+  KUBE <- fread(kubepath)
+  setattr(KUBE, "Filename", basename(kubepath))
+  cat(paste0("\nKUBE loaded: ", MODUS, "/DATERT/csv/", basename(kubepath)))
+  
+  # Identify dimension and value columns
+  .IdentifyColumns(FRISKVIK, KUBE)
+  
+  # Filter KUBE to match FRISKVIK strata 
+  ETAB <- FRISKVIK[, unique(ETAB)]
+  if(!is.na(ETAB)){
+  KUBE <- KUBE[eval(parse(text = ETAB))]
+  }
+  
+  filtercols <- str_subset(.commondims, "AAR", negate = TRUE)
+  for(i in filtercols){
+    KUBE <- KUBE[get(i) %in% FRISKVIK[, unique(get(i))]]
+  }
+  
+  # Save to global env
+  KUBE <<- KUBE
+  FRISKVIK <<- FRISKVIK
+
 }
