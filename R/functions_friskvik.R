@@ -129,3 +129,22 @@ ReadFriskvik <- function(datotag = NULL,
   FRISKVIK <<- FRISKVIK
 
 }
+
+CompareFriskvikYear <- function(data1 = FRISKVIK,
+                                data2 = KUBE){
+  
+  kubeyears <- data.table(KUBE = data2[, sort(unique(AAR), decreasing = TRUE)])
+  kubeyears[, join := KUBE]
+  friskvikyears <- data.table(FRISKVIK = data1[, sort(unique(AAR), decreasing = TRUE)])
+  friskvikyears[, join := FRISKVIK]
+  
+  out <- merge.data.table(friskvikyears, kubeyears, by = "join", all.y = T)[sort(join, decreasing = TRUE)]
+  out[,join := NULL]
+  
+  out[]
+}
+
+CompareFriskvikVal <- function(data1 = FRISKVIK,
+                               data2 = KUBE){
+  
+}
