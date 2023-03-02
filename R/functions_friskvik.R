@@ -1,6 +1,6 @@
 #' ReadFriskvik
 #'
-#' @param datotag Datatag used to identify friskvik file and corresponding kube, from DATERT
+#' @param datotag full file name from FRISKVIK/GODKJENT
 #' @param geolevel One of "B", "K", or "F"
 #' @param profile One of "FHP" or "OVP"
 #' @param profileyear 4-digit profileyear
@@ -12,16 +12,16 @@
 #' @export
 #'
 #' @examples
-ReadFriskvik <- function(datotag, 
-                         profile,
-                         geolevel,
-                         profileyear,
-                         modus,
+ReadFriskvik <- function(filename = NULL, 
+                         profile = NULL,
+                         geolevel = NULL,
+                         profileyear = NULL,
+                         modus = NULL,
                          friskvikpath = NULL,
                          kubepath = NULL){
   
   # Check arguments
-  if(is.null(datotag)) {
+  if(is.null(filename)) {
     stop("file not selected")
   }
   
@@ -36,43 +36,50 @@ ReadFriskvik <- function(datotag,
     kubepath <- .CreateKubePath(modus = modus)
   }
   
-  friskvikfile <- list.files(friskvikpath,
-                             pattern = datotag)
   
-  if(length(friskvikfile) == 0){
+  # Find and load FRISKVIK file
+  friskvikfile <- list.files(friskvikpath,
+                             pattern = filename)
+  
+  if(length(friskvikfile) < 1){
     stop("FRISKVIK file not found, check arguments (datotag, profile, geolevel, profileyear)")
   } else if(length(friskvikfile) > 1){
-    stop("> 1 FRISKVIK files with the same dato tag identified", 
+    stop("> 1 FRISKVIK files with the same name identified", 
          cat(friskvikfile, sep = "\n"))
   } else {
+    # Generate file path FRISKVIK
     friskvik <- file.path(friskvikpath, friskvikfile)
   }
   
   FRISKVIK <- fread(friskvik)
   setattr(FRISKVIK, "Filename", basename(friskvik))
   cat(paste0("FRISKVIK loaded: ", 
-             str_extract(friskvikpath, "(?<=KUBER/).*"), "/", 
+             str_extract(friskvikpath, "(?<=KUBER/).*"), 
              "/", 
-             basename(friskvik)))
+             basename(friskvik),
+             "\n"))
   
-  
+  # Find and load KUBE file
+  datotag <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
   kubefile <- list.files(kubepath, 
                          pattern = datotag)
   
-  if(length(kubefile) == 0){
+  if(length(kubefile) < 1){
     stop("corresponding KUBE file not found, check arguments (datotag, modus)")
   } else if(length(kubefile) > 1){
     stop("> 1 KUBE files with the same dato tag identified", 
          cat(kubefile, sep = "\n"))
   } else {
+    # Generate file path KUBE
     kube <- file.path(kubepath, kubefile)
   }
   
   KUBE <- fread(kube)
   setattr(KUBE, "Filename", basename(kube))
-  cat(paste0("\nKUBE loaded: ", 
+  cat(paste0("KUBE loaded: ", 
              str_extract(kubepath, "(?<=KUBER/).*"), "/",
-             basename(kube)))
+             basename(kube),
+             "\n"))
   
   # Identify dimension and value columns
   .IdentifyColumns(FRISKVIK, KUBE)
@@ -192,79 +199,6 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   
 }
 
-#' CheckFriskvik
-#'
-#' @param profile "FHP" or "OVP"
-#' @param geolevel "B", "K", or "F"
-#' @param profileyear 4-digit year
-#' @param modus "KH" or "NH"
-#'
-#' @return
-#' @export
-#'
-#' @examples
-CheckFriskvik <- function(profile = c("FHP", "OVP"),
-                          geolevel = c("B", "K", "F"),
-                          profileyear = NULL,
-                          modus = c("KH", "NH")){
-  
-  if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
-    stop("profile must be either 'FHP' or 'OVP'")
-  }
-  
-  if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
-    stop("geolevel must be either 'B', 'K', or 'F'")
-  }
-  
-  if(nchar(profileyear) != 4){
-    stop("friskvikyear must be a 4 digit number")
-  }
-  
-  if(!(modus %in% c("KH", "NH"))) {
-    stop("`modus` must be either 'KH' or 'NH'")
-  }
-  
-  # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
-  
-  
-  
-  GEOLEVEL <- if(geolevel == "B"){
-    "BYDEL"
-  } else if(geolevel == "F"){
-    "FYLKE"
-  } else if(geolevel == "K"){
-    "KOMM"
-  }
-  
-  PROFILE <- if(profile == "FHP"){
-    "FRISKVIK"
-  } else if(profile == "OVP"){
-    "OVP"
-  }
-  
-  MODUS <- if(modus == "KH"){
-    "KOMMUNEHELSA" 
-  } else if(modus == "NH"){
-    "NORGESHELSA"
-  }
-  
-  friskvikpath <- file.path(basepath,
-                            paste(PROFILE, GEOLEVEL, sep = "_"),
-                            profileyear,
-                            "GODKJENT")
-  
-  godkjentdir <- max(list.dirs(friskvikpath, full.names = F, recursive = F))
-  
-  friskvikpath <- file.path(friskvikpath, godkjentdir)
-  
-  
-  
-  
-  # Locate and read files
-  
-  ReadFriskvik
-  
-}
 
 #' Helper function to create path to most recent FRISKVIK/GODKJENT-folder
 #'
@@ -357,3 +291,66 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   
   kubepath
 }
+
+#' CheckFriskvik
+#'
+#' @param profile "FHP" or "OVP"
+#' @param geolevel "B", "K", or "F"
+#' @param profileyear 4-digit year
+#' @param modus "KH" or "NH"
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CheckFriskvik <- function(profile = c("FHP", "OVP"),
+                          geolevel = c("B", "K", "F"),
+                          profileyear = NULL,
+                          modus = c("KH", "NH")){
+  
+  if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
+    stop("profile must be either 'FHP' or 'OVP'")
+  }
+  
+  if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
+    stop("geolevel must be either 'B', 'K', or 'F'")
+  }
+  
+  if(nchar(profileyear) != 4){
+    stop("friskvikyear must be a 4 digit number")
+  }
+  
+  if(!(modus %in% c("KH", "NH"))) {
+    stop("`modus` must be either 'KH' or 'NH'")
+  }
+  
+  # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
+  
+  friskvikpath <- .CreateFriskvikpath(profile = profile, 
+                                      geolevel = geolevel, 
+                                      profileyear = profileyear)
+  
+  kubepath <- .CreateKubePath(modus = modus)
+  
+  # Extract all datotags in FRISKVIK/GODKJENT
+  
+  files <- list.files(friskvikpath, pattern = ".csv")
+  datotags <- str_extract(files, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
+  
+  # Load files, generate 1-line output
+  canread <- numeric()
+  for(i in files){
+    tryload <- try(ReadFriskvik(filename = i,
+                                friskvikpath = friskvikpath,
+                                kubepath = kubepath), 
+                   silent = T)
+    
+    if("try-error" %in% class(tryload)){
+      canread <- c(canread, 0)
+    } else {
+      canread <- c(canread, 1)
+    }
+    rm(tryload)
+    gc()
+  }
+  
