@@ -1,6 +1,6 @@
 #' ReadFriskvik
 #'
-#' @param datotag Datatag used to identify friskvik file and corresponding kube
+#' @param datotag Datatag used to identify friskvik file and corresponding kube, from DATERT
 #' @param geolevel One of "B", "K", or "F"
 #' @param profile One of "FHP" or "OVP"
 #' @param friskvikyear Year to identify friskvik folder, defaults to 2023
@@ -124,10 +124,38 @@ ReadFriskvik <- function(datotag = NULL,
     KUBE <- KUBE[get(i) %in% FRISKVIK[, unique(get(i))]]
   }
   
+  # Standard dimension filtering, hard coded for 2023 as dimensions not included in FRISKVIK
+  friskvikname <- .GetKubename(FRISKVIK)
+  
+  if("INNVKAT" %in% .dims2){
+    KUBE <- KUBE[INNVKAT == 0]
+  }
+  
+  if("LANDBAK" %in% .dims2){
+    if(friskvikname %in% c("Innvand_0_17", 
+                           "INNVAND_barn")){
+      KUBE <- KUBE[LANDBAK == 100]
+    } else {
+      KUBE <- KUBE[LANDBAK == 0]
+    }
+  }
+  
+  if("UTDANN" %in% .dims2){
+    if(friskvikname %in% c("UTDANNING_NH",
+                           "UTDANN_HOY")){
+      KUBE <- KUBE[UTDANN == 23]
+    } else {
+      KUBE <- KUBE[UTDANN == 0]
+    }
+  }
+  
+  # Ensure same order
+  setkeyv(KUBE, .commondims)
+  setkeyv(FRISKVIK, .commondims)
+ 
   # Save to global env
   KUBE <<- KUBE
   FRISKVIK <<- FRISKVIK
-
 }
 
 CompareFriskvikYear <- function(data1 = FRISKVIK,
@@ -144,7 +172,95 @@ CompareFriskvikYear <- function(data1 = FRISKVIK,
   out[]
 }
 
+FriskvikLastYear <- function(data1 = FRISKVIK,
+                             data2 = KUBE){
+  
+  if(length(data1[, unique(AAR)]) > 1){
+    cat("> 1 unique years in FRISKVIK")
+    return(NA)
+  } else if(data1[, unique(AAR)] == max(data2[, unique(AAR)])){
+    return("Yes")
+  } else {
+    "No"
+  }
+}
+
+CompareFriskvikPrikk <- function(data1 = FRISKVIK,
+                                 data2 = KUBE){
+  
+  # Only include years included in FRISKVIK
+  data2 <- data2[AAR %in% data1[, unique(AAR)]]
+  
+  # Compare values censored in FRISKVIK with values censored in KUBE
+  if(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0])){
+      "Yes"
+    } else {
+      "No"
+    }
+}
+
 CompareFriskvikVal <- function(data1 = FRISKVIK,
                                data2 = KUBE){
+  
+  # Only include years included in FRISKVIK
+  data2 <- data2[AAR %in% data1[, unique(AAR)]]
+  
+  # Find value columns in KUBE
+  .IdentifyColumns(data1, data2)
+  kubevals <- str_subset(.vals2, "RATE.n|SPVFLAGG", negate = TRUE)
+  # Compare FRISKVIK$MEIS to all value columns to find match
+  matches <- character()
+  different <- character()
+  
+  # Map over value columns in KUBE, find the column(s) matching FRISKVIK$MEIS
+  for(i in kubevals){
+    if(isTRUE(all.equal(data1$MEIS, data2[, get(i)]))){
+      matches <- c(matches, i)
+    } else {
+      different <- c(different, i)
+    }
+  }
+  
+  matches <- (str_c(matches, collapse = ", "))
+  different <- (str_c(different, collapse = ", "))
+  
+  list(matches = matches, different = different)
+  
+}
+
+#' CheckFriskvik
+#'
+#' @param profile "FHP" or "OVP"
+#' @param geolevel "B", "K", or "F"
+#' @param profileyear 4-digit year
+#' @param modus "KH" or "NH"
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CheckFriskvik <- function(profile = c("FHP", "OVP"),
+                          geolevel = c("B", "K", "F"),
+                          profileyear = NULL,
+                          modus = c("KH", "NH")){
+  
+  if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
+    stop("profile must be either 'FHP' or 'OVP'")
+  }
+  
+  if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
+    stop("geolevel must be either 'B', 'K', or 'F'")
+  }
+  
+  if(nchar(profileyear) != 4){
+    stop("friskvikyear must be a 4 digit number")
+  }
+  
+  if(!(modus %in% c("KH", "NH"))) {
+    stop("`modus` must be either 'KH' or 'NH'")
+  }
+  
+  
+  
   
 }
