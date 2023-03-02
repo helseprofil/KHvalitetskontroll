@@ -1,0 +1,55 @@
+---
+title: "Friskviksjekk"
+author: "Vegard"
+date: "2023-02-28"
+output: html_document
+---
+
+For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
+```{r include=FALSE}
+# Global settings, do not change
+knitr::opts_chunk$set(cache = F, echo = F)
+# Only run if functions are not already loaded. 
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+```
+
+- To check specific FRISKVIK-file, run the chunks one-by-one interactively
+- To generate an overall check, use the `CheckFriskvik()` function
+
+# Read files
+```{r}
+# Use the unique date tag to identify files. This ensures that the corresponding FRISKVIK and KUBE files are loaded for comparison. 
+# The function loads both files
+
+ReadFriskvik(filename = "BARNENS", # Complete date tag, as text e.g. "2023_03-01-09-00"
+             profile = "FHP", # "OVP" or "FHP"
+             geolevel = "B", # "B", "K", or "F", corresponding to profile geolevel
+             profileyear = 2023, # 4 digit profile year
+             modus = "KH") # "KH" or "NH", to search correct folder
+```
+# Does FRISKVIK contain the latest year
+
+- Lists the unique year (descending order) in the FRISKVIK and KUBE file. 
+- Friskvik should contain the most recent year
+
+```{r}
+CompareFriskvikYear()
+```
+```{r}
+FriskvikLastYear()
+```
+# All values censored in FRISKVIK is also censored in KUBE
+
+- Compares TRUE/FALSE vector of `is.na(FRISKVIK$MEIS)` and `KUBE$SPVFLAGG > 0`
+```{r}
+CompareFriskvikPrikk()
+```
+# FRISKVIK = KUBE?
+
+- Does the MEIS column in FRISKVIK (plotted in profile table) match a column in the KUBE?
+- Checks which columns matches, and which columns are different
+
+```{r}
+CompareFriskvikVal()
+```
+
