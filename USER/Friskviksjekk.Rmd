@@ -21,9 +21,9 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # Use the unique date tag to identify files. This ensures that the corresponding FRISKVIK and KUBE files are loaded for comparison. 
 # The function loads both files
 
-ReadFriskvik(filename = "ALKOHOL_12m_UNGDATA_2022-12-22-11-29.csv", # Complete date tag, as text e.g. "2023_03-01-09-00"
-             profile = "OVP", # "OVP" or "FHP"
-             geolevel = "K", # "B", "K", or "F", corresponding to profile geolevel
+ReadFriskvik(filename = "BARNENS", # Complete date tag, as text e.g. "2023_03-01-09-00"
+             profile = "FHP", # "OVP" or "FHP"
+             geolevel = "B", # "B", "K", or "F", corresponding to profile geolevel
              profileyear = 2023, # 4 digit profile year
              modus = "KH") # "KH" or "NH", to search correct folder
 ```
