@@ -376,7 +376,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
            Different_kubecol = Different_kubecol)
     }
   )
-    
+  
+  cat("\nOutput generated, write file")
   setDT(output)
   
   # Save report to file
@@ -388,17 +389,20 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                         "VALIDERING", 
                         "FRISKVIK_vs_KUBE")
   
+  # Add profileyear-folder if not existing
   savedir <- file.path(savepath, profileyear)
   if(!exists(savedir)){
     dir.create(savedir)
   }
   
-  savename <- paste(profile, geolevel, Sys.Date(), sep = "_")
-  
+  savename <- paste0(file.path(savedir,
+                               paste(PROFILE, geolevel, format(Sys.time(), "%Y-%m-%d-%H-%M"), sep = "_")),
+                               ".csv")
   fwrite(output,
-         )
+         file = savename,
+         sep = ",")
   
-  
+  cat(paste("\nOutput written to", savename))
 }
     
     
