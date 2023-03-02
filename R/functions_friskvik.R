@@ -164,10 +164,11 @@ CompareFriskvikPrikk <- function(data1 = FRISKVIK,
   data2 <- data2[AAR %in% data1[, unique(AAR)]]
   
   # Compare values censored in FRISKVIK with values censored in KUBE
-  if(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0])){
+  if(isTRUE(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0]))){
       "Yes"
     } else {
-      "No"
+      geodiff <- data1[is.na(data1$MEIS) != data2[, SPVFLAGG > 0], GEO]
+      paste("NO!! Diff for GEO:", str_c(geodiff, collapse = ", "))
     }
 }
 
@@ -193,11 +194,14 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
     }
   }
   
+  if(length(matches) == 0){
+    matches <- "!!NO MATCH!!"
+  }
+  
   matches <- (str_c(matches, collapse = ", "))
   different <- (str_c(different, collapse = ", "))
   
   list(matches = matches, different = different)
-  
 }
 
 
@@ -234,7 +238,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
                         "PRODUKTER", 
                         "KUBER")
  
-  GEOLEVEL <- if(geolevel == "B"){
+  GEOLEVEL <<- if(geolevel == "B"){
     "BYDEL"
   } else if(geolevel == "F"){
     "FYLKE"
@@ -242,7 +246,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
     "KOMM"
   }
   
-  PROFILE <- if(profile == "FHP"){
+  PROFILE <<- if(profile == "FHP"){
     "FRISKVIK"
   } else if(profile == "OVP"){
     "OVP"
@@ -281,7 +285,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
                         "PRODUKTER", 
                         "KUBER")
   
-  MODUS <- if(modus == "KH"){
+  MODUS <<- if(modus == "KH"){
     "KOMMUNEHELSA/DATERT/csv/" 
   } else if(modus == "NH"){
     "NORGESHELSA/DATERT/csv/"
@@ -345,18 +349,16 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                                 kubepath = kubepath), 
                    silent = T)
     
-    Friskvik <- x
+    Friskvik_name <- x
     
     if("try-error" %in% class(tryload)){
-      Kube <- NA
+      Kube_name <- NA
       Last_year <- NA
       Identical_prikk <- NA
       Matching_kubecol <- NA
       Different_kubecol <- NA
-      
-      
-    } else {
-      Kube <- attributes(KUBE)$Filename
+      } else {
+      Kube_name <- attributes(KUBE)$Filename
       Last_year <- FriskvikLastYear()
       Identical_prikk <- CompareFriskvikPrikk()
       
@@ -368,8 +370,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     
     rm(tryload)
     
-    tibble(Friskvik = friskvik_name,
-           Kube = kube_name,
+    tibble(Friskvik = Friskvik_name,
+           Kube = Kube_name,
            Last_year = Last_year,
            Identical_prikk = Identical_prikk,
            Matching_kubecol = Matching_kubecol,
@@ -377,7 +379,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     }
   )
   
-  cat("\nOutput generated, write file")
+  cat("\nOutput generated")
   setDT(output)
   
   # Save report to file
@@ -391,16 +393,16 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   
   # Add profileyear-folder if not existing
   savedir <- file.path(savepath, profileyear)
-  if(!exists(savedir)){
+  if(!dir.exists(savedir)){
     dir.create(savedir)
   }
   
   savename <- paste0(file.path(savedir,
-                               paste(PROFILE, geolevel, format(Sys.time(), "%Y-%m-%d-%H-%M"), sep = "_")),
+                               paste(PROFILE, GEOLEVEL, format(Sys.time(), "%Y-%m-%d-%H-%M"), sep = "_")),
                                ".csv")
   fwrite(output,
          file = savename,
-         sep = ",")
+         sep = ";")
   
   cat(paste("\nOutput written to", savename))
 }
