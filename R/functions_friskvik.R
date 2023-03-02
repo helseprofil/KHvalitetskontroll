@@ -147,13 +147,14 @@ FriskvikLastYear <- function(data1 = FRISKVIK,
                              data2 = KUBE){
   
   if(length(data1[, unique(AAR)]) > 1){
-    cat("> 1 unique years in FRISKVIK")
-    return(">1 year in FRISKVIK")
+    out <- "> 1 year in FRISKVIK"
   } else if(data1[, unique(AAR)] == max(data2[, unique(AAR)])){
-    return("Yes")
+    out <- "Yes"
   } else {
-    "No"
+    out <- "No"
   }
+  
+  out
 }
 
 CompareFriskvikPrikk <- function(data1 = FRISKVIK,
