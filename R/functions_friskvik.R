@@ -25,68 +25,16 @@ ReadFriskvik <- function(datotag,
     stop("file not selected")
   }
   
-  if(is.null(friskvikpath) & is.null(kubepath)){
-    
-    if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
-      stop("profile must be either 'FHP' or 'OVP'")
-    }
-    
-    if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
-      stop("geolevel must be either 'B', 'K', or 'F'")
-    }
-    
-    if(nchar(profileyear) != 4){
-      stop("friskvikyear must be a 4 digit number")
-    }
-    
-    if(!(modus %in% c("KH", "NH"))) {
-      stop("`modus` must be either 'KH' or 'NH'")
-    }
-  
-    # Construct file path parts
-    basepath <- file.path("F:", 
-                          "Forskningsprosjekter", 
-                          "PDB 2455 - Helseprofiler og til_",
-                          "PRODUKSJON", 
-                          "PRODUKTER", 
-                          "KUBER")
-    
-    MODUS <- if(modus == "KH"){
-      "KOMMUNEHELSA/DATERT/csv/" 
-    } else if(modus == "NH"){
-      "NORGESHELSA/DATERT/csv/"
-    }
-  
-    # Construct file path to FRISKVIK file, most recent GODKJENT folder
-    GEOLEVEL <- if(geolevel == "B"){
-      "BYDEL"
-    } else if(geolevel == "F"){
-      "FYLKE"
-    } else if(geolevel == "K"){
-      "KOMM"
-    }
-    
-    PROFILE <- if(profile == "FHP"){
-      "FRISKVIK"
-    } else if(profile == "OVP"){
-      "OVP"
-    }
-    
-    friskvikpath <- file.path(basepath,
-                              paste(PROFILE, GEOLEVEL, sep = "_"),
-                              profileyear,
-                              "GODKJENT")
-    godkjentdir <- max(list.dirs(friskvikpath, full.names = F, recursive = F))
-    
-    friskvikpath <- file.path(friskvikpath, godkjentdir)
-    
-    # Construct file path to KUBE
-    kubepath <- file.path(basepath,
-                          MODUS)
-    
+  # Create file paths
+  if(is.null(friskvikpath)){
+    friskvikpath <- .CreateFriskvikpath(profile = profile,
+                                        geolevel = geolevel,
+                                        profileyear = profileyear)
   }
   
-  
+  if(is.null(kubepath)){
+    kubepath <- .CreateKubePath(modus = modus)
+  }
   
   friskvikfile <- list.files(friskvikpath,
                              pattern = datotag)
@@ -97,13 +45,15 @@ ReadFriskvik <- function(datotag,
     stop("> 1 FRISKVIK files with the same dato tag identified", 
          cat(friskvikfile, sep = "\n"))
   } else {
-    friskvikpath <- file.path(friskvikpath, friskvikfile)
+    friskvik <- file.path(friskvikpath, friskvikfile)
   }
   
-  FRISKVIK <- fread(friskvikpath)
-  setattr(FRISKVIK, "Filename", basename(friskvikpath))
-  cat(paste0("FRISKVIK loaded: ", PROFILE, "_", GEOLEVEL, "/", 
-             profileyear, "/GODKJENT/", godkjentdir,"/", basename(friskvikpath)))
+  FRISKVIK <- fread(friskvik)
+  setattr(FRISKVIK, "Filename", basename(friskvik))
+  cat(paste0("FRISKVIK loaded: ", 
+             str_extract(friskvikpath, "(?<=KUBER/).*"), "/", 
+             "/", 
+             basename(friskvik)))
   
   
   kubefile <- list.files(kubepath, 
@@ -115,12 +65,14 @@ ReadFriskvik <- function(datotag,
     stop("> 1 KUBE files with the same dato tag identified", 
          cat(kubefile, sep = "\n"))
   } else {
-    kubepath <- file.path(kubepath, kubefile)
+    kube <- file.path(kubepath, kubefile)
   }
   
-  KUBE <- fread(kubepath)
-  setattr(KUBE, "Filename", basename(kubepath))
-  cat(paste0("\nKUBE loaded: ", MODUS, "/DATERT/csv/", basename(kubepath)))
+  KUBE <- fread(kube)
+  setattr(KUBE, "Filename", basename(kube))
+  cat(paste0("\nKUBE loaded: ", 
+             str_extract(kubepath, "(?<=KUBER/).*"), "/",
+             basename(kube)))
   
   # Identify dimension and value columns
   .IdentifyColumns(FRISKVIK, KUBE)
@@ -328,6 +280,18 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                                 geolevel,
                                 profileyear){
   
+  if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
+    stop("profile must be either 'FHP' or 'OVP'")
+  }
+  
+  if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
+    stop("geolevel must be either 'B', 'K', or 'F'")
+  }
+  
+  if(nchar(profileyear) != 4){
+    stop("friskvikyear must be a 4 digit number")
+  }
+  
   basepath <- file.path("F:", 
                         "Forskningsprosjekter", 
                         "PDB 2455 - Helseprofiler og til_",
@@ -370,6 +334,10 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
 #'
 #' @examples
 .CreateKubePath <- function(modus){
+  
+  if(!(modus %in% c("KH", "NH"))) {
+    stop("`modus` must be either 'KH' or 'NH'")
+  }
  
   basepath <- file.path("F:", 
                         "Forskningsprosjekter", 
