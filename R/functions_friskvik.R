@@ -335,23 +335,76 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   
   # Extract all datotags in FRISKVIK/GODKJENT
   
-  files <- list.files(friskvikpath, pattern = ".csv")
-  datotags <- str_extract(files, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
+  friskvikfiles <- list.files(friskvikpath, pattern = ".csv")
   
-  # Load files, generate 1-line output
-  canread <- numeric()
-  for(i in files){
-    tryload <- try(ReadFriskvik(filename = i,
+  # Loop trouch friskvikfiles, generate 1-line output per file
+  output <- map_df(friskvikfiles, \(x)  {
+    # Load files
+    tryload <- try(ReadFriskvik(filename = x,
                                 friskvikpath = friskvikpath,
                                 kubepath = kubepath), 
                    silent = T)
     
+    Friskvik <- x
+    
     if("try-error" %in% class(tryload)){
-      canread <- c(canread, 0)
+      Kube <- NA
+      Last_year <- NA
+      Identical_prikk <- NA
+      Matching_kubecol <- NA
+      Different_kubecol <- NA
+      
+      
     } else {
-      canread <- c(canread, 1)
+      Kube <- attributes(KUBE)$Filename
+      Last_year <- FriskvikLastYear()
+      Identical_prikk <- CompareFriskvikPrikk()
+      
+      compvals <- CompareFriskvikVal()
+      
+      Matching_kubecol <- compvals$matches
+      Different_kubecol <- compvals$different
     }
+    
     rm(tryload)
-    gc()
+    
+    tibble(Friskvik = friskvik_name,
+           Kube = kube_name,
+           Last_year = Last_year,
+           Identical_prikk = Identical_prikk,
+           Matching_kubecol = Matching_kubecol,
+           Different_kubecol = Different_kubecol)
+    }
+  )
+    
+  setDT(output)
+  
+  # Save report to file
+  
+  savepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "FRISKVIK_vs_KUBE")
+  
+  savedir <- file.path(savepath, profileyear)
+  if(!exists(savedir)){
+    dir.create(savedir)
   }
+  
+  savename <- paste(profile, geolevel, Sys.Date(), sep = "_")
+  
+  fwrite(output,
+         )
+  
+  
+}
+    
+    
+    
+    
+    
+    
+
   
