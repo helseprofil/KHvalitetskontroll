@@ -2,7 +2,7 @@
 
 cat("\nWelcome to KHvalitetskontroll\n", 
     "\n---\n", 
-    "\nAvailable user files:\n",
+    "\nAvailable USER files:\n",
     "- Kvalitetskontroll_del1.Rmd\n",
     "  - Manuell sjekk\n",
     "- Kvalitetskontroll_del2.Rmd\n",
