@@ -311,11 +311,9 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                                       profileyear = profileyear)
   
   # Extract all datotags in FRISKVIK/GODKJENT
-  
   friskvikfiles <- list.files(friskvikpath, pattern = ".csv")
   
   # Create savepath and report name
-  
   savepath <- file.path("F:", 
                         "Forskningsprosjekter", 
                         "PDB 2455 - Helseprofiler og til_",
