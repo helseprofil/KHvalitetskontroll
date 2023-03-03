@@ -19,6 +19,7 @@ library(Hmisc)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step2.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_friskvik.R")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_interactive.R")
 
 # Load list of all dimensions, and make hidden object

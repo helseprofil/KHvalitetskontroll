@@ -1,0 +1,78 @@
+---
+title: "Friskviksjekk"
+author: ""
+date: "Report generated: `r Sys.Date()`"
+output: html_document
+---
+Version: 0.3 (03.03.2023). 
+
+For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
+```{r include=FALSE}
+# Global settings, do not change
+knitr::opts_chunk$set(cache = F, echo = F)
+# Only run if functions are not already loaded. 
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+```
+
+# Generate full report from most recent GODKJENT folder
+
+- This function generates a report saved to `F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/VALIDERING/FRISKVIK_vs_KUBE/XXXX(profileyear)/`
+- Specify profile ("FHP" or "OVP"), geolevel ("B", "K", or "F"), and profileyear.
+- Some files are not handled by the system, e.g. if more kube files with the same date tag exists, or if column names are not standard. These must be checked manually.
+
+```{r}
+CheckFriskvik(profile = "FHP",
+              geolevel = "K",
+              profileyear = 2023)
+```
+
+# Check specific files
+
+- To check specific FRISKVIK-file, run the chunks below one-by-one interactively
+
+# Read files
+
+- The function ReadFriskvik() generates two data objects: FRISKVIK and KUBE. These are used as input in the functions below. 
+- The KUBE file is filtered according to the dimensions in the FRISKVIK file (except for AAR), to make direct comparison possible. 
+## If > 1 kube files exist
+- If > 1 KUBE file with the same date tag exists, this file will not be included in the report, and should be checked manually using the functions below. To specify the correct KUBE file directly, use the kubefil argument. This should be the full file path to the kube file, starting from `"KOMMUNEHELSA/..."` or `"NORGESHELSA/..."`. To let the function find the file, set `kubefile = NULL`. 
+
+```{r}
+# Use the FRISKVIK file name to identify the files of interest.
+# If you need to specify kubefile, use this format: "KOMMUNEHELSA/DATERT/csv/SVANGERROYK_GK_POSTPROSESS_2022-11-03-11-37.csv"
+
+ReadFriskvik(filename = "FRISKVIKNAME", # Complete FRISKVIK file name
+             profile = NULL, # "OVP" or "FHP"
+             geolevel = NULL, # "B", "K", or "F", corresponding to profile geolevel
+             profileyear = NULL,
+             kubefile = NULL) # 4 digit profile year
+
+```
+# Does FRISKVIK contain the latest year
+
+- Lists the unique year (descending order) in the FRISKVIK and KUBE file. 
+```{r}
+CompareFriskvikYear()
+```
+
+- Does the Friskvik file contain the most recent year (returns yes, no, or >1 year in friskvik)
+```{r}
+FriskvikLastYear()
+```
+
+# All values censored in FRISKVIK is also censored in KUBE
+
+- Compares TRUE/FALSE vector of `is.na(FRISKVIK$MEIS)` and `KUBE$SPVFLAGG > 0`
+```{r}
+CompareFriskvikPrikk()
+```
+
+# FRISKVIK = KUBE?
+
+- Does the MEIS column in FRISKVIK (plotted in profile table) match a column in the KUBE?
+- Checks which columns matches, and which columns are different
+
+```{r}
+CompareFriskvikVal()
+```
+

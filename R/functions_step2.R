@@ -673,7 +673,6 @@ CompareNewOld <- function(data = compareKUBE,
   walk(tables, print)
 }
 
-
 #' Flag outliers in dfnew_flag
 #'
 #' @param data 
@@ -831,4 +830,4 @@ PlotOutlier <- function(data){
     # En bildefil per plott. Tittel = namecols, inneholder boxplot + tidsserier for alle nye uteliggere
   
 }
-  
+

@@ -259,6 +259,7 @@ UnspecifiedBydel(maxrows = TRUE)
 # This function creates the country level time series plots for all value columns across all dimensions
 # The plots are printed in the next code chunk. This is to be able to adjust the figure height according to number of dimensions
 # Summary of aggregation going into the plots
+# The plots are stored in an object called `TS` which is stored in the environment. To show plots in plotting window (better resizing), just call TS in the console.
 PlotTimeseries()
 ```
 ```{r fig.height = .PlotHeight, out.width = "90%", results = 'asis'}
