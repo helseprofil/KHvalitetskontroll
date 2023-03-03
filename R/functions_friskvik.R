@@ -283,7 +283,6 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
 #' @param profile "FHP" or "OVP"
 #' @param geolevel "B", "K", or "F"
 #' @param profileyear 4-digit year
-#' @param modus "KH" or "NH"
 #'
 #' @return
 #' @export
@@ -303,10 +302,6 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   
   if(nchar(profileyear) != 4){
     stop("friskvikyear must be a 4 digit number")
-  }
-  
-  if(!(modus %in% c("KH", "NH"))) {
-    stop("`modus` must be either 'KH' or 'NH'")
   }
   
   # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
