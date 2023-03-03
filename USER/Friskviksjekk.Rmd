@@ -4,7 +4,7 @@ author: ""
 date: "Report generated: `r Sys.Date()`"
 output: html_document
 ---
-Version: 0.1 (02.03.2023). 
+Version: 0.2 (03.03.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -14,19 +14,35 @@ knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
+# Generate full report
+
+- This function generates a report saved to `F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/VALIDERING/FRISKVIK_vs_KUBE/XXXX(profileyear)/`
+- Specify profile ("FHP" or "OVP"), geolevel ("B", "K", or "F"), and profileyear.
+- Some files are not handled by the system, e.g. if more kube files with the same date tag exists, or if column names are not standard. These must be checked manually.
+
+```{r}
+CheckFriskvik(profile = "FHP",
+              geolevel = "F",
+              profileyear = 2023)
+```
+
+# Check specific files
+
 - To check specific FRISKVIK-file, run the chunks one-by-one interactively
 - To generate an overall check, use the `CheckFriskvik()` function
 
 # Read files
+
+- The function generates two data objects: FRISKVIK and KUBE. These are used as input in the functions below. 
 ```{r}
 # Use the unique date tag to identify files. This ensures that the corresponding FRISKVIK and KUBE files are loaded for comparison. 
 # The function loads both files
 
-ReadFriskvik(filename = "BARNENS", # Complete date tag, as text e.g. "2023_03-01-09-00"
+ReadFriskvik(filename = "FILENAME", # Complete FRISKVIK file name
              profile = "FHP", # "OVP" or "FHP"
-             geolevel = "B", # "B", "K", or "F", corresponding to profile geolevel
-             profileyear = 2023, # 4 digit profile year
-             modus = "KH") # "KH" or "NH", to search correct folder
+             geolevel = "K", # "B", "K", or "F", corresponding to profile geolevel
+             profileyear = 2023) # 4 digit profile year
+
 ```
 # Does FRISKVIK contain the latest year
 
