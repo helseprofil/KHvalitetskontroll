@@ -15,11 +15,35 @@ ReadFriskvik <- function(filename = NULL,
                          profile = NULL,
                          geolevel = NULL,
                          profileyear = NULL,
-                         friskvikpath = NULL){
+                         friskvikpath = NULL,
+                         kubefile = NULL){
   
   # Check arguments
   if(is.null(filename)) {
     stop("file not selected")
+  }
+  
+  if(is.null(friskvikpath)){
+    if(is.null(profile)){
+      stop("profile must be provided")
+    }
+    if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
+      stop("profile must be either 'FHP' or 'OVP'")
+    }
+    
+    if(is.null(geolevel)){
+      stop("geolevel must be provided")
+    } 
+    if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
+      stop("geolevel must be either 'B', 'K', or 'F'")
+    }
+    
+    if(is.null(profileyear)){
+      stop("profileyear must be provided")
+    } 
+    if(nchar(profileyear) != 4){
+      stop("friskvikyear must be a 4 digit number")
+    }
   }
   
   # Create file paths
@@ -70,24 +94,32 @@ ReadFriskvik <- function(filename = NULL,
   
   # Find and load KUBE file
   # Search in kubepath_kh, and if not found search kubepath_nh
-  datotag <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
-  
-  kube <- list.files(kubepath_kh, 
-                     pattern = datotag, 
-                     full.names = T)
-  
-  if(length(kube) == 0){
-    kube <- list.files(kubepath_nh, 
-                       pattern = datotag,
+  if(is.null(kubefile)){
+    datotag <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
+    
+    kube <- list.files(kubepath_kh, 
+                       pattern = datotag, 
                        full.names = T)
+    
+    if(length(kube) == 0){
+      kube <- list.files(kubepath_nh, 
+                         pattern = datotag,
+                         full.names = T)
+    }
+    
+  } else if(!is.null(kubefile)){
+    kube <- file.path(basepath, kubefile)
   }
   
   if(length(kube) < 1){
-    stop("corresponding KUBE file not found, check arguments (datotag)")
+    stop("corresponding KUBE file not found, check arguments")
   } else if(length(kube) > 1){
     stop("> 1 KUBE files with the same dato tag identified", 
          cat(kube, sep = "\n"))
   } 
+
+    
+
   
   KUBE <- fread(kube)
   setattr(KUBE, "Filename", basename(kube))
@@ -290,7 +322,8 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
 #' @examples
 CheckFriskvik <- function(profile = c("FHP", "OVP"),
                           geolevel = c("B", "K", "F"),
-                          profileyear = NULL){
+                          profileyear = NULL,
+                          test = FALSE){
   
   if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
     stop("profile must be either 'FHP' or 'OVP'")
@@ -322,7 +355,12 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                         "FRISKVIK_vs_KUBE")
   
   # Add profileyear-folder if not existing
-  savedir <- file.path(savepath, profileyear)
+  if(test){
+    savedir <- file.path(savepath, "testmappe")
+  } else {
+    savedir <- file.path(savepath, profileyear)
+  }
+  
   if(!dir.exists(savedir)){
     dir.create(savedir)
   }
