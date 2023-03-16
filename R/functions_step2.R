@@ -52,7 +52,7 @@
   
   dfnew_flag <<- .FlagOutlier(data = dfnew_flag,
                               dims = dims,
-                              vals = vals)
+                              vals = vals)[]
   
   cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
@@ -691,22 +691,7 @@ CompareNewOld <- function(data = compareKUBE,
     .weightsdata <- data.table(GEO = .allgeos, WEIGHTS = .allweights)
   }
   
-  # Select value column for outlier detection
-  if("MEIS" %in% vals){
-    val <- "MEIS"
-    cat("\n- Outlier detection based on MEIS")
-  } else if ("RATE" %in% vals){
-    val <- "RATE"
-    cat("\n- Outlier detection based on RATE")
-  } else if ("SMR" %in% vals){
-    val <- "SMR"
-    cat("\n- Outlier detection based on SMR")
-  } else {
-    cat("\n- None of MEIS, RATE, or SMR available for outlier detection")
-    return(invisible(NULL))
-  }
-  
-  # Add GEONIV, OUTLIER, and HIGHLOW columns
+  # Add GEONIV column
   settransform(data, 
                GEONIV = qF(fcase(GEO == 0, "L",
                                  GEO %in% 81:84, "H",
@@ -714,46 +699,57 @@ CompareNewOld <- function(data = compareKUBE,
                                  GEO %in% .largekommune, "K",
                                  GEO %in% .smallkommune, "k",
                                  GEO > 9999, "B"), sort = FALSE))
-
-  # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
-  bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
-  g <- GRP(data, bycols)
   
-  # Add WEIGHTS, and set to NULL if all values are missing in a strata
-  data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
-  data[, WEIGHTS := if(all(is.na(get(val)))){ NA_real_ }, by = bycols]
-  w <- data$WEIGHTS
+  .val <- fcase("MEIS" %in% vals, "MEIS",
+                "RATE" %in% vals, "RATE",
+                "SMR" %in% vals, "SMR",
+                default = NA)
   
-  # Estimate weighted quantiles, and low and high cutoffs
-  cutoffs <- fmutate(g[["groups"]],
-                     MIN = fmin(data[, get(val)], g = g),
-                     wq25 = fnth(data[, get(val)], n = 0.25, g = g, w = w, ties = 1),
-                     wq50 = fnth(data[, get(val)], n = 0.50, g = g, w = w, ties = 1),
-                     wq75 = fnth(data[, get(val)], n = 0.75, g = g, w = w, ties = 1),
-                     MAX = fmax(data[, get(val)], g = g),
-                     LOW = wq25 - 1.5*(wq75-wq25),
-                     HIGH = wq75 + 1.5*(wq75-wq25))
+  # If MEIS, RATE or SMR is present, estimate grouped, weighted quantiles and detect outliers
+  if(!is.na(.val)){
   
-  # Merge cutoffs onto data for
-  data[cutoffs, `:=` (MIN = i.MIN,
-                      wq25 = i.wq25,
-                      wq50 = i.wq50,
-                      wq75 = i.wq75,
-                      MAX = i.MAX,
-                      LOW = i.LOW,
-                      HIGH = i.HIGH),
-             on = bycols]
-
-  # Flag outliers and define HIGHLOW
-  settransform(data, 
-               OUTLIER = fcase(get(val) < LOW | get(val) > HIGH, 1, 
-                               get(val) >= LOW & get(val) <= HIGH, 0,
-                               default = NA),
-               HIGHLOW = fcase(get(val) < LOW, "Low",
-                               get(val) > HIGH, "High",
-                               default = NA)) 
+    cat(paste0("\n - Outlier detection based on ", .val, "\n"))
   
-  data[]
+    # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
+    bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
+    g <- GRP(data, bycols)
+    
+    # Add WEIGHTS, and set to NULL if all values are missing in a strata
+    data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
+    data[, WEIGHTS := if(all(is.na(get(.val)))){ NA_real_ }, by = bycols]
+    w <- data$WEIGHTS
+    
+    # Estimate weighted quantiles, and low and high cutoffs
+    cutoffs <- fmutate(g[["groups"]],
+                       MIN = fmin(data[, get(.val)], g = g),
+                       wq25 = fnth(data[, get(.val)], n = 0.25, g = g, w = w, ties = 1),
+                       wq50 = fnth(data[, get(.val)], n = 0.50, g = g, w = w, ties = 1),
+                       wq75 = fnth(data[, get(.val)], n = 0.75, g = g, w = w, ties = 1),
+                       MAX = fmax(data[, get(.val)], g = g),
+                       LOW = wq25 - 1.5*(wq75-wq25),
+                       HIGH = wq75 + 1.5*(wq75-wq25))
+    
+    # Merge cutoffs onto data 
+    data[cutoffs, `:=` (MIN = i.MIN,
+                        wq25 = i.wq25,
+                        wq50 = i.wq50,
+                        wq75 = i.wq75,
+                        MAX = i.MAX,
+                        LOW = i.LOW,
+                        HIGH = i.HIGH),
+               on = bycols]
+  
+    # Flag outliers and define HIGHLOW
+    data[, `:=` (OUTLIER = fcase(get(.val) < LOW | get(.val) > HIGH, 1, 
+                                 get(.val) >= LOW & get(.val) <= HIGH, 0,
+                                 default = NA),
+                 HIGHLOW = fcase(get(.val) < LOW, "Low",
+                                 get(.val) > HIGH, "High",
+                                 default = NA))] 
+  } else {
+    cat("\n- Neither MEIS, RATE, nor SMR available for outlier detection")
+  }
+  
 }
 
 #' PlotOutlier
