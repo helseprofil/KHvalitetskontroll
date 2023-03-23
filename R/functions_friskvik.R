@@ -507,6 +507,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
          file = savename,
          sep = ";")
   
+  odbcCloseAll()
+  
   cat(paste("\nOutput written to", savename))
 }
     
