@@ -399,7 +399,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     Identical_prikk <- NA
     Matching_kubecol <- NA
     Different_kubecol <- NA
-    ETAB <- NA
+    FRISKVIK_ETAB <- NA
     KUBE_KJONN <- NA
     KUBE_ALDER <- NA
     KUBE_UTDANN <- NA
