@@ -417,7 +417,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       Matching_kubecol <- compvals$matches
       Different_kubecol <- compvals$different
       
-      FRISKVIK_ETAB <- FRISKVIK[, unique(ETAB)]
+      FRISKVIK_ETAB <- .UniqueLevel(FRISKVIK, "ETAB")
       KUBE_KJONN <- .UniqueLevel(KUBE, "KJONN")
       KUBE_ALDER <- .UniqueLevel(KUBE, "ALDER")
       KUBE_UTDANN <- .UniqueLevel(KUBE, "UTDANN")
