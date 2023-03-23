@@ -116,7 +116,7 @@ ReadFriskvik <- function(filename = NULL,
   } else if(length(kube) > 1){
     stop("> 1 KUBE files with the same dato tag identified", 
          cat(kube, sep = "\n"))
-  } 
+  } x
 
     
 
@@ -370,7 +370,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                      ".csv")
   
   # Loop trouch friskvikfiles, generate 1-line output per file
-  output <- map_df(friskvikfiles, \(file)  {
+  output <- map_df(friskvikfiles[1:3], \(file)  {
     # Load files
     tryload <- try(ReadFriskvik(filename = file,
                                 friskvikpath = friskvikpath), 
@@ -397,17 +397,16 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     
     rm(tryload)
     
-    tibble(Friskvik = Friskvik_name,
-           Kube = Kube_name,
-           Last_year = Last_year,
-           Identical_prikk = Identical_prikk,
-           Matching_kubecol = Matching_kubecol,
-           Different_kubecol = Different_kubecol)
+    data.table(Friskvik = Friskvik_name,
+               Kube = Kube_name,
+               Last_year = Last_year,
+               Identical_prikk = Identical_prikk,
+               Matching_kubecol = Matching_kubecol,
+               Different_kubecol = Different_kubecol)
     }
   )
   
   cat("\nOutput generated")
-  setDT(output)
   
   # Write result
   fwrite(output,
