@@ -386,7 +386,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                      ".csv")
   
   # Loop trouch friskvikfiles, generate 1-line output per file
-  output <- map_df(friskvikfiles[1:3], \(file)  {
+  output <- map_df(friskvikfiles, \(file)  {
     # Try to load files
     tryload <- try(ReadFriskvik(filename = file,
                                 friskvikpath = friskvikpath), 
