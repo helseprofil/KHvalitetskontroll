@@ -373,7 +373,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   }
   
   savename <- paste0(file.path(savedir,
-                               paste(PROFILE, GEOLEVEL, format(Sys.time(), "%Y-%m-%d-%H-%M"), sep = "_")),
+                               paste(PROFILE, GEOLEVEL, str_extract(friskvikpath, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"), sep = "_")),
                      ".csv")
   
   # Loop trouch friskvikfiles, generate 1-line output per file
