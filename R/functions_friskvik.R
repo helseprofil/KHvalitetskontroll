@@ -322,7 +322,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   if(dim %in% names(data)){
     paste(data[, unique(get(dim))], collapse = ", ")
   } else {
-    NA_character_
+    NA
   }
 }
 
