@@ -1,9 +1,10 @@
 ---
 title: "Friskviksjekk"
-author: "Vegard"
-date: "2023-02-28"
+author: ""
+date: "Report generated: `r Sys.Date()`"
 output: html_document
 ---
+Version: 0.3 (03.03.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -13,37 +14,59 @@ knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
-- To check specific FRISKVIK-file, run the chunks one-by-one interactively
-- To generate an overall check, use the `CheckFriskvik()` function
+# Generate full report from most recent GODKJENT folder
+
+- This function generates a report saved to `F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/VALIDERING/FRISKVIK_vs_KUBE/XXXX(profileyear)/`
+- Specify profile ("FHP" or "OVP"), geolevel ("B", "K", or "F"), and profileyear.
+- Some files are not handled by the system, e.g. if more kube files with the same date tag exists, or if column names are not standard. These must be checked manually.
+
+```{r}
+CheckFriskvik(profile = "FHP",
+              geolevel = "K",
+              profileyear = 2023)
+```
+
+# Check specific files
+
+- To check specific FRISKVIK-file, run the chunks below one-by-one interactively
 
 # Read files
-```{r}
-# Use the unique date tag to identify files. This ensures that the corresponding FRISKVIK and KUBE files are loaded for comparison. 
-# The function loads both files
 
-ReadFriskvik(filename = "BARNENS", # Complete date tag, as text e.g. "2023_03-01-09-00"
-             profile = "FHP", # "OVP" or "FHP"
-             geolevel = "B", # "B", "K", or "F", corresponding to profile geolevel
-             profileyear = 2023, # 4 digit profile year
-             modus = "KH") # "KH" or "NH", to search correct folder
+- The function ReadFriskvik() generates two data objects: FRISKVIK and KUBE. These are used as input in the functions below. 
+- The KUBE file is filtered according to the dimensions in the FRISKVIK file (except for AAR), to make direct comparison possible. 
+## If > 1 kube files exist
+- If > 1 KUBE file with the same date tag exists, this file will not be included in the report, and should be checked manually using the functions below. To specify the correct KUBE file directly, use the kubefil argument. This should be the full file path to the kube file, starting from `"KOMMUNEHELSA/..."` or `"NORGESHELSA/..."`. To let the function find the file, set `kubefile = NULL`. 
+
+```{r}
+# Use the FRISKVIK file name to identify the files of interest.
+# If you need to specify kubefile, use this format: "KOMMUNEHELSA/DATERT/csv/SVANGERROYK_GK_POSTPROSESS_2022-11-03-11-37.csv"
+
+ReadFriskvik(filename = "FRISKVIKNAME", # Complete FRISKVIK file name
+             profile = NULL, # "OVP" or "FHP"
+             geolevel = NULL, # "B", "K", or "F", corresponding to profile geolevel
+             profileyear = NULL,
+             kubefile = NULL) # 4 digit profile year
+
 ```
 # Does FRISKVIK contain the latest year
 
 - Lists the unique year (descending order) in the FRISKVIK and KUBE file. 
-- Friskvik should contain the most recent year
-
 ```{r}
 CompareFriskvikYear()
 ```
+
+- Does the Friskvik file contain the most recent year (returns yes, no, or >1 year in friskvik)
 ```{r}
 FriskvikLastYear()
 ```
+
 # All values censored in FRISKVIK is also censored in KUBE
 
 - Compares TRUE/FALSE vector of `is.na(FRISKVIK$MEIS)` and `KUBE$SPVFLAGG > 0`
 ```{r}
 CompareFriskvikPrikk()
 ```
+
 # FRISKVIK = KUBE?
 
 - Does the MEIS column in FRISKVIK (plotted in profile table) match a column in the KUBE?

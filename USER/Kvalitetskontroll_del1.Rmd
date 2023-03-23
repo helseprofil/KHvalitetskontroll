@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.8.0 (24.01.2023). 
+Version: 1.8.1 (16.03.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r include=FALSE}
@@ -25,10 +25,10 @@ knitr::opts_chunk$set(cache = F, echo = F)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
-# KOMMENTARER
+# COMMENTS
 
 - 
--
+- 
 -
 
 # INPUT
@@ -39,7 +39,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 ```{r echo = F}
 ## Load new data file
 dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "KH", # KH or NH
+                  modus = "NH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
@@ -53,7 +53,7 @@ dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, spe
 # Default list is set for column names which often needs to be changed.
 # NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
 setnames(dfnew, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE)
 ```
@@ -65,7 +65,7 @@ setnames(dfnew,
 
 # Load old data file
 dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "KH",# KH or NH
+                  modus = "NH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
@@ -79,7 +79,7 @@ dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, sp
 # Default list is set for column names which often needs to be changed.
 # NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
 setnames(dfold, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE) 
 ```
@@ -93,8 +93,8 @@ PROFILEYEAR <<- 2023
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
-PRIKKval <<- "TELLER"
-PRIKKlimit <<- 3
+PRIKKval <<- "sumNEVNER"
+PRIKKlimit <<- 100
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
 # If no comparison value is present, set "COMPAREVALUE <<- NA". In this case, section 3 A-D will give empty output.
@@ -143,11 +143,16 @@ CheckPrikk()
 
 ## 2B. Compare number of censored observations
 
-- Summarises number of (un)censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE
+- Summarises number of rows that are uncensored (SPVFLAGG = 0) and censored (SPVFLAGG = 1, 2, or 3) in the new and old KUBE
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
 - If only one file, results for this file shown
 
 ```{r}
+# Tips: for expired levels, it can be useful to remove them before comparison. 
+# To remove them from dfold, you can specify the data2-argument like this and filter out expired strata
+# ComparePrikk(data2 = dfold[!GEO %in% 81:84]) - removes helseregion from dfold (includes all GEO not in 81-84)
+# ComparePrikk(data2 = dfold[AAR %in% unique(dfnew$AAR)]) - only include AAR which is also present in dfnew
+# ComparePrikk(data2 = dfold[SOES == 0]) - only include SOES = 0 
 ComparePrikk()
 ```
 
@@ -156,6 +161,11 @@ ComparePrikk()
 - Across all strata, summarizes number and proportion of time series with 0 (complete), 1, 2, ..., max (all cencored), etc censored observations
 
 ```{r}
+# Tips: for expired levels, it can be useful to remove them before comparison. 
+# To remove them from dfold, you can specify the data2-argument like this and filter out expired strata
+# ComparePrikkTS(data2 = dfold[!GEO %in% 81:84]) - removes helseregion from dfold (includes all GEO not in 81-84)
+# ComparePrikkTS(data2 = dfold[AAR %in% unique(dfnew$AAR)]) - only include AAR which is also present in dfnew
+# ComparePrikkTS(data2 = dfold[SOES == 0]) - only include SOES = 0 
 ComparePrikkTS()
 ```
 

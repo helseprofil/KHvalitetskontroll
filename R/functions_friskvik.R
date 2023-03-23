@@ -1,12 +1,11 @@
 #' ReadFriskvik
 #'
-#' @param datotag full file name from FRISKVIK/GODKJENT
-#' @param geolevel One of "B", "K", or "F"
+#' @param filename 
 #' @param profile One of "FHP" or "OVP"
+#' @param geolevel One of "B", "K", or "F"
 #' @param profileyear 4-digit profileyear
-#' @param modus "KH" or "NH", to locate kube file
 #' @param friskvikpath can provide full path, defaults to NULL
-#' @param kubepath can provide full path, defaults to NULL
+#' @param kubefile Exact path to kube, starting with "KOMMUNEHELSA/" or "NORGESHELSA/"
 #'
 #' @return
 #' @export
@@ -16,13 +15,35 @@ ReadFriskvik <- function(filename = NULL,
                          profile = NULL,
                          geolevel = NULL,
                          profileyear = NULL,
-                         modus = NULL,
                          friskvikpath = NULL,
-                         kubepath = NULL){
+                         kubefile = NULL){
   
   # Check arguments
   if(is.null(filename)) {
     stop("file not selected")
+  }
+  
+  if(is.null(friskvikpath)){
+    if(is.null(profile)){
+      stop("profile must be provided")
+    }
+    if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
+      stop("profile must be either 'FHP' or 'OVP'")
+    }
+    
+    if(is.null(geolevel)){
+      stop("geolevel must be provided")
+    } 
+    if(!geolevel %in% c("B", "K", "F") | length(geolevel) != 1){
+      stop("geolevel must be either 'B', 'K', or 'F'")
+    }
+    
+    if(is.null(profileyear)){
+      stop("profileyear must be provided")
+    } 
+    if(nchar(profileyear) != 4){
+      stop("friskvikyear must be a 4 digit number")
+    }
   }
   
   # Create file paths
@@ -32,10 +53,22 @@ ReadFriskvik <- function(filename = NULL,
                                         profileyear = profileyear)
   }
   
-  if(is.null(kubepath)){
-    kubepath <- .CreateKubePath(modus = modus)
-  }
+  basepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "PRODUKTER", 
+                        "KUBER")
   
+  kubepath_kh <- file.path(basepath,
+                           "KOMMUNEHELSA",
+                           "DATERT",
+                           "csv")
+  
+  kubepath_nh <- file.path(basepath,
+                           "NORGESHELSA",
+                           "DATERT",
+                           "csv")
   
   # Find and load FRISKVIK file
   friskvikfile <- list.files(friskvikpath,
@@ -60,24 +93,34 @@ ReadFriskvik <- function(filename = NULL,
              "\n"))
   
   # Find and load KUBE file
-  datotag <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
-  kubefile <- list.files(kubepath, 
-                         pattern = datotag)
-  
-  if(length(kubefile) < 1){
-    stop("corresponding KUBE file not found, check arguments (datotag, modus)")
-  } else if(length(kubefile) > 1){
-    stop("> 1 KUBE files with the same dato tag identified", 
-         cat(kubefile, sep = "\n"))
-  } else {
-    # Generate file path KUBE
-    kube <- file.path(kubepath, kubefile)
+  # Search in kubepath_kh, and if not found search kubepath_nh
+  if(is.null(kubefile)){
+    datotag <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
+    
+    kube <- list.files(kubepath_kh, 
+                       pattern = datotag, 
+                       full.names = T)
+    
+    if(length(kube) == 0){
+      kube <- list.files(kubepath_nh, 
+                         pattern = datotag,
+                         full.names = T)
+    }
+    
+  } else if(!is.null(kubefile)){
+    kube <- file.path(basepath, kubefile)
   }
   
+  if(length(kube) < 1){
+    stop("corresponding KUBE file not found, check arguments")
+  } else if(length(kube) > 1){
+    stop("> 1 KUBE files with the same dato tag identified", 
+         cat(kube, sep = "\n"))
+  } 
+
   KUBE <- fread(kube)
   setattr(KUBE, "Filename", basename(kube))
   cat(paste0("KUBE loaded: ", 
-             str_extract(kubepath, "(?<=KUBER/).*"), "/",
              basename(kube),
              "\n"))
   
@@ -264,37 +307,23 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   friskvikpath
 }
 
-#' Helper function to create path to KUBE/DATERT/csv
+#' Helper function to extract unique levels of dimension columns
 #'
-#' @param modus 
+#' @param data 
+#' @param dim 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-.CreateKubePath <- function(modus){
+.UniqueLevel <- function(data = KUBE, 
+                        dim = NULL){
   
-  if(!(modus %in% c("KH", "NH"))) {
-    stop("`modus` must be either 'KH' or 'NH'")
+  if(dim %in% names(data)){
+    paste(data[, unique(get(dim))], collapse = ", ")
+  } else {
+    NA
   }
- 
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
-                        "PRODUKSJON", 
-                        "PRODUKTER", 
-                        "KUBER")
-  
-  MODUS <<- if(modus == "KH"){
-    "KOMMUNEHELSA/DATERT/csv/" 
-  } else if(modus == "NH"){
-    "NORGESHELSA/DATERT/csv/"
-  }
-  
-  kubepath <- file.path(basepath,
-                        MODUS)
-  
-  kubepath
 }
 
 #' CheckFriskvik
@@ -302,7 +331,6 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
 #' @param profile "FHP" or "OVP"
 #' @param geolevel "B", "K", or "F"
 #' @param profileyear 4-digit year
-#' @param modus "KH" or "NH"
 #'
 #' @return
 #' @export
@@ -311,7 +339,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
 CheckFriskvik <- function(profile = c("FHP", "OVP"),
                           geolevel = c("B", "K", "F"),
                           profileyear = NULL,
-                          modus = c("KH", "NH")){
+                          test = FALSE){
   
   if(!profile %in% c("FHP", "OVP") | length(profile) != 1){
     stop("profile must be either 'FHP' or 'OVP'")
@@ -325,65 +353,16 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     stop("friskvikyear must be a 4 digit number")
   }
   
-  if(!(modus %in% c("KH", "NH"))) {
-    stop("`modus` must be either 'KH' or 'NH'")
-  }
-  
   # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
   
   friskvikpath <- .CreateFriskvikpath(profile = profile, 
                                       geolevel = geolevel, 
                                       profileyear = profileyear)
   
-  kubepath <- .CreateKubePath(modus = modus)
-  
   # Extract all datotags in FRISKVIK/GODKJENT
-  
   friskvikfiles <- list.files(friskvikpath, pattern = ".csv")
   
-  # Loop trouch friskvikfiles, generate 1-line output per file
-  output <- map_df(friskvikfiles, \(x)  {
-    # Load files
-    tryload <- try(ReadFriskvik(filename = x,
-                                friskvikpath = friskvikpath,
-                                kubepath = kubepath), 
-                   silent = T)
-    
-    Friskvik_name <- x
-    
-    if("try-error" %in% class(tryload)){
-      Kube_name <- NA
-      Last_year <- NA
-      Identical_prikk <- NA
-      Matching_kubecol <- NA
-      Different_kubecol <- NA
-      } else {
-      Kube_name <- attributes(KUBE)$Filename
-      Last_year <- FriskvikLastYear()
-      Identical_prikk <- CompareFriskvikPrikk()
-      
-      compvals <- CompareFriskvikVal()
-      
-      Matching_kubecol <- compvals$matches
-      Different_kubecol <- compvals$different
-    }
-    
-    rm(tryload)
-    
-    tibble(Friskvik = Friskvik_name,
-           Kube = Kube_name,
-           Last_year = Last_year,
-           Identical_prikk = Identical_prikk,
-           Matching_kubecol = Matching_kubecol,
-           Different_kubecol = Different_kubecol)
-    }
-  )
-  
-  cat("\nOutput generated")
-  setDT(output)
-  
-  # Save report to file
-  
+  # Create savepath and report name
   savepath <- file.path("F:", 
                         "Forskningsprosjekter", 
                         "PDB 2455 - Helseprofiler og til_",
@@ -392,14 +371,81 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                         "FRISKVIK_vs_KUBE")
   
   # Add profileyear-folder if not existing
-  savedir <- file.path(savepath, profileyear)
+  if(test){
+    savedir <- file.path(savepath, "testmappe")
+  } else {
+    savedir <- file.path(savepath, profileyear)
+  }
+  
   if(!dir.exists(savedir)){
     dir.create(savedir)
   }
   
   savename <- paste0(file.path(savedir,
-                               paste(PROFILE, GEOLEVEL, format(Sys.time(), "%Y-%m-%d-%H-%M"), sep = "_")),
-                               ".csv")
+                               paste(PROFILE, GEOLEVEL, str_extract(friskvikpath, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"), sep = "_")),
+                     ".csv")
+  
+  # Loop trouch friskvikfiles, generate 1-line output per file
+  output <- map_df(friskvikfiles, \(file)  {
+    # Try to load files
+    tryload <- try(ReadFriskvik(filename = file,
+                                friskvikpath = friskvikpath), 
+                   silent = T)
+    
+    # Define output columns
+    Friskvik_name <- file
+    Kube_name <- NA
+    Last_year <- NA
+    Identical_prikk <- NA
+    Matching_kubecol <- NA
+    Different_kubecol <- NA
+    ETAB <- NA
+    KJONN <- NA
+    ALDER <- NA
+    UTDANN <- NA
+    INNVKAT <- NA
+    LANDBAK <- NA
+      
+    # If both files are read without error, replace output columns
+    if(isFALSE("try-error" %in% class(tryload))){
+      Kube_name <- attributes(KUBE)$Filename
+      Last_year <- FriskvikLastYear()
+      Identical_prikk <- CompareFriskvikPrikk()
+      
+      compvals <- CompareFriskvikVal()
+      
+      Matching_kubecol <- compvals$matches
+      Different_kubecol <- compvals$different
+      
+      ETAB <- .UniqueLevel(FRISKVIK, "ETAB")
+      KJONN <- .UniqueLevel(KUBE, "KJONN")
+      ALDER <- .UniqueLevel(KUBE, "ALDER")
+      UTDANN <- .UniqueLevel(KUBE, "UTDANN")
+      INNVKAT <- .UniqueLevel(KUBE, "INNVKAT")
+      LANDBAK <- .UniqueLevel(KUBE, "LANDBAK")
+    }
+    
+    rm(tryload)
+    
+    data.table(Friskvik = Friskvik_name,
+               Kube = Kube_name,
+               FRISKVIK_ETAB = ETAB,
+               KUBE_KJONN = KJONN,
+               KUBE_ALDER = ALDER,
+               KUBE_UTDANN = UTDANN,
+               KUBE_INNVKAT = INNVKAT,
+               KUBE_LANDBAK = LANDBAK,
+               Last_year = Last_year,
+               Identical_prikk = Identical_prikk,
+               Matching_kubecol = Matching_kubecol,
+               Different_kubecol = Different_kubecol
+               )
+    }
+  )
+  
+  cat("\nOutput generated")
+  
+  # Write result
   fwrite(output,
          file = savename,
          sep = ";")
@@ -407,10 +453,3 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   cat(paste("\nOutput written to", savename))
 }
     
-    
-    
-    
-    
-    
-
-  

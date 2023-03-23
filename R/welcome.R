@@ -2,13 +2,15 @@
 
 cat("\nWelcome to KHvalitetskontroll\n", 
     "\n---\n", 
-    "\nAvailable user files:\n",
+    "\nAvailable USER files:\n",
     "- Kvalitetskontroll_del1.Rmd\n",
     "  - Manuell sjekk\n",
     "- Kvalitetskontroll_del2.Rmd\n",
     "  - Compare\n",
-    "- Interaktiv.Rmd",
-    "  - Functions for interactive quality control",
+    "- Interaktiv.Rmd\n",
+    "  - Functions for interactive quality control\n",
+    "- Friskviksjekk.Rmd\n",
+    "  - Functions to compare FRISKVIK vs KUBE\n",
     "\n---\n",
     if(exists(".updatemsg")) {
       .updatemsg
