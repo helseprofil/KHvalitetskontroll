@@ -420,16 +420,17 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     
     data.table(Friskvik = Friskvik_name,
                Kube = Kube_name,
-               Last_year = Last_year,
-               Identical_prikk = Identical_prikk,
-               Matching_kubecol = Matching_kubecol,
-               Different_kubecol = Different_kubecol,
                ETAB = FRISKVIK_ETAB,
                KUBE_KJONN = KUBE_KJONN,
                KUBE_ALDER = KUBE_ALDER,
                KUBE_UTDANN = KUBE_UTDANN,
                KUBE_INNVKAT = KUBE_INNVKAT,
-               KUBE_LANDBAK = KUBE_LANDBAK)
+               KUBE_LANDBAK = KUBE_LANDBAK,
+               Last_year = Last_year,
+               Identical_prikk = Identical_prikk,
+               Matching_kubecol = Matching_kubecol,
+               Different_kubecol = Different_kubecol
+               )
     }
   )
   
