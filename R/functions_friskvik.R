@@ -382,7 +382,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   }
   
   # Open ACCESS connection
-  .DB <- odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+  .DB <<- odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
   
   # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
   
@@ -507,7 +507,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
          file = savename,
          sep = ";")
   
-  odbcCloseAll()
+  odbcClose(.DB)
   
   cat(paste("\nOutput written to", savename))
 }
