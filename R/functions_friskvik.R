@@ -326,6 +326,34 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   }
 }
 
+.ReadAccess <- function(targetcol = NULL,
+                        table = NULL,
+                        name = NULL, 
+                        profile = NULL,
+                        geolevel = NULL, 
+                        profileyear = NULL){
+  
+  if(table == "FRISKVIK"){
+    sqlQuery(.DB,
+             paste0("SELECT ", targetcol, 
+                    " FROM FRISKVIK ", 
+                    " WHERE PROFILTYPE='", profile, "'",
+                    " AND AARGANG=", profileyear,
+                    " AND MODUS='", geolevel, "'",
+                    " AND INDIKATOR='", name, "'"),
+             as.is = T)[[1]]
+  } else if (table == "KUBER"){
+    sqlQuery(.DB,
+             paste0("SELECT ", targetcol, 
+                    " FROM KUBER ", 
+                    " WHERE KUBE_NAVN='", name, "'"),
+             as.is = T)[[1]]
+    
+  }
+  
+}
+
+
 #' CheckFriskvik
 #'
 #' @param profile "FHP" or "OVP"
@@ -353,6 +381,9 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     stop("friskvikyear must be a 4 digit number")
   }
   
+  # Open ACCESS connection
+  .DB <<- odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+  
   # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
   
   friskvikpath <- .CreateFriskvikpath(profile = profile, 
@@ -370,7 +401,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                         "VALIDERING", 
                         "FRISKVIK_vs_KUBE")
   
-  # Add profileyear-folder if not existing
+  # Add test or profileyear-folder if not existing
   if(test){
     savedir <- file.path(savepath, "testmappe")
   } else {
@@ -381,6 +412,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     dir.create(savedir)
   }
   
+  # Create output file name, with date tag matching GODKJENT folder
   savename <- paste0(file.path(savedir,
                                paste(PROFILE, GEOLEVEL, str_extract(friskvikpath, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"), sep = "_")),
                      ".csv")
@@ -405,9 +437,13 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     UTDANN <- NA
     INNVKAT <- NA
     LANDBAK <- NA
-      
+    ENHET <- NA
+    REFVERDI_VP <- NA
+    VALID_COMBINATION <- NA
+    
     # If both files are read without error, replace output columns
     if(isFALSE("try-error" %in% class(tryload))){
+      
       Kube_name <- attributes(KUBE)$Filename
       Last_year <- FriskvikLastYear()
       Identical_prikk <- CompareFriskvikPrikk()
@@ -423,6 +459,31 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       UTDANN <- .UniqueLevel(KUBE, "UTDANN")
       INNVKAT <- .UniqueLevel(KUBE, "INNVKAT")
       LANDBAK <- .UniqueLevel(KUBE, "LANDBAK")
+      
+      # Get info from ACCESS
+      friskvikindikator <- str_extract(Friskvik_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
+      kubeindikator <- str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
+      
+      ENHET <- .ReadAccess("Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
+      if(length(ENHET) == 0){
+        ENHET <- "Enhet is missing"
+        }
+      REFVERDI_VP <- .ReadAccess("REFVERDI_VP", "KUBER", kubeindikator)
+      if(length(REFVERDI_VP) == 0){
+        REFVERDI_VP <- "REFVERDI_VP is missing"
+      }
+      
+      isAK <- fcase(str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
+                    default = FALSE)
+      
+      isPD <- fcase(isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
+                    default = FALSE)
+      
+      isMEIS <- fcase(isTRUE("MEIS" %in% Matching_kubecol), TRUE,
+                      default = FALSE)
+      
+      VALID_COMBINATION <- fcase(all(isAK, isPD, isMEIS) | isFALSE(any(isAK, isPD, isMEIS)), "Yes",
+                                 default =  "No")
     }
     
     rm(tryload)
@@ -438,8 +499,10 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                Last_year = Last_year,
                Identical_prikk = Identical_prikk,
                Matching_kubecol = Matching_kubecol,
-               Different_kubecol = Different_kubecol
-               )
+               Different_kubecol = Different_kubecol,
+               Enhet = ENHET,
+               REFVERDI_VP = REFVERDI_VP,
+               VALID = VALID_COMBINATION)
     }
   )
   
@@ -449,6 +512,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   fwrite(output,
          file = savename,
          sep = ";")
+  
+  odbcClose(.DB)
   
   cat(paste("\nOutput written to", savename))
 }
