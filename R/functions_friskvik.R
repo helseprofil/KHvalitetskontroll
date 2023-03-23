@@ -307,6 +307,15 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   friskvikpath
 }
 
+#' Helper function to extract unique levels of dimension columns
+#'
+#' @param data 
+#' @param dim 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 .UniqueLevel <- function(data = KUBE, 
                         dim = NULL){
   
@@ -408,7 +417,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       Matching_kubecol <- compvals$matches
       Different_kubecol <- compvals$different
       
-      ETAB <- FRISKVIK[, unique(ETAB)]
+      FRISKVIK_ETAB <- FRISKVIK[, unique(ETAB)]
       KUBE_KJONN <- .UniqueLevel(KUBE, "KJONN")
       KUBE_ALDER <- .UniqueLevel(KUBE, "ALDER")
       KUBE_UTDANN <- .UniqueLevel(KUBE, "UTDANN")
