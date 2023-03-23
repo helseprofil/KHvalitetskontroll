@@ -399,12 +399,12 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     Identical_prikk <- NA
     Matching_kubecol <- NA
     Different_kubecol <- NA
-    FRISKVIK_ETAB <- NA
-    KUBE_KJONN <- NA
-    KUBE_ALDER <- NA
-    KUBE_UTDANN <- NA
-    KUBE_INNVKAT <- NA
-    KUBE_LANDBAK <- NA
+    ETAB <- NA
+    KJONN <- NA
+    ALDER <- NA
+    UTDANN <- NA
+    INNVKAT <- NA
+    LANDBAK <- NA
       
     # If both files are read without error, replace output columns
     if(isFALSE("try-error" %in% class(tryload))){
@@ -417,24 +417,24 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       Matching_kubecol <- compvals$matches
       Different_kubecol <- compvals$different
       
-      FRISKVIK_ETAB <- .UniqueLevel(FRISKVIK, "ETAB")
-      KUBE_KJONN <- .UniqueLevel(KUBE, "KJONN")
-      KUBE_ALDER <- .UniqueLevel(KUBE, "ALDER")
-      KUBE_UTDANN <- .UniqueLevel(KUBE, "UTDANN")
-      KUBE_INNVKAT <- .UniqueLevel(KUBE, "INNVKAT")
-      KUBE_LANDBAK <- .UniqueLevel(KUBE, "LANDBAK")
+      ETAB <- .UniqueLevel(FRISKVIK, "ETAB")
+      KJONN <- .UniqueLevel(KUBE, "KJONN")
+      ALDER <- .UniqueLevel(KUBE, "ALDER")
+      UTDANN <- .UniqueLevel(KUBE, "UTDANN")
+      INNVKAT <- .UniqueLevel(KUBE, "INNVKAT")
+      LANDBAK <- .UniqueLevel(KUBE, "LANDBAK")
     }
     
     rm(tryload)
     
     data.table(Friskvik = Friskvik_name,
                Kube = Kube_name,
-               ETAB = FRISKVIK_ETAB,
-               KUBE_KJONN = KUBE_KJONN,
-               KUBE_ALDER = KUBE_ALDER,
-               KUBE_UTDANN = KUBE_UTDANN,
-               KUBE_INNVKAT = KUBE_INNVKAT,
-               KUBE_LANDBAK = KUBE_LANDBAK,
+               FRISKVIK_ETAB = ETAB,
+               KUBE_KJONN = KJONN,
+               KUBE_ALDER = ALDER,
+               KUBE_UTDANN = UTDANN,
+               KUBE_INNVKAT = INNVKAT,
+               KUBE_LANDBAK = LANDBAK,
                Last_year = Last_year,
                Identical_prikk = Identical_prikk,
                Matching_kubecol = Matching_kubecol,
