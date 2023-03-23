@@ -465,9 +465,15 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       kubeindikator <- str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
       ENHET <- .ReadAccess("Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
+      if(length(ENHET) == 0){
+        ENHET <- "Enhet is missing"
+        }
       REFVERDI_VP <- .ReadAccess("REFVERDI_VP", "KUBER", kubeindikator)
+      if(length(REFVERDI_VP) == 0){
+        REFVERDI_VP <- "REFVERDI_VP is missing"
+      }
       
-      isAK <- fcase(str_detect(ENHET, "\\(.*\\)"), TRUE,
+      isAK <- fcase(str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
                     default = FALSE)
       
       isPD <- fcase(isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
