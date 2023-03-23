@@ -310,6 +310,16 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   friskvikpath
 }
 
+.UniqueLevel <- function(data = KUBE, 
+                        dim = NULL){
+  
+  if(dim %in% names(data)){
+    paste(data[, unique(get(dim))], collapse = ", ")
+  } else {
+    NA_character_
+  }
+}
+
 #' CheckFriskvik
 #'
 #' @param profile "FHP" or "OVP"
@@ -371,20 +381,27 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   
   # Loop trouch friskvikfiles, generate 1-line output per file
   output <- map_df(friskvikfiles[1:3], \(file)  {
-    # Load files
+    # Try to load files
     tryload <- try(ReadFriskvik(filename = file,
                                 friskvikpath = friskvikpath), 
                    silent = T)
     
+    # Define output columns
     Friskvik_name <- file
-    
-    if("try-error" %in% class(tryload)){
-      Kube_name <- NA
-      Last_year <- NA
-      Identical_prikk <- NA
-      Matching_kubecol <- NA
-      Different_kubecol <- NA
-      } else {
+    Kube_name <- NA
+    Last_year <- NA
+    Identical_prikk <- NA
+    Matching_kubecol <- NA
+    Different_kubecol <- NA
+    ETAB <- NA
+    KUBE_KJONN <- NA
+    KUBE_ALDER <- NA
+    KUBE_UTDANN <- NA
+    KUBE_INNVKAT <- NA
+    KUBE_LANDBAK <- NA
+      
+    # If both files are read without error, replace output columns
+    if(isFALSE("try-error" %in% class(tryload))){
       Kube_name <- attributes(KUBE)$Filename
       Last_year <- FriskvikLastYear()
       Identical_prikk <- CompareFriskvikPrikk()
@@ -393,6 +410,13 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       
       Matching_kubecol <- compvals$matches
       Different_kubecol <- compvals$different
+      
+      ETAB <- FRISKVIK[, unique(ETAB)]
+      KUBE_KJONN <- .UniqueLevel(KUBE, "KJONN")
+      KUBE_ALDER <- .UniqueLevel(KUBE, "ALDER")
+      KUBE_UTDANN <- .UniqueLevel(KUBE, "UTDANN")
+      KUBE_INNVKAT <- .UniqueLevel(KUBE, "INNVKAT")
+      KUBE_LANDBAK <- .UniqueLevel(KUBE, "LANDBAK")
     }
     
     rm(tryload)
@@ -402,7 +426,13 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                Last_year = Last_year,
                Identical_prikk = Identical_prikk,
                Matching_kubecol = Matching_kubecol,
-               Different_kubecol = Different_kubecol)
+               Different_kubecol = Different_kubecol,
+               ETAB = FRISKVIK_ETAB,
+               KUBE_KJONN = KUBE_KJONN,
+               KUBE_ALDER = KUBE_ALDER,
+               KUBE_UTDANN = KUBE_UTDANN,
+               KUBE_INNVKAT = KUBE_INNVKAT,
+               KUBE_LANDBAK = KUBE_LANDBAK)
     }
   )
   
