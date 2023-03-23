@@ -116,11 +116,8 @@ ReadFriskvik <- function(filename = NULL,
   } else if(length(kube) > 1){
     stop("> 1 KUBE files with the same dato tag identified", 
          cat(kube, sep = "\n"))
-  } x
+  } 
 
-    
-
-  
   KUBE <- fread(kube)
   setattr(KUBE, "Filename", basename(kube))
   cat(paste0("KUBE loaded: ", 
