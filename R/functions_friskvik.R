@@ -326,15 +326,30 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   }
 }
 
-.ReadAccess <- function(targetcol = NULL,
-                        table = NULL,
-                        name = NULL, 
+#' Helper function to read single element from KHELSA database
+#'
+#' @param con connection object created by .ConnectKHelsa
+#' @param targetcol specify target column in the selected table
+#' @param table specify table name
+#' @param name refer to `INDIKATOR`/`KUBE_NAVN` columns
+#' @param profile only for FRISKVIK, refer to `PROFILTYPE`` ("FHP", "OVP")
+#' @param geolevel only for FRISKVIK, refer to `MODUS` ("B", "K", "F")
+#' @param profileyear only for FRISKVIK, refer to `AARGANG` 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.ReadAccess <- function(con,
+                        targetcol,
+                        table,
+                        name, 
                         profile = NULL,
                         geolevel = NULL, 
                         profileyear = NULL){
   
   if(table == "FRISKVIK"){
-    sqlQuery(.DB,
+    sqlQuery(con,
              paste0("SELECT ", targetcol, 
                     " FROM FRISKVIK ", 
                     " WHERE PROFILTYPE='", profile, "'",
@@ -343,7 +358,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
                     " AND INDIKATOR='", name, "'"),
              as.is = T)[[1]]
   } else if (table == "KUBER"){
-    sqlQuery(.DB,
+    sqlQuery(con,
              paste0("SELECT ", targetcol, 
                     " FROM KUBER ", 
                     " WHERE KUBE_NAVN='", name, "'"),
@@ -381,8 +396,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     stop("friskvikyear must be a 4 digit number")
   }
   
-  # Open ACCESS connection
-  .DB <<- odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+  # Establish ACCESS connection
+  .DB <- .ConnectKHelsa()
   
   # Generate friskvikpath and kubepath, and list of all datatags in the most recent FRISKVIK/GODKJENT-folder
   
@@ -464,11 +479,11 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       friskvikindikator <- str_extract(Friskvik_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       kubeindikator <- str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
-      ENHET <- .ReadAccess("Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
+      ENHET <- .ReadAccess(.DB, "Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
       if(length(ENHET) == 0 | is.na(ENHET)){
         ENHET <- "Enhet is missing"
         }
-      REFVERDI_VP <- .ReadAccess("REFVERDI_VP", "KUBER", kubeindikator)
+      REFVERDI_VP <- .ReadAccess(.DB, "REFVERDI_VP", "KUBER", kubeindikator)
       if(length(REFVERDI_VP) == 0 | is.na(REFVERDI_VP)){
         REFVERDI_VP <- "REFVERDI_VP is missing"
       }
