@@ -263,3 +263,13 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   }
   
 }
+
+#' Helper function to connect to KHelsa ACCESS database
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.ConnectKHelsa <- function(){
+  odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+}
