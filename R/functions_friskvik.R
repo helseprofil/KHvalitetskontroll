@@ -465,11 +465,11 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       kubeindikator <- str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
       ENHET <- .ReadAccess("Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-      if(length(ENHET) == 0){
+      if(length(ENHET) == 0 | is.na(ENHET)){
         ENHET <- "Enhet is missing"
         }
       REFVERDI_VP <- .ReadAccess("REFVERDI_VP", "KUBER", kubeindikator)
-      if(length(REFVERDI_VP) == 0){
+      if(length(REFVERDI_VP) == 0 | is.na(REFVERDI_VP)){
         REFVERDI_VP <- "REFVERDI_VP is missing"
       }
       
@@ -513,7 +513,9 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
          file = savename,
          sep = ";")
   
+  # Close ACCESS connection
   odbcClose(.DB)
+  rm(.DB)
   
   cat(paste("\nOutput written to", savename))
 }
