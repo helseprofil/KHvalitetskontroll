@@ -311,6 +311,16 @@ CompareFylkeLand <- function(data = dfnew,
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
+  # Check if both Land and Fylke is present
+  if(isFALSE("Land" %in% data$geolevel)){
+    cat("No rows corresponding to Land, comparison not possible")
+    return(invisible(NULL))
+  }
+  if(isFALSE("Fylke" %in% data$geolevel)){
+    cat("No rows corresponding to Fylke, comparison not possible")
+    return(invisible(NULL))
+  }
+  
   # Sum compare value per strata of geolevel and grouping dims
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
   
