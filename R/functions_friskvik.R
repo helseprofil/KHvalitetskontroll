@@ -16,7 +16,8 @@ ReadFriskvik <- function(filename = NULL,
                          geolevel = NULL,
                          profileyear = NULL,
                          friskvikpath = NULL,
-                         kubefile = NULL){
+                         kubefile = NULL,
+                         con = NULL){
   
   # Check arguments
   if(is.null(filename)) {
@@ -69,6 +70,7 @@ ReadFriskvik <- function(filename = NULL,
                            "NORGESHELSA",
                            "DATERT",
                            "csv")
+                           
   
   # Find and load FRISKVIK file
   friskvikfile <- list.files(friskvikpath,
@@ -92,31 +94,42 @@ ReadFriskvik <- function(filename = NULL,
              basename(friskvik),
              "\n"))
   
-  # Find and load KUBE file
+  # Find (if kubefile is not provided) and load KUBE file
   # Search in kubepath_kh, and if not found search kubepath_nh
   if(is.null(kubefile)){
-    datotag <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
+    
+    pattern <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
     
     kube <- list.files(kubepath_kh, 
-                       pattern = datotag, 
+                       pattern = pattern, 
                        full.names = T)
     
     if(length(kube) == 0){
       kube <- list.files(kubepath_nh, 
-                         pattern = datotag,
+                         pattern = pattern,
                          full.names = T)
     }
     
-  } else if(!is.null(kubefile)){
+  } else {
     kube <- file.path(basepath, kubefile)
   }
   
-  if(length(kube) < 1){
+  # If > 1 kube found and con provided, use ACCESS to extract correct kube name
+  if (length(kube) > 1 && isFALSE(is.null(con))) {
+    friskvikindikator <-
+      str_extract(basename(friskvik),
+                  ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
+    correctkube <-.ReadAccess(con, "KUBE_NAVN", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
+    kube <- str_subset(kube, correctkube)
+  }
+  
+  # Check that only one kube is identified, or stop
+  if(length(kube) < 1) {
     stop("corresponding KUBE file not found, check arguments")
   } else if(length(kube) > 1){
-    stop("> 1 KUBE files with the same dato tag identified", 
+    stop("> 1 KUBE files with the same name and dato tag identified",
          cat(kube, sep = "\n"))
-  } 
+  }
 
   KUBE <- fread(kube)
   setattr(KUBE, "Filename", basename(kube))
@@ -436,7 +449,11 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   output <- map_df(friskvikfiles, \(file)  {
     # Try to load files
     tryload <- try(ReadFriskvik(filename = file,
-                                friskvikpath = friskvikpath), 
+                                geolevel = geolevel,
+                                profile = profile, 
+                                profileyear = profileyear,
+                                friskvikpath = friskvikpath,
+                                con = .DB), 
                    silent = T)
     
     # Define output columns
@@ -480,12 +497,12 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       kubeindikator <- str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
       ENHET <- .ReadAccess(.DB, "Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-      if(length(ENHET) == 0 | is.na(ENHET)){
-        ENHET <- "Enhet is missing"
+      if(length(ENHET) == 0 | isTRUE(is.na(ENHET))){
+        ENHET <- "!!MISSING"
         }
       REFVERDI_VP <- .ReadAccess(.DB, "REFVERDI_VP", "KUBER", kubeindikator)
-      if(length(REFVERDI_VP) == 0 | is.na(REFVERDI_VP)){
-        REFVERDI_VP <- "REFVERDI_VP is missing"
+      if(length(REFVERDI_VP) == 0 | isTRUE(is.na(REFVERDI_VP))){
+        REFVERDI_VP <- "!!MISSING"
       }
       
       isAK <- fcase(str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
