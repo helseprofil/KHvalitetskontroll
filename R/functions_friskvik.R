@@ -498,11 +498,11 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       
       ENHET <- .ReadAccess(.DB, "Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
       if(length(ENHET) == 0 | isTRUE(is.na(ENHET))){
-        ENHET <- "Enhet is missing"
+        ENHET <- "!!MISSING"
         }
       REFVERDI_VP <- .ReadAccess(.DB, "REFVERDI_VP", "KUBER", kubeindikator)
       if(length(REFVERDI_VP) == 0 | isTRUE(is.na(REFVERDI_VP))){
-        REFVERDI_VP <- "REFVERDI_VP is missing"
+        REFVERDI_VP <- "!!MISSING"
       }
       
       isAK <- fcase(str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
