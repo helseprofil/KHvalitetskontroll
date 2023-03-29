@@ -754,7 +754,7 @@ PlotTimeseries <- function(data = dfnew){
             value.name = "yval")
   
   # Plot time series
-  d %>%
+  plot <- d %>%
     ggplot(aes(x = AARx,
                y = yval,
                color = .data[[dim]],
@@ -772,12 +772,19 @@ PlotTimeseries <- function(data = dfnew){
                                     by = 1), 
                        labels = sort(unique(d$AAR)), 
                        expand = expansion(add = 0.2)) +
-    guides(color = guide_legend(title = NULL, 
-                                nrow = nrow_legend, 
-                                byrow = TRUE)) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8),
           panel.spacing = unit(0.5, "cm"))  +
     force_panelsizes(rows = unit(4, "cm"))
+  
+  if(nrow_legend > 4){
+    plot +
+      guides(color = "none")
+  } else {
+    plot +
+      guides(color = guide_legend(title = NULL, 
+                                  nrow = nrow_legend, 
+                                  byrow = TRUE))
+  }
 }
 
 PrintTimeseries <- function(dims = .TSplotdims,
