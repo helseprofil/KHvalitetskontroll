@@ -154,11 +154,11 @@ ReadFriskvik <- function(filename = NULL,
   # Standard dimension filtering, hard coded for 2023 as dimensions not included in FRISKVIK
   friskvikname <- .GetKubename(FRISKVIK)
   
-  if("INNVKAT" %in% .dims2){
+  if("INNVKAT" %in% .dims2 & isFALSE("INNVKAT" %in% .dims1)){
     KUBE <- KUBE[INNVKAT == 0]
   }
   
-  if("LANDBAK" %in% .dims2){
+  if("LANDBAK" %in% .dims2 & isFALSE("LANDBAK" %in% .dims1)){
     if(friskvikname %in% c("Innvand_0_17", 
                            "INNVAND_barn")){
       KUBE <- KUBE[LANDBAK == 100]
@@ -167,7 +167,7 @@ ReadFriskvik <- function(filename = NULL,
     }
   }
   
-  if("UTDANN" %in% .dims2){
+  if("UTDANN" %in% .dims2 & isFALSE("UTDANN" %in% .dims1)){
     if(friskvikname %in% c("UTDANNING_NH",
                            "UTDANN_HOY")){
       KUBE <- KUBE[UTDANN == 23]
