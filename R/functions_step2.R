@@ -167,8 +167,7 @@
   cat("\n  - Remove new rows, select common dimensions and values")
   comparenew <- copy(data1)
   # Remove new rows, select common columns and values
-  comparenew <- comparenew[newrow == 0,
-                           c(commondims, commonvals), with = F]
+  comparenew <- comparenew[newrow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
   commonvals_new <- paste0(commonvals, "_new")
   setnames(comparenew, commonvals, commonvals_new)
@@ -178,8 +177,7 @@
   cat("\n  - Remove expired rows, select common dimensions and values")
   compareold <- copy(data2)
   # Remove new rows, select common columns and values
-  compareold <- compareold[exprow == 0,
-                           c(commondims, commonvals), with = F]
+  compareold <- compareold[exprow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
   commonvals_old <- paste0(commonvals, "_old")
   setnames(compareold, commonvals, commonvals_old)

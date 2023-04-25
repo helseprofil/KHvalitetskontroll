@@ -311,6 +311,16 @@ CompareFylkeLand <- function(data = dfnew,
   
   cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
   
+  # Check if both Land and Fylke is present
+  if(isFALSE("Land" %in% data$geolevel)){
+    cat("No rows corresponding to Land, comparison not possible")
+    return(invisible(NULL))
+  }
+  if(isFALSE("Fylke" %in% data$geolevel)){
+    cat("No rows corresponding to Fylke, comparison not possible")
+    return(invisible(NULL))
+  }
+  
   # Sum compare value per strata of geolevel and grouping dims
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
   
@@ -744,7 +754,7 @@ PlotTimeseries <- function(data = dfnew){
             value.name = "yval")
   
   # Plot time series
-  d %>%
+  plot <- d %>%
     ggplot(aes(x = AARx,
                y = yval,
                color = .data[[dim]],
@@ -762,12 +772,19 @@ PlotTimeseries <- function(data = dfnew){
                                     by = 1), 
                        labels = sort(unique(d$AAR)), 
                        expand = expansion(add = 0.2)) +
-    guides(color = guide_legend(title = NULL, 
-                                nrow = nrow_legend, 
-                                byrow = TRUE)) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8),
           panel.spacing = unit(0.5, "cm"))  +
     force_panelsizes(rows = unit(4, "cm"))
+  
+  if(nrow_legend > 4){
+    plot +
+      guides(color = "none")
+  } else {
+    plot +
+      guides(color = guide_legend(title = NULL, 
+                                  nrow = nrow_legend, 
+                                  byrow = TRUE))
+  }
 }
 
 PrintTimeseries <- function(dims = .TSplotdims,

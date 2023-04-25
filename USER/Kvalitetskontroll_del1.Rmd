@@ -15,20 +15,20 @@ output:
 }
 </style>
 
-Version: 1.8.0 (24.01.2023). 
+Version: 1.8.2 (29.03.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
-```{r include=FALSE}
+```{r init, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 ```
 
-# KOMMENTARER
+# COMMENTS
 
 - 
--
+- 
 -
 
 # INPUT
@@ -36,10 +36,10 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 **Data files loaded**
 
 *New file:* 
-```{r echo = F}
+```{r newfile, echo = F}
 ## Load new data file
 dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "KH", # KH or NH
+                  modus = "NH", # KH or NH
                   folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
@@ -53,19 +53,19 @@ dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, spe
 # Default list is set for column names which often needs to be changed.
 # NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
 setnames(dfnew, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE)
 ```
 
 *Old file for comparison:*
-```{r echo = F}
+```{r oldfile, echo = F}
 # If no old file exists (new indicator), uncomment the next line and delete the rest of this code chunk.
 # dfold <<- NULL
 
 # Load old data file
 dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "KH",# KH or NH
+                  modus = "NH",# KH or NH
                   folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
 
 ####
@@ -79,13 +79,13 @@ dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, sp
 # Default list is set for column names which often needs to be changed.
 # NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
 setnames(dfold, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE) 
 ```
 
 **Input parameters: **
-```{r echo = T}
+```{r input, echo = T}
 # UPDATE 18.01.2022: "<-" is replaced with "<<-" to make sure these settings are applied when saving the report. 
 
 # To save files and report in correct folder
@@ -93,8 +93,8 @@ PROFILEYEAR <<- 2023
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
-PRIKKval <<- "TELLER"
-PRIKKlimit <<- 3
+PRIKKval <<- "sumNEVNER"
+PRIKKlimit <<- 100
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
 # If no comparison value is present, set "COMPAREVALUE <<- NA". In this case, section 3 A-D will give empty output.
@@ -114,7 +114,7 @@ GROUPdims <<- c("AAR")
 - Check if there are any expired columns (not present in the new kube)
 - If only one file, list column names.
 
-```{r}
+```{r comparecols}
 CompareCols()
 ```
 
@@ -125,7 +125,7 @@ CompareCols()
 - Expired levels (not found in new KUBE)
 - If only one file, only number of levels per dimension.
 
-```{r}
+```{r comparedims}
 CompareDims()
 ```
 
@@ -137,17 +137,22 @@ CompareDims()
 -   If everything is ok, the function returns a confirmation.
 -   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection in a separate window.
 
-```{r}
+```{r checkprikk}
 CheckPrikk()
 ```
 
 ## 2B. Compare number of censored observations
 
-- Summarises number of (un)censored rows (SPVFLAGG = 0,1,2,3) in the new and old KUBE
+- Summarises number of rows that are uncensored (SPVFLAGG = 0) and censored (SPVFLAGG = 1, 2, or 3) in the new and old KUBE
 -   **Absolute** (new - old KUBE) and **relative** (new/old cube) difference is calculated and provided per group.
 - If only one file, results for this file shown
 
-```{r}
+```{r compareprikk}
+# Tips: for expired levels, it can be useful to remove them before comparison. 
+# To remove them from dfold, you can specify the data2-argument like this and filter out expired strata
+# ComparePrikk(data2 = dfold[!GEO %in% 81:84]) - removes helseregion from dfold (includes all GEO not in 81-84)
+# ComparePrikk(data2 = dfold[AAR %in% unique(dfnew$AAR)]) - only include AAR which is also present in dfnew
+# ComparePrikk(data2 = dfold[SOES == 0]) - only include SOES = 0 
 ComparePrikk()
 ```
 
@@ -155,7 +160,12 @@ ComparePrikk()
 
 - Across all strata, summarizes number and proportion of time series with 0 (complete), 1, 2, ..., max (all cencored), etc censored observations
 
-```{r}
+```{r prikkts}
+# Tips: for expired levels, it can be useful to remove them before comparison. 
+# To remove them from dfold, you can specify the data2-argument like this and filter out expired strata
+# ComparePrikkTS(data2 = dfold[!GEO %in% 81:84]) - removes helseregion from dfold (includes all GEO not in 81-84)
+# ComparePrikkTS(data2 = dfold[AAR %in% unique(dfnew$AAR)]) - only include AAR which is also present in dfnew
+# ComparePrikkTS(data2 = dfold[SOES == 0]) - only include SOES = 0 
 ComparePrikkTS()
 ```
 
@@ -168,7 +178,7 @@ ComparePrikkTS()
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest (e.g. only show specific year)
 
-```{r}
+```{r fylkeland}
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
@@ -186,7 +196,7 @@ CompareFylkeLand(groupdim = GROUPdims)
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest 
 
-```{r}
+```{r kommunefylke}
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
@@ -204,7 +214,7 @@ CompareKommuneFylke(groupdim = GROUPdims)
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest (e.g. only show specific year)
 
-```{r}
+```{r oslo}
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
@@ -224,7 +234,7 @@ CompareOslo(groupdim = GROUPdims)
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest (e.g. only show Oslo or specific year)
 
-```{r}
+```{r bydelkommune}
 # Default is to stratify the output by GROUPdims (input)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
@@ -242,7 +252,7 @@ CompareBydelKommune(groupdim = GROUPdims)
 - Uses value columns containing "TELLER" or "NEVNER"
 - Only includes years with data on bydel
 
-```{r}
+```{r unknownbydel}
 # When maxrows = TRUE, a maximum of 8000 rows is printed. This reduces file size and make the report faster/more responsive. 
 # The top X rows (sorted by "UOPPGITT, %") per MALTALL per KOMMUNE is printed (8000 rows total)
 # To print all rows, set maxrows = FALSE
@@ -255,14 +265,14 @@ UnspecifiedBydel(maxrows = TRUE)
 - Plots country-level time-series data to check for misclassification across dimensions
 - For each plot, all dimensions other than the one plotted is aggregated (if total is not present). 
 
-```{r}
+```{r ts1}
 # This function creates the country level time series plots for all value columns across all dimensions
 # The plots are printed in the next code chunk. This is to be able to adjust the figure height according to number of dimensions
 # Summary of aggregation going into the plots
 # The plots are stored in an object called `TS` which is stored in the environment. To show plots in plotting window (better resizing), just call TS in the console.
 PlotTimeseries()
 ```
-```{r fig.height = .PlotHeight, out.width = "90%", results = 'asis'}
+```{r ts2, fig.height = .PlotHeight, out.width = "90%", results = 'asis'}
 # This prints the time series plots
 PrintTimeseries()
 ```
@@ -271,7 +281,8 @@ PrintTimeseries()
 # Save report (instead of using the knit button)
 # Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(profile year)/KVALITETSKONTROLL/KUBENAVN/
 # Make sure PROFILEYEAR is correctly defined in INPUT section
-# If savename = NULL, file name will default to the full cube name (incl date tag)
+# If the file name becomes too long, you can set shortname = TRUE, and only the datetag will be used as file name, e.g. XXXX-XX-XX-XX-XX_Kvalitetskontroll_del1.html. 
+# If savename = NULL, file name will default to the full cube name (incl date tag). You can also manually select the name of the output file. 
 
 # NB: 
 # You must load data files and run the INPUT section before saving the report, to generate all the objects
@@ -279,6 +290,7 @@ PrintTimeseries()
 
 SaveReport(profileyear = PROFILEYEAR, 
            inputfile = "Kvalitetskontroll_del1.Rmd",
+           shortname = FALSE,
            savename = NULL)
 ```
 

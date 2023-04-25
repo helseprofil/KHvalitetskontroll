@@ -149,6 +149,7 @@ print_dim <- function(...){
 #' @examples
 SaveReport <- function(profileyear = PROFILEYEAR,
                        inputfile = "Kvalitetskontroll_del1.Rmd",
+                       shortname = FALSE,
                        savename = NULL){
   
   # Extract kubename
@@ -177,6 +178,10 @@ SaveReport <- function(profileyear = PROFILEYEAR,
     filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"),
                        "_",
                        str_remove(inputfile, ".Rmd"))
+  }
+  
+  if(shortname){
+    filename <- str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
   }
   
   # Save report
@@ -240,11 +245,6 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 }
 
 #' Loads current BEFOLK_GK file, and separates out small and large kommune
-#'
-#' @return
-#' @export
-#'
-#' @examples
 .SmallLargeKommune <- function(){
   
   basepath <- file.path("F:", 
@@ -284,4 +284,14 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   # Export lists of large and small kommune
   .largekommune <<- pop[between(GEO, 99, 9999) & TELLER >= 10000, unique(GEO)]
   .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
+}
+
+#' Helper function to connect to KHelsa ACCESS database
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.ConnectKHelsa <- function(){
+odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
 }
