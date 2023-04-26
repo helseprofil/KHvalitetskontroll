@@ -1,20 +1,16 @@
 #Load packages
+library(RODBC)
 library(dplyr)
 library(forcats)
-library(tidyr)
 library(stringr)
 library(purrr)
-library(data.table)
 library(DT)
 library(gert)
-library(rmarkdown)
-library(tools)
 library(ggplot2)
 library(ggh4x)
 library(norgeo)
 library(collapse)
-library(Hmisc)
-library(RODBC)
+library(data.table)
 
 # Load internal functions
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
@@ -29,8 +25,8 @@ source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R"
 rm(ALL_DIMENSIONS)
 
 # Set ggplot theme and color palette
-theme_set(theme_bw())
-theme_update(legend.position = "top", 
+ggplot2::theme_set(theme_bw())
+ggplot2::theme_update(legend.position = "top", 
              panel.grid.minor = element_blank(),
              text = element_text(color = "black"),
              plot.margin = margin(t = 1, b = 1, r = 1, unit = "cm"))
@@ -116,7 +112,7 @@ DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE") # Default is to create all
                  24683, 21817, 17767, 19945, 23082, 3235, 5221, 13802, 42505, 44148, 30479, 
                  40272, 30484, 42950, 41953, 52298, 59073, 55418, 43420)
 
-.weightsdata <- data.table(GEO = .allgeos, WEIGHTS = .allweights)
+.weightsdata <- data.table::data.table(GEO = .allgeos, WEIGHTS = .allweights)
 
 .smallkommune <- c(1111, 1112, 1114, 1133, 1134, 1135, 1144, 1145, 1151, 1160, 1511, 1514, 
                    1515, 1516, 1517, 1525, 1528, 1531, 1532, 1535, 1539, 1547, 1554, 1557, 

@@ -17,17 +17,17 @@ CompareCols <- function(data1 = dfnew,
   
     .IdentifyColumns(data1)
     
-    cat(paste0("Columns in file: ", str_c(c(.dims1, .vals1), collapse = ", ")))
+    cat(paste0("Columns in file: ", stringr::str_c(c(.dims1, .vals1), collapse = ", ")))
     
   } else {
   # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
   
-  msgnew <- case_when(length(c(.newdims, .newvals)) == 0 ~ "No new columns.",
-                      TRUE ~ paste0("New columns found: ", str_c(c(.newdims, .newvals), collapse = ", ")))
+  msgnew <- dplyr::case_when(length(c(.newdims, .newvals)) == 0 ~ "No new columns.",
+                             TRUE ~ paste0("New columns found: ", stringr::str_c(c(.newdims, .newvals), collapse = ", ")))
   
-  msgexp <- case_when(length(c(.expdims, .expvals)) == 0 ~ "\nNo expired columns.",
-                      TRUE ~ paste0("\nExpired columns found: ", str_c(c(.expdims, .expvals), collapse = ", ")))
+  msgexp <- dplyr::case_when(length(c(.expdims, .expvals)) == 0 ~ "\nNo expired columns.",
+                             TRUE ~ paste0("\nExpired columns found: ", stringr::str_c(c(.expdims, .expvals), collapse = ", ")))
   
   cat(msgnew)
   cat(msgexp)
@@ -54,10 +54,10 @@ CompareDims <- function(data1 = dfnew,
     
     .IdentifyColumns(data1)
     
-    map_df(.dims1, 
-           \(x)
-           tibble("Dimension" = x,
-                  "N (levels)" = length(data1[, unique(get(x))])))
+    purrr::map_df(.dims1, 
+                  \(x)
+                  dplyr::tibble("Dimension" = x,
+                          "N (levels)" = length(data1[, unique(get(x))])))
     
   } else {
   
@@ -78,8 +78,8 @@ CompareDims <- function(data1 = dfnew,
     levels2 <- unique(data2[[dim]])
     
     # Identify new or expired levels
-    newlevels <- str_subset(levels1, str_c("\\b", levels2, "\\b", collapse = "|"), negate = TRUE)
-    explevels <- str_subset(levels2, str_c("\\b", levels1, "\\b", collapse = "|"), negate = TRUE)
+    newlevels <- stringr::str_subset(levels1, stringr::str_c("\\b", levels2, "\\b", collapse = "|"), negate = TRUE)
+    explevels <- stringr::str_subset(levels2, stringr::str_c("\\b", levels1, "\\b", collapse = "|"), negate = TRUE)
     
     # Replace with "none" if 0 new/expired levels
     if(length(newlevels) == 0){
@@ -91,13 +91,13 @@ CompareDims <- function(data1 = dfnew,
     }
   
     # Create output
-    tibble("Dimension" = dim,
+    dplyr::tibble("Dimension" = dim,
            "N levels (new)" = length(levels1),
-           "New levels" = str_c(newlevels, collapse = ", "),
-           "Expired levels" = str_c(explevels, collapse = ", "))
-  }
+           "New levels" = stringr::str_c(newlevels, collapse = ", "),
+           "Expired levels" = stringr::str_c(explevels, collapse = ", "))
+    }
   
-  map_df(.commondims, ~CompareDim(data1, data2, dim = .x))
+  purrr::map_df(.commondims, ~CompareDim(data1, data2, dim = .x))
   }
   
 }
@@ -171,14 +171,14 @@ ComparePrikk <- function(data1 = dfnew,
     old <- data2[, .("N (old)" = .N), keyby = bycols]
     
     # merge tables
-    output <- merge.data.table(new, old, all = TRUE)
+    output <- data.table::merge.data.table(new, old, all = TRUE)
     
     # Rectangularize output to get all combinations of SPVFLAGG and groupdims
     allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
     output <- output[allcomb, on = bycols]
     
     # Set N new and old = 0 if missing
-    walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
+    purrr::walk(c("N (new)", "N (old)"), \(x) output[is.na(get(x)), (x) := 0])
     
     # Calculate absolute and relative difference
     output[, `:=` (Absolute = `N (new)` - `N (old)`,
@@ -195,9 +195,9 @@ ComparePrikk <- function(data1 = dfnew,
       rownames = FALSE,
       options = list(
         columnDefs = list(list(
-          targets =  str_subset(names(output), 
-                                str_c(bycols, collapse = "|"), 
-                                negate = TRUE),
+          targets =  stringr::str_subset(names(output), 
+                                         stringr::str_c(bycols, collapse = "|"), 
+                                         negate = TRUE),
           searchable = FALSE
         )),
         # Show length menu, table, pagination, and information
@@ -224,10 +224,10 @@ ComparePrikkTS <- function(data1 = dfnew,
     # Identify dimension and value columns
     .IdentifyColumns(data1)
     
-    data <- copy(data1)
+    data <- data.table::copy(data1)
     
     # Identify grouping dimensions
-    groupdims <- str_subset(.dims1, "AAR", negate = TRUE)
+    groupdims <- stringr::str_subset(.dims1, "AAR", negate = TRUE)
     
     # Calculate n censored observations, 
     data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
@@ -244,11 +244,11 @@ ComparePrikkTS <- function(data1 = dfnew,
   .IdentifyColumns(data1, data2)
   
   # Combine data
-  data <- rbindlist(list(copy(data1)[, .SD, .SDcols = .commoncols][, KUBE := "New"], 
-                         copy(data2)[, .SD, .SDcols = .commoncols][, KUBE := "Old"]))
+    data <- data.table::rbindlist(list(data.table::copy(data1)[, .SD, .SDcols = .commoncols][, KUBE := "New"],
+                                       data.table::copy(data2)[, .SD, .SDcols = .commoncols][, KUBE := "Old"]))
   
   # Identify grouping dimensions
-  groupdims <- str_subset(c(.commondims, "KUBE"), "AAR", negate = TRUE)
+  groupdims <- stringr::str_subset(c(.commondims, "KUBE"), "AAR", negate = TRUE)
   
   # Calculate n censored observations, 
   data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
@@ -261,15 +261,17 @@ ComparePrikkTS <- function(data1 = dfnew,
   data[, ANDEL := round(`N STRATA`/sum(`N STRATA`), 3), by = KUBE]
 
   # Create output table
-  out <- dcast(data, N_PRIKK~KUBE, value.var = c("N STRATA", "ANDEL"))
-  setcolorder(out, c("N_PRIKK",
-                     str_subset(names(out), "New"),
-                     str_subset(names(out), "Old")))
+  out <- data.table::dcast(data, N_PRIKK~KUBE, value.var = c("N STRATA", "ANDEL"))
+  data.table::setcolorder(out, c(
+    "N_PRIKK",
+    stringr::str_subset(names(out), "New"),
+    stringr::str_subset(names(out), "Old")
+  ))
   }
   
   # Format and print output table
   out <- out[, "N_PRIKK" := as.factor(N_PRIKK)][order(N_PRIKK)]
-  setnames(out, names(out), str_replace(names(out), "_", " "))
+  data.table::setnames(out, names(out), stringr::str_replace(names(out), "_", " "))
   
   DT::datatable(out, 
                 filter = "top", 
@@ -305,11 +307,11 @@ CompareFylkeLand <- function(data = dfnew,
   }
   
   # Create subset, remove helseregion
-  data <- copy(data)[GEO<100 & !GEO %in% 81:84] 
+  data <- data.table::copy(data)[GEO<100 & !GEO %in% 81:84] 
   data[, geolevel := "Fylke"]
   data[GEO == 0, geolevel := "Land"]
   
-  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  cat("GEOcodes included: ", stringr::str_c(unique(data$GEO), collapse = ", "), "\n")
   
   # Check if both Land and Fylke is present
   if(isFALSE("Land" %in% data$geolevel)){
@@ -325,7 +327,7 @@ CompareFylkeLand <- function(data = dfnew,
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
   
   # Format output
-  data <- dcast(data, ... ~ geolevel, value.var = "sum")
+  data <- data.table::dcast(data, ... ~ geolevel, value.var = "sum")
   
   # If groupdim == NULL, remove column named "."
   if(is.null(groupdim)){
@@ -349,7 +351,7 @@ CompareFylkeLand <- function(data = dfnew,
   # If any groupdims present, convert to factor and set column order
   if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
-  setcolorder(data, c(groupdim, "Land", "Fylke", "Absolute", "Relative"))
+  data.table::setcolorder(data, c(groupdim, "Land", "Fylke", "Absolute", "Relative"))
   }
   
   DT::datatable(data[order(-Relative)], 
@@ -384,11 +386,11 @@ CompareKommuneFylke <- function(data = dfnew,
   }
   
   # Create subset, remove helseregion
-  data <- copy(data)[GEO > 0 & GEO < 10000 & !GEO %in% 81:84]
+  data <- data.table::copy(data)[GEO > 0 & GEO < 10000 & !GEO %in% 81:84]
   data[, geolevel := "Kommune"]
   data[GEO < 100, geolevel := "Fylke"]
   
-  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  cat("GEOcodes included: ", stringr::str_c(unique(data$GEO), collapse = ", "), "\n")
   
   # Check if both Fylke and Kommune is present
   if(!"Fylke" %in% data$geolevel){
@@ -404,7 +406,7 @@ CompareKommuneFylke <- function(data = dfnew,
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
   
   # Format output
-  data <- dcast(data, ... ~ geolevel, value.var = "sum")
+  data <- data.table::dcast(data, ... ~ geolevel, value.var = "sum")
   
   # If groupdim == NULL, remove column named "."
   if(is.null(groupdim)){
@@ -428,7 +430,7 @@ CompareKommuneFylke <- function(data = dfnew,
   # If any groupdims present, convert to factor and set column order
   if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
-  setcolorder(data, c(groupdim, "Fylke", "Kommune", "Absolute", "Relative"))
+  data.table::setcolorder(data, c(groupdim, "Fylke", "Kommune", "Absolute", "Relative"))
   }
   
   DT::datatable(data[order(-Relative)], 
@@ -471,7 +473,7 @@ CompareBydelKommune <- function(data = dfnew,
   } 
   
   # Create subset, create geolevel and kommune variable
-  data <- copy(data)[GEO %in% c(kommunegeo, bydelsgeo)]
+  data <- data.table::copy(data)[GEO %in% c(kommunegeo, bydelsgeo)]
   data[, `:=` (geolevel = "Bydel",
                KOMMUNE = character())]
   data[grep("^301", GEO), KOMMUNE := "Oslo"]
@@ -480,7 +482,7 @@ CompareBydelKommune <- function(data = dfnew,
   data[grep("^5001", GEO), KOMMUNE := "Trondheim"]
   data[GEO < 9999, geolevel := "Kommune"]
   
-  cat("GEOcodes included: ", str_c(unique(data$GEO), collapse = ", "), "\n")
+  cat("GEOcodes included: ", stringr::str_c(unique(data$GEO), collapse = ", "), "\n")
   
   # Check if Kommune is present
   if(!"Kommune" %in% data$geolevel){
@@ -492,7 +494,7 @@ CompareBydelKommune <- function(data = dfnew,
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("KOMMUNE", "geolevel", groupdim)]
   
   # Format output
-  data <- dcast(data, ... ~ geolevel, value.var = "sum")
+  data <- data.table::dcast(data, ... ~ geolevel, value.var = "sum")
   
   # Estimate absolute and relative difference, format digits
   data[, `:=` (Absolute = Kommune - Bydel,
@@ -511,7 +513,7 @@ CompareBydelKommune <- function(data = dfnew,
   # Convert KOMMUNE & groupdim (if present) to factor and set column order
   fct_col <- c("KOMMUNE", groupdim)
   data[, (fct_col) := lapply(.SD, as.factor), .SDcols = fct_col]
-  setcolorder(data, c("KOMMUNE", groupdim, "Kommune", "Bydel", "Absolute", "Relative"))
+  data.table::setcolorder(data, c("KOMMUNE", groupdim, "Kommune", "Bydel", "Absolute", "Relative"))
   
   DT::datatable(data[order(-Relative)], 
                 filter = "top",
@@ -544,7 +546,7 @@ CompareOslo <- function(data = dfnew,
   }
   
   # Create subset, remove helseregion
-  data <- copy(data)[GEO %in% c(3, 301)]
+  data <- data.table::copy(data)[GEO %in% c(3, 301)]
   data[, geolevel := "Oslo Kommune"]
   data[GEO == 3, geolevel := "Oslo Fylke"]
   
@@ -562,7 +564,7 @@ CompareOslo <- function(data = dfnew,
   data <- data[, .("sum" = sum(get(compare), na.rm = T)), keyby = c("geolevel", groupdim)]
   
   # Format output
-  data <- dcast(data, ... ~ geolevel, value.var = "sum")
+  data <- data.table::dcast(data, ... ~ geolevel, value.var = "sum")
   
   # If groupdim == NULL, remove column named "."
   if(is.null(groupdim)){
@@ -584,7 +586,7 @@ CompareOslo <- function(data = dfnew,
   # If any groupdims present, convert to factor and set column order
   if(!is.null(groupdim)){
   data[, (groupdim) := lapply(.SD, as.factor), .SDcols = groupdim]
-  setcolorder(data, c(groupdim, "Oslo Fylke", "Oslo Kommune", "Absolute", "Relative"))
+  data.table::setcolorder(data, c(groupdim, "Oslo Fylke", "Oslo Kommune", "Absolute", "Relative"))
   }
   
   DT::datatable(data[order(-Relative)], 
@@ -611,16 +613,16 @@ CompareOslo <- function(data = dfnew,
 #' @examples
 PlotTimeseries <- function(data = dfnew){
   
-  plotdata <- copy(data)
+  plotdata <- data.table::copy(data)
   
   # Identify dimension and value columns
   .IdentifyColumns(plotdata)
   
   # Identify all dimensions in the file, plotdims (- GEO and AAR) and plotvals (- RATE.n and SPVFLAGG)
-  .TSplotdims <<- str_subset(.dims1, "GEO|AAR", negate = TRUE)
-  .TSplotvals <<- str_subset(names(plotdata),
-                            str_c(c(.dims1, "RATE.n", "SPVFLAGG"), collapse = "|"),
-                            negate = TRUE)
+  .TSplotdims <<- stringr::str_subset(.dims1, "GEO|AAR", negate = TRUE)
+  .TSplotvals <<- stringr::str_subset(names(plotdata),
+                                      stringr::str_c(c(.dims1, "RATE.n", "SPVFLAGG"), collapse = "|"),
+                                      negate = TRUE)
   
   # Find plotheight for HTML report
   .PlotHeight <<- 2 + 2*ceiling(length(.TSplotvals)/2)
@@ -631,10 +633,10 @@ PlotTimeseries <- function(data = dfnew){
   plotdata <- plotdata[, .SD, .SDcols = c(.dims1, .TSplotvals)]
   
   # Organize plotdata according to all dimensions
-  setkeyv(plotdata, .dims1)
+  data.table::setkeyv(plotdata, .dims1)
   
   # Create AARx for plotting on x-axis
-  plotdata[, AARx := as.numeric(str_extract(AAR, "[:digit:]*(?=_)"))]
+  plotdata[, AARx := as.numeric(stringr::str_extract(AAR, "[:digit:]*(?=_)"))]
   
   # Identify dimensions to aggregate or keep total (if containing 0 or only 1 unique value), excluding dim to be plotted
   aggdims <- .TSplotdims
@@ -644,7 +646,7 @@ PlotTimeseries <- function(data = dfnew){
       # add to containtotal
       containtotal <- c(containtotal, i)
       # remove from aggdims
-      aggdims <- str_subset(aggdims, i, negate = T) 
+      aggdims <- stringr::str_subset(aggdims, i, negate = T) 
     }
   }
   
@@ -652,19 +654,19 @@ PlotTimeseries <- function(data = dfnew){
   ALDERtot_tf <- FALSE
   ALDERtot <- NULL
   if("ALDER" %in% names(plotdata)){
-  ALDERl <- min(as.numeric(str_extract(plotdata$ALDER, "[:digit:]*(?=_)")))
-  ALDERh <- max(as.numeric(str_extract(plotdata$ALDER, "(?<=_)[:digit:]*")))
+  ALDERl <- min(as.numeric(stringr::str_extract(plotdata$ALDER, "[:digit:]*(?=_)")))
+  ALDERh <- max(as.numeric(stringr::str_extract(plotdata$ALDER, "(?<=_)[:digit:]*")))
   ALDERtot <- paste0(ALDERl, "_", ALDERh)
   ALDERtot_tf <- ALDERtot %in% unique(plotdata$ALDER)
   
     if(ALDERtot_tf){
       containtotal <- c(containtotal, "ALDER")
-      aggdims <- str_subset(aggdims, "ALDER", negate = TRUE)
+      aggdims <- stringr::str_subset(aggdims, "ALDER", negate = TRUE)
     } 
   }
   
   # Identify value columns to average or sum
-  sumcols <- .TSplotvals[str_detect(.TSplotvals, c("TELLER"))]
+  sumcols <- .TSplotvals[stringr::str_detect(.TSplotvals, c("TELLER"))]
   avgcols <- .TSplotvals[!.TSplotvals %in% sumcols]
   
   # Convert avgcols to numeric to avoid warning
@@ -683,16 +685,16 @@ PlotTimeseries <- function(data = dfnew){
   cat(paste0("\n - Value columns aggregated to average: ", print_dim(avgcols)))
   
   # Loop through plotdims to generate the plots
-  TS <<- map(.TSplotdims, ~.plot_ts(dim = .x,
-                                     plotdata = plotdata,
-                                     plotvals = .TSplotvals,
-                                     aggdims = aggdims,
-                                     containtotal = containtotal,
-                                     sumcols = sumcols,
-                                     avgcols = avgcols,
-                                     dimexist = .dims1,
-                                     ALDERtot = ALDERtot))
-  
+  TS <<- purrr::map(.TSplotdims, ~.plot_ts(dim = .x,
+                                           plotdata = plotdata,
+                                           plotvals = .TSplotvals,
+                                           aggdims = aggdims,
+                                           containtotal = containtotal,
+                                           sumcols = sumcols,
+                                           avgcols = avgcols,
+                                           dimexist = .dims1,
+                                           ALDERtot = ALDERtot)
+                    )
 } 
 
 # Plotting function
@@ -707,11 +709,11 @@ PlotTimeseries <- function(data = dfnew){
                      ALDERtot){
   
   # Exclude dim from containtotal/aggdims
-  aggdims <- str_subset(aggdims, dim, negate = TRUE)
-  containtotal <- str_subset(containtotal, dim, negate = TRUE)
+  aggdims <- stringr::str_subset(aggdims, dim, negate = TRUE)
+  containtotal <- stringr::str_subset(containtotal, dim, negate = TRUE)
   
   # Copy plotdata
-  d <- copy(plotdata)
+  d <- data.table::copy(plotdata)
   
   # Find n rows for plot legend
   nrow_legend <- ceiling(length(unique(d[[dim]]))/3)
@@ -732,7 +734,7 @@ PlotTimeseries <- function(data = dfnew){
   for(i in aggdims){
     
     # Group by all existing standard dimensions
-    groupcols <- str_subset(dimexist, i, negate = TRUE)
+    groupcols <- stringr::str_subset(dimexist, i, negate = TRUE)
     d[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     d[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
     if(!is.character(d[[i]])){
@@ -748,10 +750,12 @@ PlotTimeseries <- function(data = dfnew){
   d[, (plotvals) := lapply(.SD, as.numeric), .SDcols = plotvals]
   
   # convert to long format
-  d <- melt(d, 
-            measure.vars = plotvals, 
-            variable.name = "targetnumber", 
-            value.name = "yval")
+  d <- data.table::melt(
+    d,
+    measure.vars = plotvals,
+    variable.name = "targetnumber",
+    value.name = "yval"
+  )
   
   # Plot time series
   plot <- d %>%
@@ -774,7 +778,7 @@ PlotTimeseries <- function(data = dfnew){
                        expand = expansion(add = 0.2)) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8),
           panel.spacing = unit(0.5, "cm"))  +
-    force_panelsizes(rows = unit(4, "cm"))
+    gg4hx::force_panelsizes(rows = unit(4, "cm"))
   
   if(nrow_legend > 4){
     plot +
@@ -800,7 +804,6 @@ PrintTimeseries <- function(dims = .TSplotdims,
     cat("\n")
   }
 }
-
 
 #' UnspecifiedBydel
 #'
@@ -829,7 +832,7 @@ UnspecifiedBydel <- function(data = dfnew,
     return(invisible(NULL))
   } 
   
-  d <- copy(data)
+  d <- data.table::copy(data)
   
   # Identify dimension and value columns
   .IdentifyColumns(d)
@@ -846,7 +849,7 @@ UnspecifiedBydel <- function(data = dfnew,
     } 
   
   # Identify dimemsion and value columns
-  vals <- str_subset(.vals1, "TELLER|NEVNER")
+  vals <- stringr::str_subset(.vals1, "TELLER|NEVNER")
         
   # Create subset, create geolevel and kommune variable
   d <- d[GEO %in% c(kommunegeo, bydelsgeo), .SD, .SDcols = c(.dims1, vals, "SPVFLAGG")]
@@ -860,7 +863,7 @@ UnspecifiedBydel <- function(data = dfnew,
   
   # Identify complete strata within kommune and all dims except GEO
   d[, sumSPV := sum(SPVFLAGG), by = c("KOMMUNE", 
-                                      str_subset(.dims1, "GEO", negate = TRUE))]
+                                      stringr::str_subset(.dims1, "GEO", negate = TRUE))]
   # Only keep complete strata
   d <- d[sumSPV == 0]
   if(nrow(d) < 1){
@@ -870,18 +873,18 @@ UnspecifiedBydel <- function(data = dfnew,
   
   # sum `vals` columns for kommune and bydel
   d <- d[, lapply(.SD, sum, na.rm = T), .SDcols = vals, by = c("KOMMUNE", "GEONIV", 
-                                                               str_subset(.dims1, "GEO", negate = TRUE))]
+                                                               stringr::str_subset(.dims1, "GEO", negate = TRUE))]
   
   # Format table
   d[, (vals) := lapply(.SD, as.numeric, na.rm = T), .SDcols = vals]
-  d <- melt(d, measure.vars = c(vals), variable.name = "MALTALL")
-  d <- dcast(d, ... ~ GEONIV, value.var = "value")
+  d <- data.table::melt(d, measure.vars = c(vals), variable.name = "MALTALL")
+  d <- data.table::dcast(d, ... ~ GEONIV, value.var = "value")
   
   # Estimate unknown bydel
   d[, `UOPPGITT, %` := 100*(1 - Bydel/Kommune)]
   
   # Convert all dimensions to factor for search function, set order
-  convert <- str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
+  convert <- stringr::str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
   d[, (convert) := lapply(.SD, as.factor), .SDcols = convert]
   round <- which(sapply(d, is.numeric))
   d[, (round) := lapply(.SD, round, 1), .SDcols = round]
@@ -914,9 +917,12 @@ UnspecifiedBydel <- function(data = dfnew,
   }
   
   # Set column order output
-  setcolorder(d, c("KOMMUNE",
-                   str_subset(.dims1, "GEO", negate = TRUE),
-                   "MALTALL", "Kommune", "Bydel"))
+  data.table::setcolorder(d,
+                          c("KOMMUNE",
+                            stringr::str_subset(.dims1, "GEO", negate = TRUE),
+                            "MALTALL",
+                            "Kommune",
+                            "Bydel"))
   
   # Make datatable output (max )
   DT::datatable(d, 

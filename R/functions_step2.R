@@ -25,8 +25,8 @@
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dimensions
-  dfnew_flag <<- copy(data1)[, `:=` (newrow = 0L)]
-  setkeyv(dfnew_flag, c(commondims, newdims))
+  dfnew_flag <<- data.table::copy(data1)[, `:=` (newrow = 0L)]
+  data.table::setkeyv(dfnew_flag, c(commondims, newdims))
   
   if(is.null(data2)){
     dfnew_flag[, newrow := 1]
@@ -34,7 +34,7 @@
   } else {
   # For common dimensions, flag all rows with new levels 
   # Loops over common dimensions. Flags previously unflagged rows for new levels 
-  walk(commondims, 
+  purrr::walk(commondims, 
        ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
                    newrow := 1L])
   
@@ -42,9 +42,9 @@
   
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(newdims) != 0) {
-    walk(newdims,
-         ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
-                     newrow := 1L])
+    purrr::walk(newdims,
+                ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
+                            newrow := 1L])
     cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
   }
   
@@ -79,22 +79,22 @@
 
   # Initiate flagged version of old KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
-  dfold_flag <<- copy(data2)[, exprow := 0L]
-  setkeyv(dfold_flag, c(commondims, expdims))
+  dfold_flag <<- data.table::copy(data2)[, exprow := 0L]
+  data.table::setkeyv(dfold_flag, c(commondims, expdims))
   
   # For common dimensions, flag all rows with expired levels 
   # Loops over common dimensions. Flags previously unflagged rows for expired levels 
-  walk(commondims, 
-       ~dfold_flag[!dfold_flag[[.x]] %in% unique(data1[[.x]]) & exprow == 0,
-                   exprow := 1L])
+  purrr::walk(commondims, 
+              ~dfold_flag[!dfold_flag[[.x]] %in% unique(data1[[.x]]) & exprow == 0,
+                          exprow := 1L])
   
   cat("\n- For common dimensions, flagged all rows with expired levels")
   
   # For expired dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(expdims) != 0) {
-    walk(expdims,
-         ~dfold_flag[dfold_flag[[.x]] != 0 & exprow == 0,
-                     exprow := 1L])
+    purrr::walk(expdims,
+                ~dfold_flag[dfold_flag[[.x]] != 0 & exprow == 0,
+                            exprow := 1L])
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
@@ -119,22 +119,22 @@
   round2 <- c("RATE_", "MEIS_", "SMR_")
   
   
-  if(any(str_detect(names(data), 
-                    str_c(round0, collapse = "|")))) { 
+  if(any(stringr::str_detect(names(data), 
+                             stringr::str_c(round0, collapse = "|")))) { 
     data <- data %>% 
-      mutate(across(starts_with(round0), round, 0))
+      dplyr::mutate(dplyr::across(dplyr::starts_with(round0), round, 0))
   }
   
-  if(any(str_detect(names(data), 
-                    str_c(round1, collapse = "|")))) { 
+  if(any(stringr::str_detect(names(data), 
+                             stringr::str_c(round1, collapse = "|")))) { 
     data <- data %>% 
-      mutate(across(starts_with(round1), round, 1))
+      dplyr::mutate(dplyr::across(dplyr::starts_with(round1), round, 1))
   }
   
-  if(any(str_detect(names(data), 
-                    str_c(round2, collapse = "|")))) {
+  if(any(stringr::str_detect(names(data), 
+                             stringr::str_c(round2, collapse = "|")))) {
     data <- data %>%
-      mutate(across(starts_with(round2), round, 2))
+      dplyr::mutate(dplyr::across(dplyr::starts_with(round2), round, 2))
   }
   
   data
@@ -165,22 +165,22 @@
   # Format new KUBE
   cat("\n- Formats new KUBE")
   cat("\n  - Remove new rows, select common dimensions and values")
-  comparenew <- copy(data1)
+  comparenew <- data.table::copy(data1)
   # Remove new rows, select common columns and values
   comparenew <- comparenew[newrow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
   commonvals_new <- paste0(commonvals, "_new")
-  setnames(comparenew, commonvals, commonvals_new)
+  data.table::setnames(comparenew, commonvals, commonvals_new)
   
   # Format old KUBE
   cat("\n- Formats old KUBE")
   cat("\n  - Remove expired rows, select common dimensions and values")
-  compareold <- copy(data2)
+  compareold <- data.table::copy(data2)
   # Remove new rows, select common columns and values
   compareold <- compareold[exprow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
   commonvals_old <- paste0(commonvals, "_old")
-  setnames(compareold, commonvals, commonvals_old)
+  data.table::setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
   compareKUBE <- comparenew[compareold, on = commondims] 
@@ -189,9 +189,9 @@
   for(i in commonvals){
     colorder <- c(colorder, paste0(i, c("_new", "_old")))
   }
-  setcolorder(compareKUBE, colorder)
+  data.table::setcolorder(compareKUBE, colorder)
   
-  setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
+  data.table::setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
   
   # Create diff columns
   
@@ -281,23 +281,23 @@ FormatData <- function(data1 = dfnew,
   
   # Summary of dimensions and values, if data2 provided
   if(!is.null(data2)){
-  msg_commondims <- case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
-                              TRUE ~ paste0("\n- Common columns found: ", str_c(.commondims, collapse = ", ")))
+  msg_commondims <- dplyr::case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
+                              TRUE ~ paste0("\n- Common columns found: ", stringr::str_c(.commondims, collapse = ", ")))
   
-  msg_newdims <- case_when(length(.newdims) == 0 ~ "\n- No new dimensions.",
-                          TRUE ~ paste0("\n- New dimensions found: ", str_c(.newdims, collapse = ", ")))
+  msg_newdims <- dplyr::case_when(length(.newdims) == 0 ~ "\n- No new dimensions.",
+                          TRUE ~ paste0("\n- New dimensions found: ", stringr::str_c(.newdims, collapse = ", ")))
   
-  msg_expdims <- case_when(length(.expdims) == 0 ~ "\n- No expired dimensions.",
-                      TRUE ~ paste0("\n- Expired dimensions found: ", str_c(.expdims, collapse = ", ")))
+  msg_expdims <- dplyr::case_when(length(.expdims) == 0 ~ "\n- No expired dimensions.",
+                      TRUE ~ paste0("\n- Expired dimensions found: ", stringr::str_c(.expdims, collapse = ", ")))
   
-  msg_commonvals <- case_when(length(.commonvals) == 0 ~ "\n- No common value columns found",
-                         TRUE ~ paste0("\n- Common value columns found: ", str_c(.commonvals, collapse = ", ")))
+  msg_commonvals <- dplyr::case_when(length(.commonvals) == 0 ~ "\n- No common value columns found",
+                         TRUE ~ paste0("\n- Common value columns found: ", stringr::str_c(.commonvals, collapse = ", ")))
   
-  msg_newvals <- case_when(length(.newvals) == 0 ~ "\n- No new value columns.",
-                      TRUE ~ paste0("\n- New value columns found: ", str_c(.newvals, collapse = ", ")))
+  msg_newvals <- dplyr::case_when(length(.newvals) == 0 ~ "\n- No new value columns.",
+                      TRUE ~ paste0("\n- New value columns found: ", stringr::str_c(.newvals, collapse = ", ")))
   
-  msg_expvals <- case_when(length(.expvals) == 0 ~ "\n- No expired value columns.",
-                      TRUE ~ paste0("\n- Expired value columns found: ", str_c(.expvals, collapse = ", ")))
+  msg_expvals <- dplyr::case_when(length(.expvals) == 0 ~ "\n- No expired value columns.",
+                      TRUE ~ paste0("\n- Expired value columns found: ", stringr::str_c(.expvals, collapse = ", ")))
   }
   
   # Flag new KUBE
@@ -320,18 +320,18 @@ FormatData <- function(data1 = dfnew,
     
     # Set filename
     if(!is.null(dfnew_flag_name)){
-      filename <- paste0(str_remove(dfnew_flag_name, ".csv"), ".csv")
+      filename <- paste0(stringr::str_remove(dfnew_flag_name, ".csv"), ".csv")
     } else {
-      filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"), "_(new)_FLAGGED.csv")
+      filename <- paste0(stringr::str_remove(attributes(dfnew)$Filename, ".csv"), "_(new)_FLAGGED.csv")
     }
     
     file <- paste0(dumppath, filename)
     
     # Write file if it doesn't exist
     if(!file.exists(file)) {
-      fwrite(dfnew_flag,
-             file = file,
-             sep = ";")
+      data.table::fwrite(dfnew_flag,
+                         file = file,
+                         sep = ";")
       cat(paste0("\nFILEDUMP: ", filename, "\n"))
     } else {
       cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
@@ -355,18 +355,18 @@ FormatData <- function(data1 = dfnew,
     if("dfold_flag" %in% dumps){
       # Set filename
       if(!is.null(dfold_flag_name)){
-        filename <- paste0(str_remove(dfold_flag_name, ".csv"), ".csv")
+        filename <- paste0(stringr::str_remove(dfold_flag_name, ".csv"), ".csv")
         } else {
-          filename <- paste0(str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
+          filename <- paste0(stringr::str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
           }
     
       file <- paste0(dumppath, filename)
       
       # Write file if it doesn't exist
       if(!file.exists(file)){
-        fwrite(dfold_flag,
-               file = paste0(dumppath, filename),
-               sep = ";")
+        data.table::fwrite(dfold_flag,
+                           file = paste0(dumppath, filename),
+                           sep = ";")
         cat(paste0("\nFILEDUMP: ", filename, "\n"))
         } else {
           cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
@@ -389,12 +389,12 @@ FormatData <- function(data1 = dfnew,
     cat("\n\n-COMPLETED creating compareKUBE\n")
     
     if("compareKUBE" %in% dumps){
-      filenamenew <- str_remove(attributes(dfnew)$Filename, ".csv")
-      filenameold <- str_remove(attributes(dfold)$Filename, ".csv")
+      filenamenew <- stringr::str_remove(attributes(dfnew)$Filename, ".csv")
+      filenameold <- stringr::str_remove(attributes(dfold)$Filename, ".csv")
       
       # Set filename
       if(!is.null(compareKUBE_name)){
-        filename <- paste0(str_remove(compareKUBE_name, ".csv"), ".csv")
+        filename <- paste0(stringr::str_remove(compareKUBE_name, ".csv"), ".csv")
       } else {
         filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
       }
@@ -403,9 +403,9 @@ FormatData <- function(data1 = dfnew,
       
       # Write file if it doesn't exist
       if(!file.exists(file)){
-        fwrite(compareKUBE,
-               file = paste0(dumppath, filename),
-               sep = ";")
+        data.table::fwrite(compareKUBE,
+                           file = paste0(dumppath, filename),
+                           sep =  ";")
         cat(paste0("\nFILEDUMP: ", filename, "\n"))
       } else {
         cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
@@ -431,7 +431,7 @@ FormatData <- function(data1 = dfnew,
 #'
 #' @examples
 CompareDiffRows <- function(data = compareKUBE) {
-  vals <- gsub("_diff", "", names(data)[str_detect(names(data), "_diff")])
+  vals <- gsub("_diff", "", names(data)[stringr::str_detect(names(data), "_diff")])
   geoniv <- c("TOTAL", "LAND", "FYLKE", "KOMMUNE", "BYDEL")
   
   .RowDiff <- function(data,
@@ -489,7 +489,7 @@ CompareDiffRows <- function(data = compareKUBE) {
     } 
     
     # Create summary table
-    tibble(
+    dplyr::tibble(
       GEOniv = geoniv,
       Value = val,
       `N identical` = nidentical,
@@ -507,8 +507,8 @@ CompareDiffRows <- function(data = compareKUBE) {
   
   # Create summary table
   # Map over geographical levels, and within each level map over values to create rowdiff table
-  difftable <- map_df(geoniv, function(geoniv) {
-    map_df(vals, ~ .RowDiff(
+  difftable <- purrr::map_df(geoniv, \(geoniv) {
+    purrr::map_df(vals, ~ .RowDiff(
       data = data,
       val = .x,
       geoniv = geoniv
@@ -516,7 +516,7 @@ CompareDiffRows <- function(data = compareKUBE) {
   })
   
   # Convert to data.table and convert GEOniv and Value to factor for filtering
-  setDT(difftable)
+  data.table::setDT(difftable)
   filtercols <- c("GEOniv", "Value")
   difftable[, (filtercols) := lapply(.SD, as.factor), .SDcols = filtercols]
   
@@ -569,11 +569,11 @@ PlotTimeDiff <- function(data = compareKUBE){
   plotdata[GEO > 100 & GEO < 10000, ':=' (geoniv = "Kommune")]
   plotdata[GEO > 10000, ':=' (geoniv = "Bydel")]
   
-  setnames(plotdata, old = c(diff, reldiff), new = c("Absolute", "Ratio"))
+  data.table::setnames(plotdata, old = c(diff, reldiff), new = c("Absolute", "Ratio"))
   
   # Reshape data before plotting
-  plotdata <- melt(plotdata,
-                   measure.vars = c("Absolute", "Ratio"))
+  plotdata <- data.table::melt(plotdata,
+                               measure.vars = c("Absolute", "Ratio"))
   
   # Plotting function to create one plot per geoniv
   .plotgeoniv <- function(geofilter){
@@ -593,11 +593,11 @@ PlotTimeDiff <- function(data = compareKUBE){
   }
   
   # Create plots
-  plots <- map(unique(plotdata$geoniv),
-               ~.plotgeoniv(geofilter = .x))
+  plots <- purrr::map(unique(plotdata$geoniv),
+                      ~.plotgeoniv(geofilter = .x))
   
   # Print plots
-  walk(plots, print)
+  purrr::walk(plots, print)
 }
 
 #' Compare new and old value
@@ -659,16 +659,16 @@ CompareNewOld <- function(data = compareKUBE,
     
     data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
                          Relative = round(data[[new]]/data[[old]], 3))]
-    setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
+    data.table::setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
     
   }
   
-  tables <- map(vals, 
-                ~.CompareValue(data = data,
-                               dims = dims,
-                               val = .x))
+  tables <- purrr::map(vals, 
+                       ~.CompareValue(data = data,
+                                      dims = dims,
+                                      val = .x))
   
-  walk(tables, print)
+  purrr::walk(tables, print)
 }
 
 #' Flag outliers in dfnew_flag
@@ -686,22 +686,22 @@ CompareNewOld <- function(data = compareKUBE,
   # Check if weights and lists of small and large kommune exists, and create if not. 
   if(!all(exists(".weightsdata"), exists(".smallkommune"), exists(".largekommune"))){
     .SmallLargeKommune()
-    .weightsdata <- data.table(GEO = .allgeos, WEIGHTS = .allweights)
+    .weightsdata <- data.table::data.table(GEO = .allgeos, WEIGHTS = .allweights)
   }
   
   # Add GEONIV column
-  settransform(data, 
-               GEONIV = qF(fcase(GEO == 0, "L",
-                                 GEO %in% 81:84, "H",
-                                 GEO < 99, "F",
-                                 GEO %in% .largekommune, "K",
-                                 GEO %in% .smallkommune, "k",
-                                 GEO > 9999, "B"), sort = FALSE))
+  collapse::settransform(data, 
+                         GEONIV = collapse::qF(data.table::fcase(GEO == 0, "L",
+                                                                 GEO %in% 81:84, "H",
+                                                                 GEO < 99, "F",
+                                                                 GEO %in% .largekommune, "K",
+                                                                 GEO %in% .smallkommune, "k",
+                                                                 GEO > 9999, "B"), sort = FALSE))
   
-  .val <- fcase("MEIS" %in% vals, "MEIS",
-                "RATE" %in% vals, "RATE",
-                "SMR" %in% vals, "SMR",
-                default = NA)
+  .val <- data.table::fcase("MEIS" %in% vals, "MEIS",
+                            "RATE" %in% vals, "RATE",
+                            "SMR" %in% vals, "SMR",
+                            default = NA)
   
   # If MEIS, RATE or SMR is present, estimate grouped, weighted quantiles and detect outliers
   if(!is.na(.val)){
@@ -709,8 +709,8 @@ CompareNewOld <- function(data = compareKUBE,
     cat(paste0("\n - Outlier detection based on ", .val, "\n"))
   
     # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
-    bycols <- c("GEONIV", str_subset(dims, "GEO|AAR", negate = T))
-    g <- GRP(data, bycols)
+    bycols <- c("GEONIV", stringr::str_subset(dims, "GEO|AAR", negate = T))
+    g <- collapse::GRP(data, bycols)
     
     # Add WEIGHTS, and set to NULL if all values are missing in a strata
     data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
@@ -718,14 +718,16 @@ CompareNewOld <- function(data = compareKUBE,
     w <- data$WEIGHTS
     
     # Estimate weighted quantiles, and low and high cutoffs
-    cutoffs <- fmutate(g[["groups"]],
-                       MIN = fmin(data[, get(.val)], g = g),
-                       wq25 = fnth(data[, get(.val)], n = 0.25, g = g, w = w, ties = 1),
-                       wq50 = fnth(data[, get(.val)], n = 0.50, g = g, w = w, ties = 1),
-                       wq75 = fnth(data[, get(.val)], n = 0.75, g = g, w = w, ties = 1),
-                       MAX = fmax(data[, get(.val)], g = g),
-                       LOW = wq25 - 1.5*(wq75-wq25),
-                       HIGH = wq75 + 1.5*(wq75-wq25))
+    cutoffs <- collapse::fmutate(
+      g[["groups"]],
+      MIN = collapse::fmin(data[, get(.val)], g = g),
+      wq25 = collapse::fnth(data[, get(.val)], n = 0.25, g = g, w = w, ties = 1),
+      wq50 = collapse::fnth(data[, get(.val)], n = 0.50, g = g, w = w, ties = 1),
+      wq75 = collapse::fnth(data[, get(.val)], n = 0.75, g = g, w = w, ties = 1),
+      MAX = collapse::fmax(data[, get(.val)], g = g),
+      LOW = wq25 - 1.5*(wq75-wq25),
+      HIGH = wq75 + 1.5*(wq75-wq25)
+      )
     
     # Merge cutoffs onto data 
     data[cutoffs, `:=` (MIN = i.MIN,
@@ -738,10 +740,10 @@ CompareNewOld <- function(data = compareKUBE,
                on = bycols]
   
     # Flag outliers and define HIGHLOW
-    data[, `:=` (OUTLIER = fcase(get(.val) < LOW | get(.val) > HIGH, 1, 
+    data[, `:=` (OUTLIER = data.table::fcase(get(.val) < LOW | get(.val) > HIGH, 1, 
                                  get(.val) >= LOW & get(.val) <= HIGH, 0,
                                  default = NA),
-                 HIGHLOW = fcase(get(.val) < LOW, "Low",
+                 HIGHLOW = data.table::fcase(get(.val) < LOW, "Low",
                                  get(.val) > HIGH, "High",
                                  default = NA))] 
   } else {
@@ -781,31 +783,31 @@ PlotOutlier <- function(data){
     return(invisible(NULL))
   }
   
-  bycols <- c("GEONIV", str_subset(.dims1, "GEO|AAR", negate = T))
+  bycols <- c("GEONIV", stringr::str_subset(.dims1, "GEO|AAR", negate = T))
   
   # Estimate N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
   data[, `:=` (N_obs = sum(!is.na(get(val))),
-               MINABOVELOW = fmin(get(val)[get(val) >= LOW]),
-               MAXBELOWHIGH = fmax(get(val)[get(val) <= HIGH])), 
+               MINABOVELOW = collapse::fmin(get(val)[get(val) >= LOW]),
+               MAXBELOWHIGH = collapse::fmax(get(val)[get(val) <= HIGH])), 
        keyby = bycols]
   
   # Extract data to construct boxplots
-  baseplotdata <- GRP(data, c(bycols, 
-                              "MIN", 
-                              "wq25", "wq50", "wq75", 
-                              "MAX", 
-                              "LOW", "HIGH", "N_obs", "MINABOVELOW", "MAXBELOWHIGH"))[["groups"]]
+  baseplotdata <- collapse::GRP(data, c(bycols, 
+                                        "MIN", 
+                                        "wq25", "wq50", "wq75", 
+                                        "MAX", 
+                                        "LOW", "HIGH", "N_obs", "MINABOVELOW", "MAXBELOWHIGH"))[["groups"]]
   
   # Extract data containing only outliers
-  outlierdata <- data[OUTLIER == 1][, label := paste0(GEO, "'",str_sub(AAR, -2L, -1L))]
+  outlierdata <- data[OUTLIER == 1][, label := paste0(GEO, "'", stringr::str_sub(AAR, -2L, -1L))]
   
   # Create vector of boxplot filenames
-  namecols <- str_subset(bycols, "GEONIV", negate = TRUE)
-  boxplot_names <- GRP(baseplotdata, namecols)[["groups"]][, do.call(paste, c(.SD, sep = ","))]
+  namecols <- stringr::str_subset(bycols, "GEONIV", negate = TRUE)
+  boxplot_names <- collapse::GRP(baseplotdata, namecols)[["groups"]][, do.call(paste, c(.SD, sep = ","))]
   
   
   baseplotdata[!is.na(wq50) & KJONN == 0 & ALDER == "0_44"] %>% 
-    ggplot(aes(x = fct_rev(GEONIV),
+    ggplot(aes(x = forcats::fct_rev(GEONIV),
                ymin = MINABOVELOW,
                lower = wq25,
                middle = wq50,

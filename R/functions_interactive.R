@@ -64,7 +64,7 @@ ShowTS <- function(data = NULL,
   }
 
   # Control that only one level is selected per dimension (except AAR) 
-  for(i in str_subset(dims, "AAR", negate = T)){
+  for(i in stringr::str_subset(dims, "AAR", negate = T)){
     
     d <- unique(data[[i]])
     if(length(d) > 1){
@@ -81,7 +81,7 @@ ShowTS <- function(data = NULL,
                     if("LANDBAK" %in% dims){paste0("\nLANDBAK = ", landbak)},
                     if(!is.null(extradim)){paste0("\n", extradim, " = ", extraval)})
   
-  plot <- data[, AARx := as.numeric(str_extract(AAR, "(?<=_)[:digit:]*"))] %>% 
+  plot <- data[, AARx := as.numeric(stringr::str_extract(AAR, "(?<=_)[:digit:]*"))] %>% 
     ggplot(aes(x = AARx,
                !!!ensyms(y = maltall))) + 
     geom_point() +
@@ -91,7 +91,7 @@ ShowTS <- function(data = NULL,
          title = caption)
   
   if(tab){
-  outdata <- data %>% arrange(AARx) %>% select(-AARx)
+  outdata <- data %>% dplyr::arrange(AARx) %>% dplyr::select(-AARx)
   print(outdata)
   }
   print(plot)
@@ -156,7 +156,7 @@ ShowBydel <- function(data = NULL,
   # Make list of geo codes corresponding to bydel, and filter if kommune argument is specified
   geo <- unique(data[GEO>9999]$GEO)
   if(!is.null(kommune)){
-  geo <- str_subset(geo, paste0("^", kommune))
+  geo <- stringr::str_subset(geo, paste0("^", kommune))
   }
   
   # Filter out years with no data on bydel
@@ -171,24 +171,24 @@ ShowBydel <- function(data = NULL,
   
   # Subset and order data
   data <- data[GEO %in% geo, c("KOMMUNE", ..dims, ..vals)]
-  setkeyv(data, c("KOMMUNE", dims))
+  data.table::setkeyv(data, c("KOMMUNE", dims))
   
   # Format table
   data[, (vals) := lapply(.SD, as.numeric, na.rm = T), .SDcols = vals]
   data[, (vals) := lapply(.SD, round, 2), .SDcols = vals]
-  data <- melt(data, measure.vars = c(vals), variable.name = "MALTALL")
-  data <- dcast(data, ... ~ AAR, value.var = "value")
+  data <- data.table::melt(data, measure.vars = c(vals), variable.name = "MALTALL")
+  data <- data.table::dcast(data, ... ~ AAR, value.var = "value")
   
   # Rename GEO to BYDEL for output table
-  setnames(data, "GEO", "BYDEL")
+  data.table::setnames(data, "GEO", "BYDEL")
   
   # Convert all dimensions (except GEO and AAR) to factor for search function
-  filtercols <- c("KOMMUNE", "MALTALL", str_subset(dims, "GEO|AAR", negate = T))
+  filtercols <- c("KOMMUNE", "MALTALL", stringr::str_subset(dims, "GEO|AAR", negate = T))
   data[, (filtercols) := lapply(.SD, as.factor), .SDcols = c(filtercols)]
   nofilter <- names(data)[!names(data) %in% filtercols]
   
   # move maltall column, and set first value as default filter
-  setcolorder(data, c("MALTALL"))
+  data.table::setcolorder(data, c("MALTALL"))
   defaultval <- paste0("[\"", maltall[1], "\"]")
   
   # Output
@@ -328,7 +328,7 @@ FindGeo <- function(geo){
     type <- "b"
   }
   
-  geolist <- get_code(type = type)
+  geolist <- norgeo::get_code(type = type)
   
   geolist[as.numeric(code) == geo, .(code, name)]
 }
@@ -343,9 +343,11 @@ FindGeo <- function(geo){
 #' @examples
 FindGeoName <- function(geoname){
  
-  geolist <- rbindlist(list(get_code("b"),
-                            get_code("k"),
-                            get_code("f")))
+  geolist <- data.table::rbindlist(list(
+    norgeo::get_code("b"),
+    norgeo::get_code("k"),
+    norgeo::get_code("f")
+  ))
   
   geolist[grepl(geoname, name), .(code, name)]
    

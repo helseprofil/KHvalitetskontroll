@@ -18,7 +18,7 @@ ReadFile <- function(file = NULL,
     stop("`modus` must be either 'KH' or 'NH'")
   }
   
-  if(!(str_detect(folder, "[:digit:]{4}") & str_length(folder) == 4| 
+  if(!(stringr::str_detect(folder, "[:digit:]{4}") & stringr::str_length(folder) == 4| 
        folder == "DATERT")) {
     stop("`folder` must be either 4 digits or 'DATERT'")
   }
@@ -27,11 +27,11 @@ ReadFile <- function(file = NULL,
     stop("file not selected")
   }
   
-  MODUS <- case_when(modus == "KH" ~ "KOMMUNEHELSA",
-                     modus == "NH" ~ "NORGESHELSA")
+  MODUS <- dplyr::case_when(modus == "KH" ~ "KOMMUNEHELSA",
+                            modus == "NH" ~ "NORGESHELSA")
   
-  FOLDER <- case_when(folder == "DATERT" ~ paste0(folder, "/csv"),
-                      TRUE ~ paste0(modus, folder, "NESSTAR"))
+  FOLDER <- dplyr::case_when(folder == "DATERT" ~ paste0(folder, "/csv"),
+                             TRUE ~ paste0(modus, folder, "NESSTAR"))
   
   basepath <- file.path("F:", 
                         "Forskningsprosjekter", 
@@ -54,8 +54,8 @@ ReadFile <- function(file = NULL,
     filepath <- file.path(basepath, filename)
   }
   
-  outdata <- fread(filepath)
-  setattr(outdata, "Filename", basename(filepath))
+  outdata <- data.table::fread(filepath)
+  data.table::setattr(outdata, "Filename", basename(filepath))
   cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
   
   outdata
@@ -81,7 +81,7 @@ print_dim <- function(...){
 #' @examples
 .GetKubename <- function(df){
   filename <- attributes(df)$Filename
-  str_extract(filename, "^.*(?=_[:digit:]{4})")
+  stringr::str_extract(filename, "^.*(?=_[:digit:]{4})")
 }
 
 #' CreateFolders
@@ -175,13 +175,13 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   if(!is.null(savename)){
     filename <- savename
   } else {
-    filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"),
+    filename <- paste0(stringr::str_remove(attributes(dfnew)$Filename, ".csv"),
                        "_",
-                       str_remove(inputfile, ".Rmd"))
+                       stringr::str_remove(inputfile, ".Rmd"))
   }
   
   if(shortname){
-    filename <- str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
+    filename <- stringr::str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
   }
   
   # Save report
@@ -214,7 +214,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   }
   
   .dims1 <<- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
-  .vals1 <<- str_subset(names(data1), str_c(.dims1, collapse = "|"), negate = T)
+  .vals1 <<- stringr::str_subset(names(data1), stringr::str_c(.dims1, collapse = "|"), negate = T)
   
   # Create objects relevant for data2
   .dims2 <<- NULL
@@ -232,18 +232,20 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   if(!is.null(data2)){
     
     .dims2 <<- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
-    .vals2 <<- str_subset(names(data2), str_c(.dims2, collapse = "|"), negate = T)
+    .vals2 <<- stringr::str_subset(names(data2), stringr::str_c(.dims2, collapse = "|"), negate = T)
     .commondims <<- .dims1[.dims1 %in% .dims2]
-    .newdims <<- str_subset(.dims1, str_c(.dims2, collapse = "|"), negate = T)
-    .expdims <<- str_subset(.dims2, str_c(.dims1, collapse = "|"), negate = T)
+    .newdims <<- stringr::str_subset(.dims1, stringr::str_c(.dims2, collapse = "|"), negate = T)
+    .expdims <<- stringr::str_subset(.dims2, stringr::str_c(.dims1, collapse = "|"), negate = T)
     .commonvals <<- .vals1[.vals1 %in% .vals2]
-    .newvals <<- str_subset(.vals1, str_c(.vals2, collapse = "|"), negate = T)
-    .expvals <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
+    .newvals <<- stringr::str_subset(.vals1, stringr::str_c(.vals2, collapse = "|"), negate = T)
+    .expvals <<- stringr::str_subset(.vals2, stringr::str_c(.vals1, collapse = "|"), negate = T)
     .commoncols <<- c(.commondims, .commonvals)
   }
   
 }
 
+#' .SmallLargeKommune
+#'
 #' Loads current BEFOLK_GK file, and separates out small and large kommune
 .SmallLargeKommune <- function(){
   
@@ -271,9 +273,9 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   }
   
   # Read file and filter out last year
-  pop <- fread(popfile)
+  pop <- data.table::fread(popfile)
   .IdentifyColumns(pop)
-  setkeyv(pop, .dims1)
+  data.table::setkeyv(pop, .dims1)
   pop <- pop[KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
   
   pop[, WEIGHTS := TELLER]
@@ -293,5 +295,5 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 #'
 #' @examples
 .ConnectKHelsa <- function(){
-odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+  RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
 }
