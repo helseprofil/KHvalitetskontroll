@@ -359,10 +359,10 @@
     },
     "ggh4x": {
       "Package": "ggh4x",
-      "Version": "0.2.3",
+      "Version": "0.2.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "12a9567dfa0194970dde0a3089bd7efe",
+      "Hash": "31191cd4554699b1a22f3114e6344c9e",
       "Requirements": [
         "cli",
         "ggplot2",
@@ -375,10 +375,10 @@
     },
     "ggplot2": {
       "Package": "ggplot2",
-      "Version": "3.4.0",
+      "Version": "3.4.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "fd2aab12f54400c6bca43687231e246b",
+      "Hash": "3a147ee02e85a8941aad9909f1b43b7b",
       "Requirements": [
         "MASS",
         "cli",
@@ -738,10 +738,10 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "1.0.6",
+      "Version": "1.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "4ed1f8336c8d52c3e750adcdc57228a7",
+      "Hash": "dc079ccd156cde8647360f473c1fa718",
       "Requirements": []
     },
     "rmarkdown": {
