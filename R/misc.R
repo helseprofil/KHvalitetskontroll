@@ -5,11 +5,6 @@
 #' @param file File name. Locates file by partial matching. 
 #' #' @param bank Either "NH" or "KH", defaults to "KH"
 #' @param year Either a 4-digit number corresponding to profile year, "QC", or "DATERT". Defaults to QC
-#'
-#' @return
-#' @export
-#'
-#' @examples
 ReadFile <- function(file = NULL, 
                      modus = "KH", 
                      folder = "QC"){
@@ -60,7 +55,7 @@ ReadFile <- function(file = NULL,
     filepath <- file.path(path, filename)
   }
   
-  outdata <- data.table::fread(filepath, )
+  outdata <- data.table::fread(filepath)
   
   # Set attributes Filename and Filetype
   data.table::setattr(outdata, "Filename", basename(filepath))
@@ -70,6 +65,100 @@ ReadFile <- function(file = NULL,
   cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
   
   outdata
+}
+
+ReadFiles <- function(dfnew = NULL,
+                      foldernew = "QC",
+                      modusnew = "KH",
+                      dfold = NULL,
+                      folderold = NULL,
+                      modusold = NULL){
+  
+  # Check arguments new file
+  if(isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
+    stop("dfnew must be provided in the format FILENAME_YYYY-MM-DD-hh-mm")
+  }
+  
+  if(isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
+                 foldernew == "DATERT", 
+                 foldernew == "QC"))) {
+    stop("`foldernew` must be either 'QC', 'DATERT', or 4 digits")
+  }
+  
+  if(isFALSE(modusnew %in% c("KH", "NH"))) {
+    stop("`modusnew` must be either 'KH' or 'NH'")
+  }
+  
+  # Check arguments old file
+  if(isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
+                 is.null(dfold)))){
+    stop("dfold must be provided in the format FILENAME_YYYY-MM-DD-hh-mm, or NULL")
+  }
+  
+  if(isFALSE(is.null(dfold))){
+    
+    if(isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
+                   folderold == "DATERT", 
+                   folderold == "QC"))) {
+      stop("When dfold is specified, `folderold` must be either 'QC', 'DATERT', or 4 digits")
+    }
+    
+    if(isFALSE(any(modusold %in% c("KH", "NH")))) {
+      stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
+    }
+  }
+  
+  # Check if file(s) exists, if not stop before reading files
+  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
+  
+  .findpath <- function(modus, folder){
+    folder <- as.character(folder)
+    file.path(basepath, 
+              data.table::fcase(modusnew == "KH", "KOMMUNEHELSA",
+                                modusnew == "NH", "NORGESHELSA"),
+              data.table::fcase(folder == "DATERT", paste0(folder, "/csv"),
+                                folder == "QC", folder,
+                                stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR")))
+  }
+  
+  pathnew <- .findpath(modusnew, foldernew)
+  filenew <- list.files(pathnew, pattern = dfnew)
+  filepathnew <- file.path(pathnew, filenew)
+  
+  if(isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
+    stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
+  }
+  
+  if(isFALSE(is.null(dfold))){
+    
+    pathold <- .findpath(modusold, folderold)
+    fileold <- list.files(pathold, pattern = dfold)
+    filepathold <- file.path(pathold, fileold)
+    
+    if(isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
+      stop("dfold not found. Check arguments 'dfold', 'folderold', and 'modusold")
+    }
+  }
+  
+  .readfile <- function(path, folder){
+    
+    outdata <- data.table::fread(path)
+    data.table::setattr(outdata, "Filename", basename(path))
+    data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
+                                                               folder == "DATERT", "ALLVIS",
+                                                               stringr::str_detect(folder, "\\d{4}"), "NESSTAR"))
+    outdata
+  }
+  
+  # Read dfnew
+  dfnew <<- .readfile(filepathnew, foldernew)
+  cat(paste0("New file (dfnew) loaded: ", str_extract(filepathnew, "(?<=PRODUKTER/).*"), "\n"))
+  
+  # If provided, read dfold
+  if(isFALSE(is.null(dfold))){
+    dfold <<- .readfile(filepathold, folderold)
+    cat(paste0("Old file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
+  }
 }
 
 #' print_dim
@@ -245,11 +334,11 @@ SaveReport <- function(profileyear = PROFILEYEAR,
     .dims2 <<- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
     .vals2 <<- stringr::str_subset(names(data2), stringr::str_c(.dims2, collapse = "|"), negate = T)
     .commondims <<- .dims1[.dims1 %in% .dims2]
-    .newdims <<- stringr::str_subset(.dims1, stringr::str_c(.dims2, collapse = "|"), negate = T)
-    .expdims <<- stringr::str_subset(.dims2, stringr::str_c(.dims1, collapse = "|"), negate = T)
+    .newdims <<- stringr::str_subset(.dims1, stringr::str_c("^", .dims2, "$", collapse = "|"), negate = T)
+    .expdims <<- stringr::str_subset(.dims2, stringr::str_c("^", .dims1, "$", collapse = "|"), negate = T)
     .commonvals <<- .vals1[.vals1 %in% .vals2]
-    .newvals <<- stringr::str_subset(.vals1, stringr::str_c(.vals2, collapse = "|"), negate = T)
-    .expvals <<- stringr::str_subset(.vals2, stringr::str_c(.vals1, collapse = "|"), negate = T)
+    .newvals <<- stringr::str_subset(.vals1, stringr::str_c("^", .vals2, "$", collapse = "|"), negate = T)
+    .expvals <<- stringr::str_subset(.vals2, stringr::str_c("^", .vals1, "$", collapse = "|"), negate = T)
     .commoncols <<- c(.commondims, .commonvals)
   }
   
