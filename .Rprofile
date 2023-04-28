@@ -1,11 +1,5 @@
-source("renv/activate.R")
-library(stats)
+source("R/setup.R")
 
-# Switch to main branch, look for updates:
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/updateproject.R")
+# source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 
-# Source setup file to load functions:
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
 
-# Source welcome messages
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/welcome.R")
