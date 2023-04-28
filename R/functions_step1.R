@@ -15,24 +15,27 @@ CompareCols <- function(data1 = dfnew,
   
   if(is.null(data2)){
   
-    .IdentifyColumns(data1)
-    
-    cat(paste0("Columns in file: ", stringr::str_c(c(.dims1, .vals1), collapse = ", ")))
+    cat(paste0("Columns in file: ", stringr::str_c(names(data1), collapse = ", ")))
     
   } else {
-  # Identify dimension and value columns
-  .IdentifyColumns(data1, data2)
   
-  msgnew <- dplyr::case_when(length(c(.newdims, .newvals)) == 0 ~ "No new columns.",
-                             TRUE ~ paste0("New columns found: ", stringr::str_c(c(.newdims, .newvals), collapse = ", ")))
+  newcols <- stringr::str_subset(names(data1), str_c("^", names(data2), "$", collapse = "|"), negate = TRUE)  
+  newcols <- stringr::str_subset(newcols, "_uprikk", negate = TRUE)  
+  msgnew <- data.table::fcase(length(newcols) == 0, "-No new columns.",
+                             default = paste0("-New columns found: ", stringr::str_c(newcols, collapse = ", ")))
   
-  msgexp <- dplyr::case_when(length(c(.expdims, .expvals)) == 0 ~ "\nNo expired columns.",
-                             TRUE ~ paste0("\nExpired columns found: ", stringr::str_c(c(.expdims, .expvals), collapse = ", ")))
+  newuprikk <- stringr::str_subset(names(data1), "_uprikk")  
+  msguprikk <- data.table::fcase(length(newuprikk) == 0, "\n-No '_uprikk'-columns in new file",
+                                  default = paste0("\n-dfnew have: ", stringr::str_c(newuprikk, collapse = ", ")))
+  
+  expcols <- stringr::str_subset(names(data2), str_c("^", names(data1), "$", collapse = "|"), negate = TRUE)  
+  msgexp <- data.table::fcase(length(expcols) == 0, "\n-No expired columns.",
+                              default = paste0("\n-Expired columns found: ", stringr::str_c(expcols, collapse = ", ")))
   
   cat(msgnew)
+  cat(msguprikk)
   cat(msgexp)
   }
-  
 }
 
 #' CompareDims
@@ -66,7 +69,8 @@ CompareDims <- function(data1 = dfnew,
   
   # Check if any new or expired dimensions are present
   if(length(.expdims) != 0 || length(.newdims) != 0){
-  cat(c("The following dimensions are not present in both files: ", print_dim(c(.newdims, .expdims)), "\n"))
+  cat(c("The following dimensions are not present in both files: ", 
+        stringr::str_c(c(.newdims, .expdims), collapse = ", "), "\n"))
   }
   
   CompareDim <- function(data1, 
@@ -78,8 +82,8 @@ CompareDims <- function(data1 = dfnew,
     levels2 <- unique(data2[[dim]])
     
     # Identify new or expired levels
-    newlevels <- stringr::str_subset(levels1, stringr::str_c("\\b", levels2, "\\b", collapse = "|"), negate = TRUE)
-    explevels <- stringr::str_subset(levels2, stringr::str_c("\\b", levels1, "\\b", collapse = "|"), negate = TRUE)
+    newlevels <- stringr::str_subset(levels1, stringr::str_c("^", levels2, "$", collapse = "|"), negate = TRUE)
+    explevels <- stringr::str_subset(levels2, stringr::str_c("^", levels1, "$", collapse = "|"), negate = TRUE)
     
     # Replace with "none" if 0 new/expired levels
     if(length(newlevels) == 0){
@@ -171,7 +175,7 @@ ComparePrikk <- function(data1 = dfnew,
     old <- data2[, .("N (old)" = .N), keyby = bycols]
     
     # merge tables
-    output <- data.table::merge.data.table(new, old, all = TRUE)
+    output <- old[new, on = bycols]
     
     # Rectangularize output to get all combinations of SPVFLAGG and groupdims
     allcomb <- output[, do.call(CJ, c(.SD, unique = TRUE)), .SDcols = bycols]
@@ -778,7 +782,7 @@ PlotTimeseries <- function(data = dfnew){
                        expand = expansion(add = 0.2)) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8),
           panel.spacing = unit(0.5, "cm"))  +
-    gg4hx::force_panelsizes(rows = unit(4, "cm"))
+    ggh4x::force_panelsizes(rows = unit(4, "cm"))
   
   if(nrow_legend > 4){
     plot +
