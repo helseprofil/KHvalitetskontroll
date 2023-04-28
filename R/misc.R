@@ -4,7 +4,7 @@
 #'
 #' @param file File name. Locates file by partial matching. 
 #' #' @param bank Either "NH" or "KH", defaults to "KH"
-#' @param year Either a 4-digit number corresponding to profile year, or "DATERT". Defaults to DATERT
+#' @param year Either a 4-digit number corresponding to profile year, "QC", or "DATERT". Defaults to QC
 #'
 #' @return
 #' @export
@@ -12,37 +12,43 @@
 #' @examples
 ReadFile <- function(file = NULL, 
                      modus = "KH", 
-                     folder = "DATERT"){
+                     folder = "QC"){
   
-  if(!(modus %in% c("KH", "NH"))) {
+  if(isFALSE(modus %in% c("KH", "NH"))) {
     stop("`modus` must be either 'KH' or 'NH'")
   }
   
-  if(!(stringr::str_detect(folder, "[:digit:]{4}") & stringr::str_length(folder) == 4| 
-       folder == "DATERT")) {
-    stop("`folder` must be either 4 digits or 'DATERT'")
+  if(isFALSE(any(grepl("^\\d{4}$", folder), 
+                 folder == "DATERT", 
+                 folder == "QC"))) {
+    stop("`folder` must be either 4 digits, 'QC', or 'DATERT'")
   }
   
   if(is.null(file)) {
     stop("file not selected")
   }
   
+  # Select folder NH/KH
   MODUS <- dplyr::case_when(modus == "KH" ~ "KOMMUNEHELSA",
                             modus == "NH" ~ "NORGESHELSA")
   
+  # Select subfolder QC, DATERT or NESSTAR
   FOLDER <- dplyr::case_when(folder == "DATERT" ~ paste0(folder, "/csv"),
+                             folder == "QC" ~ folder,
                              TRUE ~ paste0(modus, folder, "NESSTAR"))
   
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
-                        "PRODUKSJON", 
-                        "PRODUKTER", 
-                        "KUBER", 
-                        MODUS, 
-                        FOLDER)
+  path <- file.path(
+    "F:",
+    "Forskningsprosjekter",
+    "PDB 2455 - Helseprofiler og til_",
+    "PRODUKSJON",
+    "PRODUKTER",
+    "KUBER",
+    MODUS,
+    FOLDER
+  )
   
-  filename <- list.files(basepath, pattern = file)
+  filename <- list.files(path, pattern = file)
   
   if(length(filename) == 0){
     stop("File not found, check spelling")
@@ -51,16 +57,24 @@ ReadFile <- function(file = NULL,
     stop("Please specify file name to only select one file", 
          cat(filename, sep = "\n"))
   } else {
-    filepath <- file.path(basepath, filename)
+    filepath <- file.path(path, filename)
   }
   
-  outdata <- data.table::fread(filepath)
+  outdata <- data.table::fread(filepath, )
+  
+  # Set attributes Filename and Filetype
   data.table::setattr(outdata, "Filename", basename(filepath))
+  data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
+                                                             folder == "DATERT", "ALLVIS",
+                                                             folder == paste0(modus, folder, "NESSTAR"), "NESSTAR"))
   cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
   
   outdata
 }
 
+#' print_dim
+#' 
+#' Wrapper around `stringr::str_c()` to print grouping variables
 print_dim <- function(...){
   
   if(is.null(...)){
@@ -73,15 +87,10 @@ print_dim <- function(...){
 
 #' Finds name of cube from filepath
 #'
-#' @param df 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 .GetKubename <- function(df){
   filename <- attributes(df)$Filename
-  stringr::str_extract(filename, "^.*(?=_[:digit:]{4})")
+  str_replace_all(filename, c("^QC_" = "", 
+                              "_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}\\.csv$" = ""))
 }
 
 #' CreateFolders
@@ -95,8 +104,8 @@ print_dim <- function(...){
 #' @export
 #'
 #' @examples
-.CreateFolders <- function(profileyear = profileyear,
-                           kubename = kubename){
+.CreateFolders <- function(profileyear,
+                           kubename){
   
   basepath <- file.path("F:", 
                         "Forskningsprosjekter", 
@@ -140,17 +149,17 @@ print_dim <- function(...){
 #' Save HTML-report
 #'
 #' @param profileyear 
-#' @param inputfile 
+#' @param inputfile "Kvalitetskontroll_del1" or "Kvalitetskontroll_del2"
+#' @param shortname if true, drops kube name from output file name
 #' @param savename 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 SaveReport <- function(profileyear = PROFILEYEAR,
-                       inputfile = "Kvalitetskontroll_del1.Rmd",
+                       inputfile = NULL,
                        shortname = FALSE,
                        savename = NULL){
+  
+  if(is.null(inputfile)){
+    stop("Inputfile missing, must be 'Kvalitetskontroll_del1.Rmd' or '_del2.Rmd'")
+  }
   
   # Extract kubename
   kubename <- .GetKubename(dfnew)
@@ -175,9 +184,11 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   if(!is.null(savename)){
     filename <- savename
   } else {
-    filename <- paste0(stringr::str_remove(attributes(dfnew)$Filename, ".csv"),
-                       "_",
-                       stringr::str_remove(inputfile, ".Rmd"))
+    filename <- paste0(stringr::str_replace_all(attributes(dfnew)$Filename, c("^QC_" = "", 
+                                                                              ".csv" = "")),
+                       "_QC",
+                       stringr::str_replace_all(inputfile, c("^Kvalitetskontroll" = "",
+                                                             ".Rmd$" = "")))
   }
   
   if(shortname){
