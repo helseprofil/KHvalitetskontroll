@@ -26,50 +26,42 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # INPUT
 
-*New file:* 
-```{r echo = F}
-## Load new data file
-dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "KH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+```{r loadfiles}
+# Loads both new file (dfnew), and old file (dfold) for comparison. 
+# dfnew and dfold must be provided as full kubename_datotag
+# foldernew and folderold must be QC, DATERT or 4-digits
 
-####
-# To get a list of variable names in the new KUBE, uncomment and run the following code: 
-# names(dfnew)
-###
-
-# To chance column names, uncomment and edit the following:
-# setnames(dfnew, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
-
-# Default list is set for column names which often needs to be changed.
-# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
-setnames(dfnew, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
-         new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
-         skip_absent = TRUE)
+ReadFiles(dfnew = "QC_ENEFHIB_2023-04-21-12-47", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
+          modusnew = "KH", # KH or NH
+          dfold = "ENEFHIB_2021-10-06-10-18", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          folderold = 2022, # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
+          modus = "KH") # NULL, or KH or NH
 ```
 
-*Old file for comparison:*
-```{r}
-# Load old data file
-dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "KH",# KH or NH
-                  folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
+```{r colnamechange, echo = F}
+# To chance column names, edit the following code:
 
-####
-# To get a list of variable names in the old KUBE, uncomment and run the following code: 
-# names(dfold)
-###
+# Default list is set for column names which often needs to be changed. Absent column names are skipped. 
+# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position (numeric) to indicate old name.
+# NB2: the function matches the old and new list by position, so old name #1 is replaced with new name #1 etc. 
 
-# To chance column names, uncomment and edit the following:
-# setnames(dfold, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
-
-# Default list is set for column names which often needs to be changed.
-# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
-setnames(dfold, 
-         old = c("antall", "crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+# New file
+# To show column names use names(dfnew) in the console
+setnames(dfnew, 
+         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
-         skip_absent = TRUE) 
+         skip_absent = TRUE)
+
+# Old file, 
+# To show column names use names(dfold) in the console. 
+# Code is skipped if dfold does not exist, no need to comment/uncomment. 
+if(exists("dfold")){
+setnames(dfold, 
+         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+         new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
+         skip_absent = TRUE)
+}
 ```
 
 ```{r}

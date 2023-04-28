@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.8.2 (29.03.2023). 
+Version: 1.9 (28.4.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r init, include=FALSE}
@@ -35,70 +35,57 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 **Data files loaded**
 
-*New file:* 
-```{r newfile, echo = F}
-## Load new data file
-dfnew <- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "NH", # KH or NH
-                  folder = "DATERT") # "DATERT" or 4-digit year if file in NESSTAR-folder
+```{r loadfiles}
+# Loads both new file (dfnew), and old file (dfold) for comparison. 
+# dfnew and dfold must be provided as full kubename_datotag
+# foldernew and folderold must be QC, DATERT or 4-digits
 
-####
-# To get a list of variable names in the new KUBE, uncomment and run the following code: 
-# names(dfnew)
-###
+ReadFiles(dfnew = "QC_ENEFHIB_2023-04-21-12-47", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
+          modusnew = "KH", # KH or NH
+          dfold = "ENEFHIB_2021-10-06-10-18", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          folderold = 2022, # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
+          modus = "KH") # NULL, or KH or NH
+```
+```{r colnamechange, echo = F}
+# To chance column names, edit the following code:
 
-# To chance column names, uncomment and edit the following:
-# setnames(dfnew, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
+# Default list is set for column names which often needs to be changed. Absent column names are skipped. 
+# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position (numeric) to indicate old name.
+# NB2: the function matches the old and new list by position, so old name #1 is replaced with new name #1 etc. 
 
-# Default list is set for column names which often needs to be changed.
-# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
+# New file
+# To show column names use names(dfnew) in the console
 setnames(dfnew, 
          old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
          skip_absent = TRUE)
-```
 
-*Old file for comparison:*
-```{r oldfile, echo = F}
-# If no old file exists (new indicator), uncomment the next line and delete the rest of this code chunk.
-# dfold <<- NULL
-
-# Load old data file
-dfold <<- ReadFile(file = "FILENAME", # Matching, if >1 file found in folder, specify file name further. Example: "KUHR_2022-11-23-15-11"
-                  modus = "NH",# KH or NH
-                  folder = "2022") # DATERT" or 4-digit year if file in NESSTAR-folder
-
-####
-# To get a list of variable names in the old KUBE, uncomment and run the following code: 
-# names(dfold)
-###
-
-# To chance column names, uncomment and edit the following:
-# setnames(dfold, old = "OLD NAME", new = "NEW NAME", skip_absent = TRUE)
-
-# Default list is set for column names which often needs to be changed.
-# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position to indicate old name.
+# Old file, 
+# To show column names use names(dfold) in the console. 
+# Code is skipped if dfold does not exist, no need to comment/uncomment. 
+if(exists("dfold")){
 setnames(dfold, 
          old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
          new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
-         skip_absent = TRUE) 
+         skip_absent = TRUE)
+}
 ```
+
 
 **Input parameters: **
 ```{r input, echo = T}
-# UPDATE 18.01.2022: "<-" is replaced with "<<-" to make sure these settings are applied when saving the report. 
-
 # To save files and report in correct folder
 PROFILEYEAR <<- 2023
 
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
-PRIKKval <<- "sumNEVNER"
-PRIKKlimit <<- 100
+PRIKKval <<- "sumTELLER"
+PRIKKlimit <<- 12
 
 # For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
 # If no comparison value is present, set "COMPAREVALUE <<- NA". In this case, section 3 A-D will give empty output.
-COMPAREval <<- "TELLER" 
+COMPAREval <<- "sumTELLER" 
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
@@ -112,6 +99,7 @@ GROUPdims <<- c("AAR")
 ## 1A. Compare columns
 - Check whether there are any new columns (not present in the old kube)
 - Check if there are any expired columns (not present in the new kube)
+- Check if new kube have uncensored sumTELLER, sumNEVNER, and RATE.n
 - If only one file, list column names.
 
 ```{r comparecols}
@@ -148,8 +136,10 @@ CheckPrikk()
 - If only one file, results for this file shown
 
 ```{r compareprikk}
-# Tips: for expired levels, it can be useful to remove them before comparison. 
-# To remove them from dfold, you can specify the data2-argument like this and filter out expired strata
+# For groupdims, only levels included in dfnew is shown
+
+# Tips: for expired levels not included in GROUPdims, it can be useful to remove them before comparison. 
+# To remove them from dfold, you can specify the data2-argument like this and filter out expired strata:
 # ComparePrikk(data2 = dfold[!GEO %in% 81:84]) - removes helseregion from dfold (includes all GEO not in 81-84)
 # ComparePrikk(data2 = dfold[AAR %in% unique(dfnew$AAR)]) - only include AAR which is also present in dfnew
 # ComparePrikk(data2 = dfold[SOES == 0]) - only include SOES = 0 
@@ -186,7 +176,7 @@ ComparePrikkTS()
 # To mimic the boxplot table, use: CompareFylkeLand(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-CompareFylkeLand(groupdim = GROUPdims)
+CompareFylkeLand(groupdim = GROUPdims, compare = "sumTELLER_uprikk")
 ```
 
 ## 3B. Does KOMMUNE sum to FYLKE?
