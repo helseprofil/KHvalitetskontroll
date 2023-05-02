@@ -25,16 +25,16 @@ CompareCols <- function(data1 = dfnew,
                              default = paste0("-New columns found: ", stringr::str_c(newcols, collapse = ", ")))
   
   newuprikk <- stringr::str_subset(names(data1), "_uprikk")  
-  msguprikk <- data.table::fcase(length(newuprikk) == 0, "\n-No '_uprikk'-columns in new file",
-                                  default = paste0("\n-dfnew have: ", stringr::str_c(newuprikk, collapse = ", ")))
+  msguprikk <- data.table::fcase(length(newuprikk) == 0, "\n  -No '_uprikk'-columns in new file",
+                                  default = paste0("\n  -dfnew have: ", stringr::str_c(newuprikk, collapse = ", ")))
   
   expcols <- stringr::str_subset(names(data2), str_c("^", names(data1), "$", collapse = "|"), negate = TRUE)  
   msgexp <- data.table::fcase(length(expcols) == 0, "\n-No expired columns.",
                               default = paste0("\n-Expired columns found: ", stringr::str_c(expcols, collapse = ", ")))
   
   cat(msgnew)
-  cat(msguprikk)
   cat(msgexp)
+  cat(msguprikk)
   }
 }
 
@@ -302,12 +302,15 @@ ComparePrikkTS <- function(data1 = dfnew,
 #'
 #' @examples
 CompareFylkeLand <- function(data = dfnew, 
-                             groupdim = GROUPdims, 
-                             compare = COMPAREval){
+                             groupdim = GROUPdims){
+  
+  compare <- .find_compare(data)
   
   if(is.na(compare)){
-    cat("\nCompare column = NA, no output\n")
+    cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
     return(invisible(NULL))
+  } else {
+    cat("\nGeoLevels compared on", compare, "\n")
   }
   
   # Create subset, remove helseregion
@@ -381,12 +384,15 @@ CompareFylkeLand <- function(data = dfnew,
 #'
 #' @examples
 CompareKommuneFylke <- function(data = dfnew, 
-                                groupdim = GROUPdims, 
-                                compare = COMPAREval){
+                                groupdim = GROUPdims){
+  
+  compare <- .find_compare(data)
   
   if(is.na(compare)){
-    cat("\nCompare column = NA, no output\n")
+    cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
     return(invisible(NULL))
+  } else {
+    cat("\nGeoLevels compared on", compare, "\n")
   }
   
   # Create subset, remove helseregion
@@ -459,12 +465,15 @@ CompareKommuneFylke <- function(data = dfnew,
 #'
 #' @examples
 CompareBydelKommune <- function(data = dfnew, 
-                                groupdim = GROUPdims, 
-                                compare = COMPAREval) {
+                                groupdim = GROUPdims) {
+  
+  compare <- .find_compare(data)
   
   if(is.na(compare)){
-    cat("\nCompare column = NA, no output\n")
+    cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
     return(invisible(NULL))
+  } else {
+    cat("\nGeoLevels compared on", compare, "\n")
   }
   
   kommunegeo <- c(301, 1103, 4601, 5001)
@@ -541,12 +550,15 @@ CompareBydelKommune <- function(data = dfnew,
 #'
 #' @examples
 CompareOslo <- function(data = dfnew, 
-                        groupdim = GROUPdims, 
-                        compare = COMPAREval){
+                        groupdim = GROUPdims){
+  
+  compare <- .find_compare(data)
   
   if(is.na(compare)){
-    cat("\nCompare column = NA, no output\n")
+    cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
     return(invisible(NULL))
+  } else {
+    cat("\nGeoLevels compared on", compare, "\n")
   }
   
   # Create subset, remove helseregion
@@ -570,8 +582,7 @@ CompareOslo <- function(data = dfnew,
   # Format output
   data <- data.table::dcast(data, ... ~ geolevel, value.var = "sum")
   
-  # If groupdim == NULL, remove column named "."
-  if(is.null(groupdim)){
+  if("." %in% names(data)){
     data[, . := NULL]
   }
   
@@ -939,4 +950,11 @@ UnspecifiedBydel <- function(data = dfnew,
                   dom = 'ltpi')
                 )
   
+}
+
+.find_compare <- function(data){
+  data.table::fcase("sumTELLER_uprikk" %in% names(data), "sumTELLER_uprikk",
+                    "sumTELLER" %in% names(data), "sumTELLER",
+                    "TELLER" %in% names(data), "TELLER",
+                    default = NA_character_)
 }

@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.9 (28.4.2023). 
+Version: 1.9 (02.05.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r init, include=FALSE}
@@ -34,7 +34,6 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # INPUT
 
 **Data files loaded**
-
 ```{r loadfiles}
 # Loads both new file (dfnew), and old file (dfold) for comparison. 
 # dfnew and dfold must be provided as full kubename_datotag
@@ -72,7 +71,6 @@ setnames(dfold,
 }
 ```
 
-
 **Input parameters: **
 ```{r input, echo = T}
 # To save files and report in correct folder
@@ -82,10 +80,6 @@ PROFILEYEAR <<- 2023
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
 PRIKKval <<- "sumTELLER"
 PRIKKlimit <<- 12
-
-# For comparison between BYDEL, FYLKE, and LAND, specify which variable to sum
-# If no comparison value is present, set "COMPAREVALUE <<- NA". In this case, section 3 A-D will give empty output.
-COMPAREval <<- "sumTELLER" 
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
@@ -170,13 +164,14 @@ ComparePrikkTS()
 
 ```{r fylkeland}
 # Default is to stratify the output by GROUPdims (input)
+# Geolevels are compared on sumTELLER_uprikk > sumTELLER > sumTELLER (first which is present)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
 # Example: CompareFylkeLand(groupdim = c("AAR", "ALDER", "etc"))
 # To mimic the boxplot table, use: CompareFylkeLand(groupdim = c(EXTRAdims, "ALDER", "KJONN"))
 
 # NB! In the first bullet point above, the grouping variables are also printed to the report. This can also be modified accordingly: `r print_dim(c("AAR", "ALDER", "etc"))`  
-CompareFylkeLand(groupdim = GROUPdims, compare = "sumTELLER_uprikk")
+CompareFylkeLand(groupdim = GROUPdims)
 ```
 
 ## 3B. Does KOMMUNE sum to FYLKE?
@@ -187,7 +182,8 @@ CompareFylkeLand(groupdim = GROUPdims, compare = "sumTELLER_uprikk")
 -   Use search bar to filter out rows of interest 
 
 ```{r kommunefylke}
-# Default is to stratify the output by GROUPdims (input)
+# Default is to stratify the output by GROUPdims (input).
+# Geolevels are compared on sumTELLER_uprikk > sumTELLER > sumTELLER (first which is present)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
 # Example: CompareKommuneFylke(groupdim = c("AAR", "ALDER", "etc"))
@@ -206,6 +202,7 @@ CompareKommuneFylke(groupdim = GROUPdims)
 
 ```{r oslo}
 # Default is to stratify the output by GROUPdims (input)
+# Geolevels are compared on sumTELLER_uprikk > sumTELLER > sumTELLER (first which is present)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
 # Example: CompareOslo(groupdim = c("AAR", "ALDER", "etc"))
@@ -226,6 +223,7 @@ CompareOslo(groupdim = GROUPdims)
 
 ```{r bydelkommune}
 # Default is to stratify the output by GROUPdims (input)
+# Geolevels are compared on sumTELLER_uprikk > sumTELLER > sumTELLER (first which is present)
 
 # If you want to group output by other columns, you can specify this explicitly in the groupdim-argument
 # Example: CompareBydelKommune(groupdim = c("AAR", "ALDER", "etc"))
