@@ -1,40 +1,39 @@
-#Load packages
+# Switch to main branch, look for updates:
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/updateproject.R")
+
+# Activate renv, read current lockfile
+source("renv/activate.R")
+
+# Load packages
+library(conflicted)
+library(RODBC)
 library(dplyr)
-library(tidyr)
+library(forcats)
 library(stringr)
 library(purrr)
-library(data.table)
 library(DT)
-library(gert)
-library(rmarkdown)
-library(tools)
 library(ggplot2)
 library(ggh4x)
 library(norgeo)
-library(RODBC)
+library(collapse)
+library(data.table)
+
+# Solve conflicts
+conflicted::conflict_prefer("filter", "dplyr", quiet = T)
+conflicted::conflict_prefer("lag", "dplyr", quiet = T)
+conflicted::conflict_prefer("D", "collapse", quiet = T)
+conflicted::conflict_prefer("between", "data.table", quiet = T)
+conflicted::conflict_prefer("first", "data.table", quiet = T)
+conflicted::conflict_prefer("last", "data.table", quiet = T)
+conflicted::conflict_prefer("transpose", "data.table", quiet = T)
 
 # Load internal functions
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/misc.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step1.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_step2.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_friskvik.R")
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/functions_interactive.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/misc.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/functions_step1.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/functions_step2.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/functions_friskvik.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/functions_interactive.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/globals.R")
 
-# Load list of all dimensions, and make hidden object
-source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R") 
-.ALL_DIMENSIONS <- ALL_DIMENSIONS
-rm(ALL_DIMENSIONS)
-
-# Set ggplot theme and color palette
-theme_set(theme_bw())
-theme_update(legend.position = "top", 
-             panel.grid.minor = element_blank(),
-             text = element_text(color = "black"),
-             plot.margin = margin(t = 1, b = 1, r = 1, unit = "cm"))
-
-
-# Set global options
-PROFILEYEAR <- 2023  # For saving in correct folder
-DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE") # Default is to create all file dumps
-
-      
+# Source welcome messages
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/R/welcome.R")

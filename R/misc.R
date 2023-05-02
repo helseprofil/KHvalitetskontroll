@@ -4,45 +4,46 @@
 #'
 #' @param file File name. Locates file by partial matching. 
 #' #' @param bank Either "NH" or "KH", defaults to "KH"
-#' @param year Either a 4-digit number corresponding to profile year, or "DATERT". Defaults to DATERT
-#'
-#' @return
-#' @export
-#'
-#' @examples
+#' @param year Either a 4-digit number corresponding to profile year, "QC", or "DATERT". Defaults to QC
 ReadFile <- function(file = NULL, 
                      modus = "KH", 
-                     folder = "DATERT"){
+                     folder = "QC"){
   
-  if(!(modus %in% c("KH", "NH"))) {
+  if(isFALSE(modus %in% c("KH", "NH"))) {
     stop("`modus` must be either 'KH' or 'NH'")
   }
   
-  if(!(str_detect(folder, "[:digit:]{4}") & str_length(folder) == 4| 
-       folder == "DATERT")) {
-    stop("`folder` must be either 4 digits or 'DATERT'")
+  if(isFALSE(any(grepl("^\\d{4}$", folder), 
+                 folder == "DATERT", 
+                 folder == "QC"))) {
+    stop("`folder` must be either 4 digits, 'QC', or 'DATERT'")
   }
   
   if(is.null(file)) {
     stop("file not selected")
   }
   
-  MODUS <- case_when(modus == "KH" ~ "KOMMUNEHELSA",
-                     modus == "NH" ~ "NORGESHELSA")
+  # Select folder NH/KH
+  MODUS <- dplyr::case_when(modus == "KH" ~ "KOMMUNEHELSA",
+                            modus == "NH" ~ "NORGESHELSA")
   
-  FOLDER <- case_when(folder == "DATERT" ~ paste0(folder, "/csv"),
-                      TRUE ~ paste0(modus, folder, "NESSTAR"))
+  # Select subfolder QC, DATERT or NESSTAR
+  FOLDER <- dplyr::case_when(folder == "DATERT" ~ paste0(folder, "/csv"),
+                             folder == "QC" ~ folder,
+                             TRUE ~ paste0(modus, folder, "NESSTAR"))
   
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
-                        "PRODUKSJON", 
-                        "PRODUKTER", 
-                        "KUBER", 
-                        MODUS, 
-                        FOLDER)
+  path <- file.path(
+    "F:",
+    "Forskningsprosjekter",
+    "PDB 2455 - Helseprofiler og til_",
+    "PRODUKSJON",
+    "PRODUKTER",
+    "KUBER",
+    MODUS,
+    FOLDER
+  )
   
-  filename <- list.files(basepath, pattern = file)
+  filename <- list.files(path, pattern = file)
   
   if(length(filename) == 0){
     stop("File not found, check spelling")
@@ -51,41 +52,118 @@ ReadFile <- function(file = NULL,
     stop("Please specify file name to only select one file", 
          cat(filename, sep = "\n"))
   } else {
-    filepath <- file.path(basepath, filename)
+    filepath <- file.path(path, filename)
   }
   
-  outdata <- fread(filepath)
-  setattr(outdata, "Filename", basename(filepath))
+  outdata <- data.table::fread(filepath)
+  
+  # Set attributes Filename and Filetype
+  data.table::setattr(outdata, "Filename", basename(filepath))
+  data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
+                                                             folder == "DATERT", "ALLVIS",
+                                                             folder == paste0(modus, folder, "NESSTAR"), "NESSTAR"))
   cat(paste0("File loaded: ", MODUS, "/", FOLDER, "/", basename(filepath)))
   
   outdata
 }
 
-# .IdentifyVariables <- function(data1 = NULL,
-#                                data2 = NULL){
-#   
-#   # Identify common columns, and extract dimensions
-#   if(!exists(".ALL_DIMENSIONS")) {
-#     source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
-#     .ALL_DIMENSIONS <- ALL_DIMENSIONS
-#   }
-#   
-#   if(is.null(data1) && is.null(data2)){
-#     NULL
-#   }
-#   
-# }
+ReadFiles <- function(dfnew = NULL,
+                      foldernew = "QC",
+                      modusnew = "KH",
+                      dfold = NULL,
+                      folderold = NULL,
+                      modusold = NULL){
+  
+  # Check arguments new file
+  if(isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
+    stop("dfnew must be provided in the format FILENAME_YYYY-MM-DD-hh-mm")
+  }
+  
+  if(isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
+                 foldernew == "DATERT", 
+                 foldernew == "QC"))) {
+    stop("`foldernew` must be either 'QC', 'DATERT', or 4 digits")
+  }
+  
+  if(isFALSE(modusnew %in% c("KH", "NH"))) {
+    stop("`modusnew` must be either 'KH' or 'NH'")
+  }
+  
+  # Check arguments old file
+  if(isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
+                 is.null(dfold)))){
+    stop("dfold must be provided in the format FILENAME_YYYY-MM-DD-hh-mm, or NULL")
+  }
+  
+  if(isFALSE(is.null(dfold))){
+    
+    if(isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
+                   folderold == "DATERT", 
+                   folderold == "QC"))) {
+      stop("When dfold is specified, `folderold` must be either 'QC', 'DATERT', or 4 digits")
+    }
+    
+    if(isFALSE(any(modusold %in% c("KH", "NH")))) {
+      stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
+    }
+  }
+  
+  # Check if file(s) exists, if not stop before reading files
+  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
+  
+  .findpath <- function(modus, folder){
+    folder <- as.character(folder)
+    file.path(basepath, 
+              data.table::fcase(modusnew == "KH", "KOMMUNEHELSA",
+                                modusnew == "NH", "NORGESHELSA"),
+              data.table::fcase(folder == "DATERT", paste0(folder, "/csv"),
+                                folder == "QC", folder,
+                                stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR")))
+  }
+  
+  pathnew <- .findpath(modusnew, foldernew)
+  filenew <- list.files(pathnew, pattern = dfnew)
+  filepathnew <- file.path(pathnew, filenew)
+  
+  if(isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
+    stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
+  }
+  
+  if(isFALSE(is.null(dfold))){
+    
+    pathold <- .findpath(modusold, folderold)
+    fileold <- list.files(pathold, pattern = dfold)
+    filepathold <- file.path(pathold, fileold)
+    
+    if(isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
+      stop("dfold not found. Check arguments 'dfold', 'folderold', and 'modusold")
+    }
+  }
+  
+  .readfile <- function(path, folder){
+    
+    outdata <- data.table::fread(path)
+    data.table::setattr(outdata, "Filename", basename(path))
+    data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
+                                                               folder == "DATERT", "ALLVIS",
+                                                               stringr::str_detect(folder, "\\d{4}"), "NESSTAR"))
+    outdata
+  }
+  
+  # Read dfnew
+  dfnew <<- .readfile(filepathnew, foldernew)
+  cat(paste0("New file (dfnew) loaded: ", str_extract(filepathnew, "(?<=PRODUKTER/).*"), "\n"))
+  
+  # If provided, read dfold
+  if(isFALSE(is.null(dfold))){
+    dfold <<- .readfile(filepathold, folderold)
+    cat(paste0("Old file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
+  }
+}
 
-#' Print dim
+#' print_dim
 #' 
-#' Wrapper around str_c for nice printing of variable names in .Rmd-reports
-#' 
-#' @param ... 
-#'
-#' @return
-#' @export
-#'
-#' @examples
+#' Wrapper around `stringr::str_c()` to print grouping variables
 print_dim <- function(...){
   
   if(is.null(...)){
@@ -98,15 +176,10 @@ print_dim <- function(...){
 
 #' Finds name of cube from filepath
 #'
-#' @param df 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 .GetKubename <- function(df){
   filename <- attributes(df)$Filename
-  str_extract(filename, "^.*(?=_[:digit:]{4})")
+  str_replace_all(filename, c("^QC_" = "", 
+                              "_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}\\.csv$" = ""))
 }
 
 #' CreateFolders
@@ -120,8 +193,8 @@ print_dim <- function(...){
 #' @export
 #'
 #' @examples
-.CreateFolders <- function(profileyear = profileyear,
-                           kubename = kubename){
+.CreateFolders <- function(profileyear,
+                           kubename){
   
   basepath <- file.path("F:", 
                         "Forskningsprosjekter", 
@@ -165,17 +238,17 @@ print_dim <- function(...){
 #' Save HTML-report
 #'
 #' @param profileyear 
-#' @param inputfile 
+#' @param inputfile "Kvalitetskontroll_del1" or "Kvalitetskontroll_del2"
+#' @param shortname if true, drops kube name from output file name
 #' @param savename 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 SaveReport <- function(profileyear = PROFILEYEAR,
-                       inputfile = "Kvalitetskontroll_del1.Rmd",
+                       inputfile = NULL,
                        shortname = FALSE,
                        savename = NULL){
+  
+  if(is.null(inputfile)){
+    stop("Inputfile missing, must be 'Kvalitetskontroll_del1.Rmd' or '_del2.Rmd'")
+  }
   
   # Extract kubename
   kubename <- .GetKubename(dfnew)
@@ -200,13 +273,15 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   if(!is.null(savename)){
     filename <- savename
   } else {
-    filename <- paste0(str_remove(attributes(dfnew)$Filename, ".csv"),
-                       "_",
-                       str_remove(inputfile, ".Rmd"))
+    filename <- paste0(stringr::str_replace_all(attributes(dfnew)$Filename, c("^QC_" = "", 
+                                                                              ".csv" = "")),
+                       "_QC",
+                       stringr::str_replace_all(inputfile, c("^Kvalitetskontroll" = "",
+                                                             ".Rmd$" = "")))
   }
   
   if(shortname){
-    filename <- str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
+    filename <- stringr::str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
   }
   
   # Save report
@@ -239,7 +314,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   }
   
   .dims1 <<- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
-  .vals1 <<- str_subset(names(data1), str_c(.dims1, collapse = "|"), negate = T)
+  .vals1 <<- stringr::str_subset(names(data1), stringr::str_c(.dims1, collapse = "|"), negate = T)
   
   # Create objects relevant for data2
   .dims2 <<- NULL
@@ -257,16 +332,60 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   if(!is.null(data2)){
     
     .dims2 <<- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
-    .vals2 <<- str_subset(names(data2), str_c(.dims2, collapse = "|"), negate = T)
+    .vals2 <<- stringr::str_subset(names(data2), stringr::str_c(.dims2, collapse = "|"), negate = T)
     .commondims <<- .dims1[.dims1 %in% .dims2]
-    .newdims <<- str_subset(.dims1, str_c(.dims2, collapse = "|"), negate = T)
-    .expdims <<- str_subset(.dims2, str_c(.dims1, collapse = "|"), negate = T)
+    .newdims <<- stringr::str_subset(.dims1, stringr::str_c("^", .dims2, "$", collapse = "|"), negate = T)
+    .expdims <<- stringr::str_subset(.dims2, stringr::str_c("^", .dims1, "$", collapse = "|"), negate = T)
     .commonvals <<- .vals1[.vals1 %in% .vals2]
-    .newvals <<- str_subset(.vals1, str_c(.vals2, collapse = "|"), negate = T)
-    .expvals <<- str_subset(.vals2, str_c(.vals1, collapse = "|"), negate = T)
+    .newvals <<- stringr::str_subset(.vals1, stringr::str_c("^", .vals2, "$", collapse = "|"), negate = T)
+    .expvals <<- stringr::str_subset(.vals2, stringr::str_c("^", .vals1, "$", collapse = "|"), negate = T)
     .commoncols <<- c(.commondims, .commonvals)
   }
   
+}
+
+#' .SmallLargeKommune
+#'
+#' Loads current BEFOLK_GK file, and separates out small and large kommune
+.SmallLargeKommune <- function(){
+  
+  basepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "PRODUKTER", 
+                        "KUBER",
+                        "KOMMUNEHELSA")
+  
+  thisyear <- file.path(basepath, paste0("KH", PROFILEYEAR, "NESSTAR"))
+  popfile <- list.files(thisyear, pattern = "BEFOLK_GK", full.names = T)
+  
+  # If no file for current profileyear, use file from last year
+  if(length(popfile) == 0){
+    cat(paste0("Population file from ", PROFILEYEAR, " does not exist, file from ", PROFILEYEAR - 1, " is used to identify small and large KOMMUNE"))
+    lastyear <- file.path(basepath, paste0("KH", PROFILEYEAR - 1, "NESSTAR"))
+    popfile <- list.files(lastyear, pattern = "BEFOLK_GK", full.names = T)
+  }
+  
+  # Select the "24aarg" file if present, because this is smaller
+  if(length(popfile) > 1){
+    popfile <-  grep("24aarg", file, value = T)
+  }
+  
+  # Read file and filter out last year
+  pop <- data.table::fread(popfile)
+  .IdentifyColumns(pop)
+  data.table::setkeyv(pop, .dims1)
+  pop <- pop[KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
+  
+  pop[, WEIGHTS := TELLER]
+  .popweights <- pop[, .(GEO, WEIGHTS)]
+  .allgeos <<- .popweights$GEO
+  .allweights <<- .popweights$WEIGHTS
+  
+  # Export lists of large and small kommune
+  .largekommune <<- pop[between(GEO, 99, 9999) & TELLER >= 10000, unique(GEO)]
+  .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
 }
 
 #' Helper function to connect to KHelsa ACCESS database
@@ -276,5 +395,5 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 #'
 #' @examples
 .ConnectKHelsa <- function(){
-  odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+  RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
 }

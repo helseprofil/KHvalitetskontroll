@@ -86,10 +86,10 @@ ReadFriskvik <- function(filename = NULL,
     friskvik <- file.path(friskvikpath, friskvikfile)
   }
   
-  FRISKVIK <- fread(friskvik)
-  setattr(FRISKVIK, "Filename", basename(friskvik))
+  FRISKVIK <- data.table::fread(friskvik)
+  data.table::setattr(FRISKVIK, "Filename", basename(friskvik))
   cat(paste0("FRISKVIK loaded: ", 
-             str_extract(friskvikpath, "(?<=KUBER/).*"), 
+             stringr::str_extract(friskvikpath, "(?<=KUBER/).*"), 
              "/", 
              basename(friskvik),
              "\n"))
@@ -98,7 +98,7 @@ ReadFriskvik <- function(filename = NULL,
   # Search in kubepath_kh, and if not found search kubepath_nh
   if(is.null(kubefile)){
     
-    pattern <- str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
+    pattern <- stringr::str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
     
     kube <- list.files(kubepath_kh, 
                        pattern = pattern, 
@@ -117,10 +117,10 @@ ReadFriskvik <- function(filename = NULL,
   # If > 1 kube found and con provided, use ACCESS to extract correct kube name
   if (length(kube) > 1 && isFALSE(is.null(con))) {
     friskvikindikator <-
-      str_extract(basename(friskvik),
+      stringr::str_extract(basename(friskvik),
                   ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
     correctkube <-.ReadAccess(con, "KUBE_NAVN", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-    kube <- str_subset(kube, correctkube)
+    kube <- stringr::str_subset(kube, correctkube)
   }
   
   # Check that only one kube is identified, or stop
@@ -131,8 +131,8 @@ ReadFriskvik <- function(filename = NULL,
          cat(kube, sep = "\n"))
   }
 
-  KUBE <- fread(kube)
-  setattr(KUBE, "Filename", basename(kube))
+  KUBE <- data.table::fread(kube)
+  data.table::setattr(KUBE, "Filename", basename(kube))
   cat(paste0("KUBE loaded: ", 
              basename(kube),
              "\n"))
@@ -146,7 +146,7 @@ ReadFriskvik <- function(filename = NULL,
   KUBE <- KUBE[eval(parse(text = ETAB))]
   }
   
-  filtercols <- str_subset(.commondims, "AAR", negate = TRUE)
+  filtercols <- stringr::str_subset(.commondims, "AAR", negate = TRUE)
   for(i in filtercols){
     KUBE <- KUBE[get(i) %in% FRISKVIK[, unique(get(i))]]
   }
@@ -177,8 +177,8 @@ ReadFriskvik <- function(filename = NULL,
   }
   
   # Ensure same order
-  setkeyv(KUBE, .commondims)
-  setkeyv(FRISKVIK, .commondims)
+  data.table::setkeyv(KUBE, .commondims)
+  data.table::setkeyv(FRISKVIK, .commondims)
  
   # Save to global env
   KUBE <<- KUBE
@@ -188,12 +188,12 @@ ReadFriskvik <- function(filename = NULL,
 CompareFriskvikYear <- function(data1 = FRISKVIK,
                                 data2 = KUBE){
   
-  kubeyears <- data.table(KUBE = data2[, sort(unique(AAR), decreasing = TRUE)])
+  kubeyears <- data.table::data.table(KUBE = data2[, sort(unique(AAR), decreasing = TRUE)])
   kubeyears[, join := KUBE]
-  friskvikyears <- data.table(FRISKVIK = data1[, sort(unique(AAR), decreasing = TRUE)])
+  friskvikyears <- data.table::data.table(FRISKVIK = data1[, sort(unique(AAR), decreasing = TRUE)])
   friskvikyears[, join := FRISKVIK]
   
-  out <- merge.data.table(friskvikyears, kubeyears, by = "join", all.y = T)[sort(join, decreasing = TRUE)]
+  out <- data.table::merge.data.table(friskvikyears, kubeyears, by = "join", all.y = T)[sort(join, decreasing = TRUE)]
   out[,join := NULL]
   
   out[]
@@ -224,7 +224,7 @@ CompareFriskvikPrikk <- function(data1 = FRISKVIK,
       "Yes"
     } else {
       geodiff <- data1[is.na(data1$MEIS) != data2[, SPVFLAGG > 0], GEO]
-      paste("NO!! Diff for GEO:", str_c(geodiff, collapse = ", "))
+      paste("NO!! Diff for GEO:", stringr::str_c(geodiff, collapse = ", "))
     }
 }
 
@@ -236,7 +236,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   
   # Find value columns in KUBE
   .IdentifyColumns(data1, data2)
-  kubevals <- str_subset(.vals2, "RATE.n|SPVFLAGG", negate = TRUE)
+  kubevals <- stringr::str_subset(.vals2, "RATE.n|SPVFLAGG", negate = TRUE)
   # Compare FRISKVIK$MEIS to all value columns to find match
   matches <- character()
   different <- character()
@@ -254,8 +254,8 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
     matches <- "!!NO MATCH!!"
   }
   
-  matches <- (str_c(matches, collapse = ", "))
-  different <- (str_c(different, collapse = ", "))
+  matches <- stringr::str_c(matches, collapse = ", ")
+  different <- stringr::str_c(different, collapse = ", ")
   
   list(matches = matches, different = different)
 }
@@ -362,7 +362,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
                         profileyear = NULL){
   
   if(table == "FRISKVIK"){
-    sqlQuery(con,
+    RODBC::sqlQuery(con,
              paste0("SELECT ", targetcol, 
                     " FROM FRISKVIK ", 
                     " WHERE PROFILTYPE='", profile, "'",
@@ -371,7 +371,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
                     " AND INDIKATOR='", name, "'"),
              as.is = T)[[1]]
   } else if (table == "KUBER"){
-    sqlQuery(con,
+    RODBC::sqlQuery(con,
              paste0("SELECT ", targetcol, 
                     " FROM KUBER ", 
                     " WHERE KUBE_NAVN='", name, "'"),
@@ -442,11 +442,11 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   
   # Create output file name, with date tag matching GODKJENT folder
   savename <- paste0(file.path(savedir,
-                               paste(PROFILE, GEOLEVEL, str_extract(friskvikpath, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"), sep = "_")),
+                               paste(PROFILE, GEOLEVEL, stringr::str_extract(friskvikpath, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"), sep = "_")),
                      ".csv")
   
   # Loop trouch friskvikfiles, generate 1-line output per file
-  output <- map_df(friskvikfiles, \(file)  {
+  output <- purrr::map_df(friskvikfiles, \(file)  {
     # Try to load files
     tryload <- try(ReadFriskvik(filename = file,
                                 geolevel = geolevel,
@@ -493,8 +493,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       LANDBAK <- .UniqueLevel(KUBE, "LANDBAK")
       
       # Get info from ACCESS
-      friskvikindikator <- str_extract(Friskvik_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
-      kubeindikator <- str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
+      friskvikindikator <- stringr::str_extract(Friskvik_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
+      kubeindikator <- stringr::str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
       ENHET <- .ReadAccess(.DB, "Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
       if(length(ENHET) == 0 | isTRUE(is.na(ENHET))){
@@ -505,48 +505,50 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
         REFVERDI_VP <- "!!MISSING"
       }
       
-      isAK <- fcase(str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
+      isAK <- data.table::fcase(stringr::str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
                     default = FALSE)
       
-      isPD <- fcase(isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
+      isPD <- data.table::fcase(isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
                     default = FALSE)
       
-      isMEIS <- fcase(isTRUE("MEIS" %in% Matching_kubecol), TRUE,
+      isMEIS <- data.table::fcase(isTRUE("MEIS" %in% Matching_kubecol), TRUE,
                       default = FALSE)
       
-      VALID_COMBINATION <- fcase(all(isAK, isPD, isMEIS) | isFALSE(any(isAK, isPD, isMEIS)), "Yes",
+      VALID_COMBINATION <- data.table::fcase(all(isAK, isPD, isMEIS) | isFALSE(any(isAK, isPD, isMEIS)), "Yes",
                                  default =  "No")
     }
     
     rm(tryload)
     
-    data.table(Friskvik = Friskvik_name,
-               Kube = Kube_name,
-               FRISKVIK_ETAB = ETAB,
-               KUBE_KJONN = KJONN,
-               KUBE_ALDER = ALDER,
-               KUBE_UTDANN = UTDANN,
-               KUBE_INNVKAT = INNVKAT,
-               KUBE_LANDBAK = LANDBAK,
-               Last_year = Last_year,
-               Identical_prikk = Identical_prikk,
-               Matching_kubecol = Matching_kubecol,
-               Different_kubecol = Different_kubecol,
-               Enhet = ENHET,
-               REFVERDI_VP = REFVERDI_VP,
-               VALID = VALID_COMBINATION)
+    data.table::data.table(
+      Friskvik = Friskvik_name,
+      Kube = Kube_name,
+      FRISKVIK_ETAB = ETAB,
+      KUBE_KJONN = KJONN,
+      KUBE_ALDER = ALDER,
+      KUBE_UTDANN = UTDANN,
+      KUBE_INNVKAT = INNVKAT,
+      KUBE_LANDBAK = LANDBAK,
+      Last_year = Last_year,
+      Identical_prikk = Identical_prikk,
+      Matching_kubecol = Matching_kubecol,
+      Different_kubecol = Different_kubecol,
+      Enhet = ENHET,
+      REFVERDI_VP = REFVERDI_VP,
+      VALID = VALID_COMBINATION
+    )
     }
   )
   
   cat("\nOutput generated")
   
   # Write result
-  fwrite(output,
-         file = savename,
-         sep = ";")
+  data.table::fwrite(output,
+                     file = savename,
+                     sep = ";")
   
   # Close ACCESS connection
-  odbcClose(.DB)
+  RODBC::odbcClose(.DB)
   rm(.DB)
   
   cat(paste("\nOutput written to", savename))
