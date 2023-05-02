@@ -39,10 +39,10 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # dfnew and dfold must be provided as full kubename_datotag
 # foldernew and folderold must be QC, DATERT or 4-digits
 
-ReadFiles(dfnew = "QC_ENEFHIB_2023-04-21-12-47", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
           modusnew = "KH", # KH or NH
-          dfold = "ENEFHIB_2021-10-06-10-18", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           folderold = 2022, # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
           modus = "KH") # NULL, or KH or NH
 ```
