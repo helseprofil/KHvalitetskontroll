@@ -50,6 +50,7 @@
   
   }
   
+  # Flag outliers
   dfnew_flag <<- .FlagOutlier(data = dfnew_flag,
                               dims = dims,
                               vals = vals)[]
@@ -75,7 +76,9 @@
 .FlagOld <- function(data1,
                      data2,
                      commondims,
-                     expdims){
+                     expdims,
+                     dims,
+                     vals){
 
   # Initiate flagged version of old KUBE (sets newrow = 0), saves to global env
   # Sorts KUBE according to common and new dims
@@ -98,7 +101,11 @@
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
-  dfold_flag[]
+  # Flag outliers
+  dfold_flag <<- .FlagOutlier(data = dfold_flag,
+                              dims = dims,
+                              vals = vals)[]
+  
   cat("\n\n- Flagged version of old KUBE created: dfold_flag\n")
 }
 
@@ -235,29 +242,25 @@
 #'
 #' @param data1 New KUBE, defaults to dfnew
 #' @param data2 Old KUBE, defaults to dfold
-#' @param dims Character vector of dimension columns, defaults to DIMENSIONS
-#' @param vals Character vector of value volumns, defaults to VALUES
 #' @param dumps List of dump points, defaults to .DUMPS (NULL)
 #' @param profileyear To save output in the correct folder
-#'
-#' @return
-#' @export
-#'
-#' @examples
+#' @param dfnew_flag_name optional name of filedumps, defaults to NA
+#' @param dfold_flag_name optional name of filedumps, defaults to NA
+#' @param compareKUBE_name optional name of filedumps, defaults to NA
 FormatData <- function(data1 = dfnew,
                        data2 = dfold,
                        dumps = DUMPS,
                        profileyear = PROFILEYEAR,
-                       dfnew_flag_name = NULL,
-                       dfold_flag_name = NULL,
-                       compareKUBE_name = NULL){
+                       dfnew_flag_name = NA,
+                       dfold_flag_name = NA,
+                       compareKUBE_name = NA){
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
   
-  if(!is.null(dumps)){
-  .CreateFolders(profileyear = profileyear,
-                 kubename = kubename)
+  if(isFALSE(is.null(dumps))){
+    .CreateFolders(profileyear = profileyear,
+                   kubename = kubename)
   }
   
   dumppath <- file.path("F:", 
@@ -280,9 +283,9 @@ FormatData <- function(data1 = dfnew,
   }
   
   # Summary of dimensions and values, if data2 provided
-  if(!is.null(data2)){
+  if(isFALSE(is.null(data2))){
   msg_commondims <- dplyr::case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
-                              TRUE ~ paste0("\n- Common columns found: ", stringr::str_c(.commondims, collapse = ", ")))
+                              TRUE ~ paste0("\n- Common dimensions found: ", stringr::str_c(.commondims, collapse = ", ")))
   
   msg_newdims <- dplyr::case_when(length(.newdims) == 0 ~ "\n- No new dimensions.",
                           TRUE ~ paste0("\n- New dimensions found: ", stringr::str_c(.newdims, collapse = ", ")))
@@ -300,9 +303,9 @@ FormatData <- function(data1 = dfnew,
                       TRUE ~ paste0("\n- Expired value columns found: ", stringr::str_c(.expvals, collapse = ", ")))
   }
   
-  # Flag new KUBE
+  # Flag new KUBE (create dfnew_flag)
   cat("STARTS flagging new kube:")
-  if(!is.null(data2)){
+  if(isFALSE(is.null(data2))){
     cat(msg_commondims)
     cat(msg_newdims)
     cat(msg_commonvals)
@@ -315,108 +318,127 @@ FormatData <- function(data1 = dfnew,
            dims = .dims1,
            vals = .vals1)
   
-  # Filedump new KUBE
-  if("dfnew_flag" %in% dumps){
-    
-    # Set filename
-    if(!is.null(dfnew_flag_name)){
-      filename <- paste0(stringr::str_remove(dfnew_flag_name, ".csv"), ".csv")
-    } else {
-      filename <- paste0(stringr::str_remove(attributes(dfnew)$Filename, ".csv"), "_(new)_FLAGGED.csv")
-    }
-    
-    file <- paste0(dumppath, filename)
-    
-    # Write file if it doesn't exist
-    if(!file.exists(file)) {
-      data.table::fwrite(dfnew_flag,
-                         file = file,
-                         sep = ";")
-      cat(paste0("\nFILEDUMP: ", filename, "\n"))
-    } else {
-      cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-    }
-  }
-  
-  # Flag old KUBE (if data2 provided)
+  if(isFALSE(is.null(data2))){
+  # Flag old KUBE (if data2 provided, create dfold_flag)
   cat("\nSTARTS flagging old kube:")
-  if(!is.null(data2)){
-    cat(msg_commondims)
-    cat(msg_expdims)
-    cat(msg_commonvals)
-    cat(msg_expvals)
-    .FlagOld(data1 = data1,
-             data2 = data2,
-             commondims = .commondims,
-             expdims = .expdims)
+  cat(msg_commondims)
+  cat(msg_expdims)
+  cat(msg_commonvals)
+  cat(msg_expvals)
+  .FlagOld(data1 = data1,
+           data2 = data2,
+           commondims = .commondims,
+           expdims = .expdims,
+           dims = .dims2,
+           vals = .vals2)
   
-    # File dump old KUBE
+  # Add PREV_OUTLIER to dfnew_flag
+  cat("\nAdding PREV_OUTLIER to dfnew_flag:")
   
-    if("dfold_flag" %in% dumps){
-      # Set filename
-      if(!is.null(dfold_flag_name)){
-        filename <- paste0(stringr::str_remove(dfold_flag_name, ".csv"), ".csv")
-        } else {
-          filename <- paste0(stringr::str_remove(attributes(dfold)$Filename, ".csv"), "_(old)_FLAGGED.csv")
-          }
-    
-      file <- paste0(dumppath, filename)
-      
-      # Write file if it doesn't exist
-      if(!file.exists(file)){
-        data.table::fwrite(dfold_flag,
-                           file = paste0(dumppath, filename),
-                           sep = ";")
-        cat(paste0("\nFILEDUMP: ", filename, "\n"))
-        } else {
-          cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-        }
-    }
-  } else {
-    cat("\n- No old file to be flagged\n")
-  }
+  dfnew_flag <<- .AddPrevOutlier(data1 = dfnew_flag,
+                                 data2 = dfold_flag,
+                                 commondims = .commondims)
   
-  cat("\nCOMPLETED flagging!\n")
+  cat("\nCOMPLETED flagging and outlier detection!\n")
   
   cat("\nSTARTS create compareKUBE:")
   
-  if(!is.null(data2)){
-    .CreateCompare(data1 = dfnew_flag,
-                   data2 = dfold_flag,
-                   commondims = .commondims,
-                   commonvals = .commonvals)
+  .CreateCompare(data1 = dfnew_flag,
+                 data2 = dfold_flag,
+                 commondims = .commondims,
+                 commonvals = .commonvals)
     
-    cat("\n\n-COMPLETED creating compareKUBE\n")
-    
-    if("compareKUBE" %in% dumps){
-      filenamenew <- stringr::str_remove(attributes(dfnew)$Filename, ".csv")
-      filenameold <- stringr::str_remove(attributes(dfold)$Filename, ".csv")
-      
-      # Set filename
-      if(!is.null(compareKUBE_name)){
-        filename <- paste0(stringr::str_remove(compareKUBE_name, ".csv"), ".csv")
-      } else {
-        filename <- paste0(filenamenew, "_vs_", filenameold, "_COMPARE.csv")
-      }
-      
-      file <- paste0(dumppath, filename)
-      
-      # Write file if it doesn't exist
-      if(!file.exists(file)){
-        data.table::fwrite(compareKUBE,
-                           file = paste0(dumppath, filename),
-                           sep =  ";")
-        cat(paste0("\nFILEDUMP: ", filename, "\n"))
-      } else {
-        cat(paste0("\nFILEDUMP already exists: ", filename, "\n"))
-      }   
-    }
+  cat("\n\n-COMPLETED creating compareKUBE\n")
   } else {
-    cat("\n- No old file, compareKUBE not created\n")
+    cat("\n\n-No old KUBE to be flagged, compareKUBE not created ")
   }
+  
+  # File dumps
+  
+  datetagnew <- .getkubedatetag(data1)
+  datetagold <- data.table::fcase(isFALSE(is.null(data2)), .getkubedatetag(data2),
+                                  default = "")
+  
+  dumpfiles <- data.table::data.table(dumpfiles = c("dfnew_flag", "dfold_flag", "compareKUBE"), 
+                                      savenames = c(dfnew_flag_name, dfold_flag_name, compareKUBE_name))
+  dumpfiles <- dumpfiles[dumpfiles %in% dumps]
+  
+  walk2(dumpfiles$dumpfiles,
+        dumpfiles$savenames,
+        \(x,y) {
+        .savefiledump(filedump = x,
+                      savename = y,
+                      dumppath = dumppath,
+                      kubename = kubename,
+                      datetagnew = datetagnew,
+                      datetagold = datetagold)
+        })
   
   cat("\nDONE!")
 
+}
+
+#' .savefiledump
+#'
+#' @param filedump "dfnew_flag", "dfold_flag", or "compareKUBE"
+#' @param savename dfnew_flag_name, dfold_flag_name, or compareKUBE_name
+#' @param dumps vector of required filedumps
+#' @param dumppath where to write files
+#' @param kubename name of kube
+#' @param datetagnew 
+#' @param datetagold 
+#' @param outdata 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.savefiledump <- function(filedump,
+                          savename,
+                          dumppath = dumppath,
+                          kubename = kubename,
+                          datetagnew = datetagnew,
+                          datetagold = datetagold){
+  
+  if(filedump == "dfnew_flag"){
+    outdata <- copy(dfnew_flag)
+    datetag <- datetagnew
+    type <- "(new)_FLAGGED.csv"
+  } else if(filedump == "dfold_flag"){
+    outdata <- copy(dfold_flag)
+    datetag <- datetagold
+    type <- "(old)_FLAGGED.csv"
+  } else if(filedump == "compareKUBE"){
+    outdata <- copy(compareKUBE)
+    datetag <- paste0(datetagnew, "_vs_", datetagold)
+    type <- "COMPARE.csv"
+  }
+  
+  # Set filename
+  if(isFALSE(is.na(savename))){
+    filename <- paste0(stringr::str_remove(savename, ".csv"), ".csv")
+  } else {
+    filename <- paste0(kubename, "_", datetag, "_", type)
+  }
+  
+  file <- paste0(dumppath, filename)
+  
+  # Write file if it doesn't exist
+  if(!file.exists(file)) {
+    data.table::fwrite(outdata,
+                       file = file,
+                       sep = ";")
+    cat(paste0("\nFILEDUMP ", filedump, ": ", filename, "\n"))
+  } else {
+    cat(paste0("\nFILEDUMP ", filedump, " already exists: ", filename, "\n"))
+  }
+
+}
+
+#' .getkubedatetag
+#'
+.getkubedatetag <- function(data){
+  stringr::str_extract(attributes(data)$Filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}")
 }
 
 #' How many rows differs for each value column
@@ -715,6 +737,10 @@ CompareNewOld <- function(data = compareKUBE,
     # Add WEIGHTS, and set to NULL if all values are missing in a strata
     data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
     data[, WEIGHTS := if(all(is.na(get(.val)))){ NA_real_ }, by = bycols]
+    
+    # Set weights for helseregion = 0, otherwise fnth fails when weights is missing and data is present
+    # Alternative is to filter out HELSEREGION, but if present it should be kept. 
+    data[GEONIV == "H", WEIGHTS := 0]
     w <- data$WEIGHTS
     
     # Estimate weighted quantiles, and low and high cutoffs
@@ -749,6 +775,22 @@ CompareNewOld <- function(data = compareKUBE,
   } else {
     cat("\n- Neither MEIS, RATE, nor SMR available for outlier detection")
   }
+  
+}
+
+#' .CreateOutlierdata
+#' 
+#' Creates a data frame to be used for outlier plotting. 
+#' Adds helper columns outlier_old and newoutlier to filter out new outliers.
+#'
+#' @param data1 
+#' @param data2 
+#' @param commondims 
+.AddPrevOutlier <- function(data1 = dfnew_flag,
+                            data2 = dfold_flag,
+                            commondims){
+  d <- copy(data1)
+  d[data2, PREV_OUTLIER := i.OUTLIER, on = commondims][]
   
 }
 
