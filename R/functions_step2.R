@@ -35,16 +35,20 @@
   # For common dimensions, flag all rows with new levels 
   # Loops over common dimensions. Flags previously unflagged rows for new levels 
   purrr::walk(commondims, 
-       ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
-                   newrow := 1L])
+              \(x){
+                dfnew_flag[!get(x) %in% data2[, unique(get(x))] & newrow == 0,
+                           newrow := 1L]
+                })
   
   cat("\n- For common dimensions, flagged all rows with new levels as new rows")
   
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(newdims) != 0) {
     purrr::walk(newdims,
-                ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
-                            newrow := 1L])
+                \(x){
+                dfnew_flag[get(x) != 0 & newrow == 0,
+                           newrow := 1L]
+                  })
     cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
   }
   
@@ -88,16 +92,20 @@
   # For common dimensions, flag all rows with expired levels 
   # Loops over common dimensions. Flags previously unflagged rows for expired levels 
   purrr::walk(commondims, 
-              ~dfold_flag[!dfold_flag[[.x]] %in% unique(data1[[.x]]) & exprow == 0,
-                          exprow := 1L])
+              \(x){
+              dfold_flag[get(x) %in% data1[, unique(get(x))] & exprow == 0,
+                          exprow := 1L]
+                })
   
   cat("\n- For common dimensions, flagged all rows with expired levels")
   
   # For expired dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(expdims) != 0) {
     purrr::walk(expdims,
-                ~dfold_flag[dfold_flag[[.x]] != 0 & exprow == 0,
-                            exprow := 1L])
+                \(x){
+                dfold_flag[get(x) != 0 & exprow == 0,
+                            exprow := 1L]
+                  })
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
