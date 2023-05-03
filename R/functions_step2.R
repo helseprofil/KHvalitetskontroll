@@ -332,7 +332,7 @@ FormatData <- function(data1 = dfnew,
            dims = .dims2,
            vals = .vals2)
   
-  # Add PREV_OUTLIER to dfnew_flag
+  # Add PREV_OUTLIER and NEW_OUTLIER to dfnew_flag
   cat("\nAdding PREV_OUTLIER to dfnew_flag:")
   
   dfnew_flag <<- .AddPrevOutlier(data1 = dfnew_flag,
@@ -778,7 +778,7 @@ CompareNewOld <- function(data = compareKUBE,
   
 }
 
-#' .CreateOutlierdata
+#' .AddPrevOutlier
 #' 
 #' Creates a data frame to be used for outlier plotting. 
 #' Adds helper columns outlier_old and newoutlier to filter out new outliers.
@@ -790,7 +790,10 @@ CompareNewOld <- function(data = compareKUBE,
                             data2 = dfold_flag,
                             commondims){
   d <- copy(data1)
-  d[data2, PREV_OUTLIER := i.OUTLIER, on = commondims][]
+  d[data2, PREV_OUTLIER := i.OUTLIER, on = commondims]
+  d[, NEW_OUTLIER := 0]
+  d[OUTLIER == 1 & (is.na(PREV_OUTLIER) | PREV_OUTLIER == 0), NEW_OUTLIER := 1]
+  d[]
   
 }
 
