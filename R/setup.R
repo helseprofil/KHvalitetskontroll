@@ -1,9 +1,6 @@
 # Switch to main branch, look for updates:
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/updateproject.R")
 
-# Activate renv, read current lockfile
-source("renv/activate.R")
-
 # Load packages
 library(conflicted)
 library(RODBC)
