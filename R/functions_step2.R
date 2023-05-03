@@ -355,24 +355,35 @@ FormatData <- function(data1 = dfnew,
   
   # File dumps
   
-  datetagnew <- .getkubedatetag(data1)
+  datetagnew <- .GetKubedatetag(data1)
   datetagold <- data.table::fcase(isFALSE(is.null(data2)), .getkubedatetag(data2),
                                   default = "")
   
-  dumpfiles <- data.table::data.table(dumpfiles = c("dfnew_flag", "dfold_flag", "compareKUBE"), 
-                                      savenames = c(dfnew_flag_name, dfold_flag_name, compareKUBE_name))
-  dumpfiles <- dumpfiles[dumpfiles %in% dumps]
+  ## Create list of required dumps and savenames
+  reqdumpfiles <- data.table::data.table(dumpfiles = c("dfnew_flag", "dfold_flag", "compareKUBE"), 
+                                         savenames = c(dfnew_flag_name, dfold_flag_name, compareKUBE_name))
+  reqdumpfiles <- reqdumpfiles[dumpfiles %in% dumps]
   
-  walk2(dumpfiles$dumpfiles,
-        dumpfiles$savenames,
-        \(x,y) {
-        .savefiledump(filedump = x,
-                      savename = y,
-                      dumppath = dumppath,
-                      kubename = kubename,
-                      datetagnew = datetagnew,
-                      datetagold = datetagold)
-        })
+  ## Make sure only valid dumps are required
+  if("dfold_flag" %in% dumps & is.null(data2)){
+    cat("FILEDUMP dfold_flag required, but dfold not provided. No filedump written.")
+    reqdumpfiles <- reqdumpfiles[dumpfiles != "dfold_flag"]
+  }
+  if("compareKUBE" %in% dumps & is.null(data2)){
+    cat("FILEDUMP compareKUBE required, but dfold not provided. No filedump written.")
+    reqdumpfiles <- reqdumpfiles[dumpfiles != "compareKUBE"]
+  }
+  
+  purrr::walk2(requireddumpfiles$dumpfiles,
+               requireddumpfiles$savenames,
+               \(x,y) {
+                 .savefiledump(filedump = x,
+                               savename = y,
+                               dumppath = dumppath,
+                               kubename = kubename,
+                               datetagnew = datetagnew,
+                               datetagold = datetagold)
+                 })
   
   cat("\nDONE!")
 
@@ -410,7 +421,14 @@ FormatData <- function(data1 = dfnew,
     type <- "(old)_FLAGGED.csv"
   } else if(filedump == "compareKUBE"){
     outdata <- copy(compareKUBE)
-    datetag <- paste0(datetagnew, "_vs_", datetagold)
+    datetag <- data.table::fcase(.GetKubename(dfnew_flag) == .GetKubename(dfold_flag), paste0(datetagnew, 
+                                                                                              "_vs_", 
+                                                                                              datetagold),
+                                 .GetKubename(dfnew_flag) != .GetKubename(dfold_flag), paste0(datetagnew, 
+                                                                                              "_vs_", 
+                                                                                              .GetKubename(dfold_flag), 
+                                                                                              "_", 
+                                                                                              datetagold))
     type <- "COMPARE.csv"
   }
   
@@ -435,9 +453,9 @@ FormatData <- function(data1 = dfnew,
 
 }
 
-#' .getkubedatetag
+#' .GetKubedatetag
 #'
-.getkubedatetag <- function(data){
+.GetKubedatetag <- function(data){
   stringr::str_extract(attributes(data)$Filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}")
 }
 
