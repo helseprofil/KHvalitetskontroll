@@ -93,7 +93,7 @@
   # Loops over common dimensions. Flags previously unflagged rows for expired levels 
   purrr::walk(commondims, 
               \(x){
-              dfold_flag[get(x) %in% data1[, unique(get(x))] & exprow == 0,
+              dfold_flag[!get(x) %in% data1[, unique(get(x))] & exprow == 0,
                           exprow := 1L]
                 })
   
@@ -364,7 +364,7 @@ FormatData <- function(data1 = dfnew,
   # File dumps
   
   datetagnew <- .GetKubedatetag(data1)
-  datetagold <- data.table::fcase(isFALSE(is.null(data2)), .getkubedatetag(data2),
+  datetagold <- data.table::fcase(isFALSE(is.null(data2)), .GetKubedatetag(data2),
                                   default = "")
   
   ## Create list of required dumps and savenames
@@ -382,8 +382,8 @@ FormatData <- function(data1 = dfnew,
     reqdumpfiles <- reqdumpfiles[dumpfiles != "compareKUBE"]
   }
   
-  purrr::walk2(requireddumpfiles$dumpfiles,
-               requireddumpfiles$savenames,
+  purrr::walk2(reqdumpfiles$dumpfiles,
+               reqdumpfiles$savenames,
                \(x,y) {
                  .savefiledump(filedump = x,
                                savename = y,
