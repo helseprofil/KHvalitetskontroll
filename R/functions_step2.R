@@ -176,11 +176,13 @@
   cat("\n  - Remove new rows, select common dimensions and values")
   comparenew <- data.table::copy(data1)
   
-  # Replace TELLER and NEVNER with TELLER/NEVNER_uprikk if not present in dfnew and present in dfold
+  # Add TELLER and NEVNER, set equal to TELLER/NEVNER_uprikk if not present in dfnew and present in dfold
+  # For rows where SPVFLAGG != 0, the generated column is set to NA_real_
   # Add the value to commonvals to generate _new/_old/_diff/_reldiff columns
   for(i in c("TELLER", "NEVNER")){
     if(i %in% names(data2) & isFALSE(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
       comparenew[, (i) := get(paste0(i, "_uprikk"))]
+      comparenew[SPVFLAGG != 0, (i) := NA_real_]
       commonvals <- c(commonvals, i)
     }
   }
