@@ -26,7 +26,7 @@ CompareCols <- function(data1 = dfnew,
   
   newuprikk <- stringr::str_subset(names(data1), "_uprikk")  
   msguprikk <- data.table::fcase(length(newuprikk) == 0, "\n  -No '_uprikk'-columns in new file",
-                                  default = paste0("\n  -dfnew have: ", stringr::str_c(newuprikk, collapse = ", ")))
+                                  default = paste0("\n-dfnew _uprikk columns: ", stringr::str_c(newuprikk, collapse = ", ")))
   
   expcols <- stringr::str_subset(names(data2), str_c("^", names(data1), "$", collapse = "|"), negate = TRUE)  
   msgexp <- data.table::fcase(length(expcols) == 0, "\n-No expired columns.",

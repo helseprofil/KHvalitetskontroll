@@ -35,16 +35,20 @@
   # For common dimensions, flag all rows with new levels 
   # Loops over common dimensions. Flags previously unflagged rows for new levels 
   purrr::walk(commondims, 
-       ~dfnew_flag[!dfnew_flag[[.x]] %in% unique(data2[[.x]]) & newrow == 0,
-                   newrow := 1L])
+              \(x){
+                dfnew_flag[!get(x) %in% data2[, unique(get(x))] & newrow == 0,
+                           newrow := 1L]
+                })
   
   cat("\n- For common dimensions, flagged all rows with new levels as new rows")
   
   # For new dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(newdims) != 0) {
     purrr::walk(newdims,
-                ~dfnew_flag[dfnew_flag[[.x]] != 0 & newrow == 0,
-                            newrow := 1L])
+                \(x){
+                dfnew_flag[get(x) != 0 & newrow == 0,
+                           newrow := 1L]
+                  })
     cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
   }
   
@@ -88,16 +92,20 @@
   # For common dimensions, flag all rows with expired levels 
   # Loops over common dimensions. Flags previously unflagged rows for expired levels 
   purrr::walk(commondims, 
-              ~dfold_flag[!dfold_flag[[.x]] %in% unique(data1[[.x]]) & exprow == 0,
-                          exprow := 1L])
+              \(x){
+              dfold_flag[!get(x) %in% data1[, unique(get(x))] & exprow == 0,
+                          exprow := 1L]
+                })
   
   cat("\n- For common dimensions, flagged all rows with expired levels")
   
   # For expired dimensions, flag any rows != 0 (i.e. not total numbers)
   if(length(expdims) != 0) {
     purrr::walk(expdims,
-                ~dfold_flag[dfold_flag[[.x]] != 0 & exprow == 0,
-                            exprow := 1L])
+                \(x){
+                dfold_flag[get(x) != 0 & exprow == 0,
+                            exprow := 1L]
+                  })
     cat("\n- For expired dimensions, flagged all rows not representing total numbers")
   } 
   
@@ -119,32 +127,26 @@
 #' @export
 #'
 #' @examples
-.FixDecimals <- function(data){
+.FixDecimals <- function(data,
+                         commonvals){
   
-  round0 <- c("RATE.n", "SPVFLAGG")
-  round1 <- c("TELLER_", "NEVNER_", "sumTELLER", "sumNEVNER")
-  round2 <- c("RATE_", "MEIS_", "SMR_")
+  reldiffcols <- stringr::str_subset(names(data), "_reldiff")
+  valcols <- stringr::str_subset(names(data), stringr::str_c(commonvals, collapse = "|")) |> 
+    stringr::str_subset("_reldiff", negate = TRUE)
   
+  round0 <- stringr::str_subset(valcols, "^RATE.n_new$|^RATE.n_old$|SPVFLAGG")
+  round1 <- stringr::str_subset(valcols, "TELLER|NEVNER")
+  round2 <- c(stringr::str_subset(valcols, "^RATE_|SMR|MEIS"), reldiffcols)
   
-  if(any(stringr::str_detect(names(data), 
-                             stringr::str_c(round0, collapse = "|")))) { 
-    data <- data %>% 
-      dplyr::mutate(dplyr::across(dplyr::starts_with(round0), round, 0))
+  .myround <- function(data, val, round){
+    set(data, j = val, value = round(data[[val]], round))
   }
   
-  if(any(stringr::str_detect(names(data), 
-                             stringr::str_c(round1, collapse = "|")))) { 
-    data <- data %>% 
-      dplyr::mutate(dplyr::across(dplyr::starts_with(round1), round, 1))
-  }
+  purrr::walk(round0, \(x) .myround(data, x, 0))
+  purrr::walk(round1, \(x) .myround(data, x, 1))
+  purrr::walk(round2, \(x) .myround(data, x, 2))
   
-  if(any(stringr::str_detect(names(data), 
-                             stringr::str_c(round2, collapse = "|")))) {
-    data <- data %>%
-      dplyr::mutate(dplyr::across(dplyr::starts_with(round2), round, 2))
-  }
-  
-  data
+  data[]
 }
 
 #' CreateCompare
@@ -173,6 +175,18 @@
   cat("\n- Formats new KUBE")
   cat("\n  - Remove new rows, select common dimensions and values")
   comparenew <- data.table::copy(data1)
+  
+  # Add TELLER and NEVNER, set equal to TELLER/NEVNER_uprikk if not present in dfnew and present in dfold
+  # For rows where SPVFLAGG != 0, the generated column is set to NA_real_
+  # Add the value to commonvals to generate _new/_old/_diff/_reldiff columns
+  for(i in c("TELLER", "NEVNER")){
+    if(i %in% names(data2) & isFALSE(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
+      comparenew[, (i) := get(paste0(i, "_uprikk"))]
+      comparenew[SPVFLAGG != 0, (i) := NA_real_]
+      commonvals <- c(commonvals, i)
+    }
+  }
+
   # Remove new rows, select common columns and values
   comparenew <- comparenew[newrow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
@@ -198,8 +212,6 @@
   }
   data.table::setcolorder(compareKUBE, colorder)
   
-  data.table::setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
-  
   # Create diff columns
   
   for(i in commonvals){
@@ -223,8 +235,10 @@
   # Remove SPVFLAGG_reldiff
   compareKUBE[, SPVFLAGG_reldiff := NULL]
   
+  compareKUBE <- .FixDecimals(compareKUBE, commonvals)
   # Export compareKUBE to global environment
-  compareKUBE <<- .FixDecimals(compareKUBE)
+  # compareKUBE <<- .FixDecimals(compareKUBE)
+  compareKUBE <<- compareKUBE
 }
 
 #' Format data
@@ -247,13 +261,15 @@
 #' @param dfnew_flag_name optional name of filedumps, defaults to NA
 #' @param dfold_flag_name optional name of filedumps, defaults to NA
 #' @param compareKUBE_name optional name of filedumps, defaults to NA
+#' @param forcewrite overwrite existing file dumps (relevant if code is updated and output is affected)
 FormatData <- function(data1 = dfnew,
                        data2 = dfold,
                        dumps = DUMPS,
                        profileyear = PROFILEYEAR,
                        dfnew_flag_name = NA,
                        dfold_flag_name = NA,
-                       compareKUBE_name = NA){
+                       compareKUBE_name = NA,
+                       overwrite = FALSE){
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
@@ -332,7 +348,7 @@ FormatData <- function(data1 = dfnew,
            dims = .dims2,
            vals = .vals2)
   
-  # Add PREV_OUTLIER to dfnew_flag
+  # Add PREV_OUTLIER and NEW_OUTLIER to dfnew_flag
   cat("\nAdding PREV_OUTLIER to dfnew_flag:")
   
   dfnew_flag <<- .AddPrevOutlier(data1 = dfnew_flag,
@@ -350,35 +366,47 @@ FormatData <- function(data1 = dfnew,
     
   cat("\n\n-COMPLETED creating compareKUBE\n")
   } else {
-    cat("\n\n-No old KUBE to be flagged, compareKUBE not created ")
+    cat("\n\n-No old KUBE to be flagged, compareKUBE not created\n")
   }
   
   # File dumps
   
-  datetagnew <- .getkubedatetag(data1)
-  datetagold <- data.table::fcase(isFALSE(is.null(data2)), .getkubedatetag(data2),
+  datetagnew <- .GetKubedatetag(data1)
+  datetagold <- data.table::fcase(isFALSE(is.null(data2)), .GetKubedatetag(data2),
                                   default = "")
   
-  dumpfiles <- data.table::data.table(dumpfiles = c("dfnew_flag", "dfold_flag", "compareKUBE"), 
-                                      savenames = c(dfnew_flag_name, dfold_flag_name, compareKUBE_name))
-  dumpfiles <- dumpfiles[dumpfiles %in% dumps]
+  ## Create list of required dumps and savenames
+  reqdumpfiles <- data.table::data.table(dumpfiles = c("dfnew_flag", "dfold_flag", "compareKUBE"), 
+                                         savenames = c(dfnew_flag_name, dfold_flag_name, compareKUBE_name))
+  reqdumpfiles <- reqdumpfiles[dumpfiles %in% dumps]
   
-  walk2(dumpfiles$dumpfiles,
-        dumpfiles$savenames,
-        \(x,y) {
-        .savefiledump(filedump = x,
-                      savename = y,
-                      dumppath = dumppath,
-                      kubename = kubename,
-                      datetagnew = datetagnew,
-                      datetagold = datetagold)
-        })
+  ## Make sure only valid dumps are required
+  if("dfold_flag" %in% dumps & is.null(data2)){
+    cat("FILEDUMP dfold_flag required, but dfold not provided. No filedump written.")
+    reqdumpfiles <- reqdumpfiles[dumpfiles != "dfold_flag"]
+  }
+  if("compareKUBE" %in% dumps & is.null(data2)){
+    cat("FILEDUMP compareKUBE required, but dfold not provided. No filedump written.")
+    reqdumpfiles <- reqdumpfiles[dumpfiles != "compareKUBE"]
+  }
   
-  cat("\nDONE!")
+  purrr::walk2(reqdumpfiles$dumpfiles,
+               reqdumpfiles$savenames,
+               \(x,y) {
+                 .SaveFiledump(filedump = x,
+                               savename = y,
+                               dumppath = dumppath,
+                               kubename = kubename,
+                               datetagnew = datetagnew,
+                               datetagold = datetagold,
+                               overwrite = overwrite)
+                 })
+  
+  cat("\n\nDONE!")
 
 }
 
-#' .savefiledump
+#' .SaveFiledump
 #'
 #' @param filedump "dfnew_flag", "dfold_flag", or "compareKUBE"
 #' @param savename dfnew_flag_name, dfold_flag_name, or compareKUBE_name
@@ -393,12 +421,13 @@ FormatData <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-.savefiledump <- function(filedump,
+.SaveFiledump <- function(filedump,
                           savename,
-                          dumppath = dumppath,
-                          kubename = kubename,
-                          datetagnew = datetagnew,
-                          datetagold = datetagold){
+                          dumppath,
+                          kubename,
+                          datetagnew,
+                          datetagold, 
+                          overwrite){
   
   if(filedump == "dfnew_flag"){
     outdata <- copy(dfnew_flag)
@@ -410,7 +439,14 @@ FormatData <- function(data1 = dfnew,
     type <- "(old)_FLAGGED.csv"
   } else if(filedump == "compareKUBE"){
     outdata <- copy(compareKUBE)
-    datetag <- paste0(datetagnew, "_vs_", datetagold)
+    datetag <- data.table::fcase(.GetKubename(dfnew_flag) == .GetKubename(dfold_flag), paste0(datetagnew, 
+                                                                                              "_vs_", 
+                                                                                              datetagold),
+                                 .GetKubename(dfnew_flag) != .GetKubename(dfold_flag), paste0(datetagnew, 
+                                                                                              "_vs_", 
+                                                                                              .GetKubename(dfold_flag), 
+                                                                                              "_", 
+                                                                                              datetagold))
     type <- "COMPARE.csv"
   }
   
@@ -423,21 +459,26 @@ FormatData <- function(data1 = dfnew,
   
   file <- paste0(dumppath, filename)
   
-  # Write file if it doesn't exist
-  if(!file.exists(file)) {
+  # Write file if it doesn't exist, or if overwrite = TRUE
+  if(isTRUE(file.exists(file))){
+    cat(paste0("\nFILEDUMP ", filename, " already exists: "))
+  } 
+  
+  if(isFALSE(file.exists(file)) || isTRUE(overwrite)) {
+    if(isTRUE(file.exists(file))){
+      cat("\n---Overwriting existing filedump...---")
+      }
     data.table::fwrite(outdata,
                        file = file,
                        sep = ";")
-    cat(paste0("\nFILEDUMP ", filedump, ": ", filename, "\n"))
-  } else {
-    cat(paste0("\nFILEDUMP ", filedump, " already exists: ", filename, "\n"))
+    cat(paste0("\nFILEDUMP written to folder: ", filename, "\n"))
   }
 
 }
 
-#' .getkubedatetag
+#' .GetKubedatetag
 #'
-.getkubedatetag <- function(data){
+.GetKubedatetag <- function(data){
   stringr::str_extract(attributes(data)$Filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}")
 }
 
@@ -778,7 +819,7 @@ CompareNewOld <- function(data = compareKUBE,
   
 }
 
-#' .CreateOutlierdata
+#' .AddPrevOutlier
 #' 
 #' Creates a data frame to be used for outlier plotting. 
 #' Adds helper columns outlier_old and newoutlier to filter out new outliers.
@@ -790,7 +831,10 @@ CompareNewOld <- function(data = compareKUBE,
                             data2 = dfold_flag,
                             commondims){
   d <- copy(data1)
-  d[data2, PREV_OUTLIER := i.OUTLIER, on = commondims][]
+  d[data2, PREV_OUTLIER := i.OUTLIER, on = commondims]
+  d[, NEW_OUTLIER := 0]
+  d[OUTLIER == 1 & (is.na(PREV_OUTLIER) | PREV_OUTLIER == 0), NEW_OUTLIER := 1]
+  d[]
   
 }
 

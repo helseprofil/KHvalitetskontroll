@@ -73,7 +73,7 @@ PROFILEYEAR <<- 2023
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <<- NULL"
-DUMPS <<- NULL
+DUMPS <<- c("dfnew_flag", "dfold_flag", "compareKUBE")
 ```
 
 # Data formatting
