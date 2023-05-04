@@ -261,13 +261,15 @@
 #' @param dfnew_flag_name optional name of filedumps, defaults to NA
 #' @param dfold_flag_name optional name of filedumps, defaults to NA
 #' @param compareKUBE_name optional name of filedumps, defaults to NA
+#' @param forcewrite overwrite existing file dumps (relevant if code is updated and output is affected)
 FormatData <- function(data1 = dfnew,
                        data2 = dfold,
                        dumps = DUMPS,
                        profileyear = PROFILEYEAR,
                        dfnew_flag_name = NA,
                        dfold_flag_name = NA,
-                       compareKUBE_name = NA){
+                       compareKUBE_name = NA,
+                       overwrite = FALSE){
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
@@ -391,19 +393,20 @@ FormatData <- function(data1 = dfnew,
   purrr::walk2(reqdumpfiles$dumpfiles,
                reqdumpfiles$savenames,
                \(x,y) {
-                 .savefiledump(filedump = x,
+                 .SaveFiledump(filedump = x,
                                savename = y,
                                dumppath = dumppath,
                                kubename = kubename,
                                datetagnew = datetagnew,
-                               datetagold = datetagold)
+                               datetagold = datetagold,
+                               overwrite = overwrite)
                  })
   
   cat("\nDONE!")
 
 }
 
-#' .savefiledump
+#' .SaveFiledump
 #'
 #' @param filedump "dfnew_flag", "dfold_flag", or "compareKUBE"
 #' @param savename dfnew_flag_name, dfold_flag_name, or compareKUBE_name
@@ -418,12 +421,13 @@ FormatData <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-.savefiledump <- function(filedump,
+.SaveFiledump <- function(filedump,
                           savename,
-                          dumppath = dumppath,
-                          kubename = kubename,
-                          datetagnew = datetagnew,
-                          datetagold = datetagold){
+                          dumppath,
+                          kubename,
+                          datetagnew,
+                          datetagold, 
+                          overwrite){
   
   if(filedump == "dfnew_flag"){
     outdata <- copy(dfnew_flag)
@@ -455,14 +459,19 @@ FormatData <- function(data1 = dfnew,
   
   file <- paste0(dumppath, filename)
   
-  # Write file if it doesn't exist
-  if(!file.exists(file)) {
+  # Write file if it doesn't exist, or if overwrite = TRUE
+  if(isTRUE(file.exists(file))){
+    cat(paste0("\nFILEDUMP ", filedump, " already exists: ", filename, "\n"))
+  } 
+  
+  if(isFALSE(file.exists(file)) || isTRUE(overwrite)) {
+    if(isTRUE(file.exists(file))){
+      cat("\nOverwriting existing filedump...")
+      }
     data.table::fwrite(outdata,
                        file = file,
                        sep = ";")
     cat(paste0("\nFILEDUMP ", filedump, ": ", filename, "\n"))
-  } else {
-    cat(paste0("\nFILEDUMP ", filedump, " already exists: ", filename, "\n"))
   }
 
 }
