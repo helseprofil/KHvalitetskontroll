@@ -127,32 +127,26 @@
 #' @export
 #'
 #' @examples
-.FixDecimals <- function(data){
+.FixDecimals <- function(data,
+                         commonvals){
   
-  round0 <- c("RATE.n", "SPVFLAGG")
-  round1 <- c("TELLER_", "NEVNER_", "sumTELLER", "sumNEVNER")
-  round2 <- c("RATE_", "MEIS_", "SMR_")
+  reldiffcols <- stringr::str_subset(names(data), "_reldiff")
+  valcols <- stringr::str_subset(names(data), stringr::str_c(commonvals, collapse = "|")) |> 
+    stringr::str_subset("_reldiff", negate = TRUE)
   
+  round0 <- stringr::str_subset(valcols, "^RATE.n_new$|^RATE.n_old$|SPVFLAGG")
+  round1 <- stringr::str_subset(valcols, "TELLER|NEVNER")
+  round2 <- c(stringr::str_subset(valcols, "^RATE_|SMR|MEIS"), reldiffcols)
   
-  if(any(stringr::str_detect(names(data), 
-                             stringr::str_c(round0, collapse = "|")))) { 
-    data <- data %>% 
-      dplyr::mutate(dplyr::across(dplyr::starts_with(round0), round, 0))
+  .myround <- function(data, val, round){
+    set(data, j = val, value = round(data[[val]], round))
   }
   
-  if(any(stringr::str_detect(names(data), 
-                             stringr::str_c(round1, collapse = "|")))) { 
-    data <- data %>% 
-      dplyr::mutate(dplyr::across(dplyr::starts_with(round1), round, 1))
-  }
+  purrr::walk(round0, \(x) .myround(data, x, 0))
+  purrr::walk(round1, \(x) .myround(data, x, 1))
+  purrr::walk(round2, \(x) .myround(data, x, 2))
   
-  if(any(stringr::str_detect(names(data), 
-                             stringr::str_c(round2, collapse = "|")))) {
-    data <- data %>%
-      dplyr::mutate(dplyr::across(dplyr::starts_with(round2), round, 2))
-  }
-  
-  data
+  data[]
 }
 
 #' CreateCompare
@@ -181,6 +175,16 @@
   cat("\n- Formats new KUBE")
   cat("\n  - Remove new rows, select common dimensions and values")
   comparenew <- data.table::copy(data1)
+  
+  # Replace TELLER and NEVNER with TELLER/NEVNER_uprikk if not present in dfnew and present in dfold
+  # Add the value to commonvals to generate _new/_old/_diff/_reldiff columns
+  for(i in c("TELLER", "NEVNER")){
+    if(i %in% names(data2) & isFALSE(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
+      comparenew[, (i) := get(paste0(i, "_uprikk"))]
+      commonvals <- c(commonvals, i)
+    }
+  }
+
   # Remove new rows, select common columns and values
   comparenew <- comparenew[newrow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
@@ -206,8 +210,6 @@
   }
   data.table::setcolorder(compareKUBE, colorder)
   
-  data.table::setattr(compareKUBE, "Filename_new", attributes(data1)$Filename)  
-  
   # Create diff columns
   
   for(i in commonvals){
@@ -231,8 +233,10 @@
   # Remove SPVFLAGG_reldiff
   compareKUBE[, SPVFLAGG_reldiff := NULL]
   
+  compareKUBE <- .FixDecimals(compareKUBE, commonvals)
   # Export compareKUBE to global environment
-  compareKUBE <<- .FixDecimals(compareKUBE)
+  # compareKUBE <<- .FixDecimals(compareKUBE)
+  compareKUBE <<- compareKUBE
 }
 
 #' Format data
