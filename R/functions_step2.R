@@ -366,7 +366,7 @@ FormatData <- function(data1 = dfnew,
     
   cat("\n\n-COMPLETED creating compareKUBE\n")
   } else {
-    cat("\n\n-No old KUBE to be flagged, compareKUBE not created ")
+    cat("\n\n-No old KUBE to be flagged, compareKUBE not created\n")
   }
   
   # File dumps
@@ -402,7 +402,7 @@ FormatData <- function(data1 = dfnew,
                                overwrite = overwrite)
                  })
   
-  cat("\nDONE!")
+  cat("\n\nDONE!")
 
 }
 
@@ -461,17 +461,17 @@ FormatData <- function(data1 = dfnew,
   
   # Write file if it doesn't exist, or if overwrite = TRUE
   if(isTRUE(file.exists(file))){
-    cat(paste0("\nFILEDUMP ", filedump, " already exists: ", filename, "\n"))
+    cat(paste0("\nFILEDUMP ", filename, " already exists: "))
   } 
   
   if(isFALSE(file.exists(file)) || isTRUE(overwrite)) {
     if(isTRUE(file.exists(file))){
-      cat("\nOverwriting existing filedump...")
+      cat("\n---Overwriting existing filedump...---")
       }
     data.table::fwrite(outdata,
                        file = file,
                        sep = ";")
-    cat(paste0("\nFILEDUMP ", filedump, ": ", filename, "\n"))
+    cat(paste0("\nFILEDUMP written to folder: ", filename, "\n"))
   }
 
 }
