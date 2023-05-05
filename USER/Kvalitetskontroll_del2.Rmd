@@ -14,6 +14,7 @@ output:
   margin: auto;
 }
 </style>
+
 Version: 1.3.0 (05.05.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
@@ -35,7 +36,11 @@ ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-M
           foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
           modusnew = "KH", # KH or NH
           dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+<<<<<<< HEAD
           folderold = 2022, # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
+=======
+          folderold = "2022", # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
+>>>>>>> main
           modusold = "KH") # NULL, or KH or NH
 ```
 

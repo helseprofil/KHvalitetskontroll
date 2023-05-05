@@ -15,14 +15,14 @@ output:
 }
 </style>
 
-Version: 1.9 (05.05.2023). 
+Version: 1.9.1 (05.05.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r init, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
-source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/load_packages_functions.R")
 ```
 
 # COMMENTS
@@ -157,7 +157,7 @@ ComparePrikkTS()
 
 ## 3A. Does FYLKE sum to LAND?
 
--   Summarise the column **`r COMPAREval`** for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
+-   Summarise sumTELLER_uprikk/sumTELLER/TELLER for LAND and FYLKE, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (LAND - FYLKE) and relative (LAND/FYLKE) difference
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest (e.g. only show specific year)
@@ -176,7 +176,7 @@ CompareFylkeLand(groupdim = GROUPdims)
 
 ## 3B. Does KOMMUNE sum to FYLKE?
 
--   Summarise the column **`r COMPAREval`** for KOMMUNE and FYLKE, grouped by: `r print_dim(GROUPdims)`
+-   Summarise sumTELLER_uprikk/sumTELLER/TELLER for KOMMUNE and FYLKE, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (FYLKE - KOMMUNE) and relative (FYLKE/KOMMUNE) difference
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest 
@@ -195,7 +195,7 @@ CompareKommuneFylke(groupdim = GROUPdims)
 
 ## 3C. Oslo KOMMUNE = Oslo FYLKE?
 
--   Summarise the column **`r COMPAREval`** for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
+-   Summarise sumTELLER_uprikk/sumTELLER/TELLER for Oslo kommune and Oslo fylke, grouped by: `r print_dim(GROUPdims)`
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
 -   Use search bar to filter out rows of interest (e.g. only show specific year)
@@ -215,7 +215,7 @@ CompareOslo(groupdim = GROUPdims)
 
 ## 3D. Does BYDEL sum to KOMMUNE?
 
--   Summarise the column **`r COMPAREval`** for BYDEL and KOMMUNE, grouped by: `r print_dim(GROUPdims)`
+-   Summarise sumTELLER_uprikk/sumTELLER/TELLER for BYDEL and KOMMUNE, grouped by: `r print_dim(GROUPdims)`
 -   Calculated for Oslo, Bergen, Trondheim, and Stavanger.
 -   Calculate the absolute (KOMMUNE - BYDEL) and relative (KOMMUNE/BYDEL) difference
 -   Orders the input according to the relative difference.
