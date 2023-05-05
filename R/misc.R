@@ -27,35 +27,35 @@ ReadFiles <- function(dfnew = NULL,
                       modusold = NULL){
   
   # Check arguments new file
-  if(isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
+  if(base::isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
     stop("dfnew must be provided in the format FILENAME_YYYY-MM-DD-hh-mm")
   }
   
-  if(isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
+  if(base::isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
                  foldernew == "DATERT", 
                  foldernew == "QC"))) {
     stop("`foldernew` must be either 'QC', 'DATERT', or 4 digits")
   }
   
-  if(isFALSE(modusnew %in% c("KH", "NH"))) {
+  if(base::isFALSE(modusnew %in% c("KH", "NH"))) {
     stop("`modusnew` must be either 'KH' or 'NH'")
   }
   
   # Check arguments old file
-  if(isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
+  if(base::isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
                  is.null(dfold)))){
     stop("dfold must be provided in the format FILENAME_YYYY-MM-DD-hh-mm, or NULL")
   }
   
-  if(isFALSE(is.null(dfold))){
+  if(base::isFALSE(is.null(dfold))){
     
-    if(isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
+    if(base::isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
                    folderold == "DATERT", 
                    folderold == "QC"))) {
       stop("When dfold is specified, `folderold` must be either 'QC', 'DATERT', or 4 digits")
     }
     
-    if(isFALSE(any(modusold %in% c("KH", "NH")))) {
+    if(base::isFALSE(any(modusold %in% c("KH", "NH")))) {
       stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
     }
   }
@@ -77,17 +77,17 @@ ReadFiles <- function(dfnew = NULL,
   filenew <- list.files(pathnew, pattern = dfnew)
   filepathnew <- file.path(pathnew, filenew)
   
-  if(isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
+  if(base::isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
     stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
   }
   
-  if(isFALSE(is.null(dfold))){
+  if(base::isFALSE(is.null(dfold))){
     
     pathold <- .findpath(modusold, folderold)
     fileold <- list.files(pathold, pattern = dfold)
     filepathold <- file.path(pathold, fileold)
     
-    if(isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
+    if(base::isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
       stop("dfold not found. Check arguments 'dfold', 'folderold', and 'modusold")
     }
   }
@@ -108,7 +108,7 @@ ReadFiles <- function(dfnew = NULL,
              skip_absent = TRUE)
     data.table::setattr(outdata, "newcolnames", names(outdata))
     
-    .diff <- data.table::fcase(isFALSE(identical(attr(outdata, "orgcolnames"), 
+    .diff <- data.table::fcase(base::isFALSE(identical(attr(outdata, "orgcolnames"), 
                                                  attr(outdata, "newcolnames"))), 
                                "yes",
                                default = "no")
@@ -126,7 +126,7 @@ ReadFiles <- function(dfnew = NULL,
   }
   
   # If provided, read dfold
-  if(isFALSE(is.null(dfold))){
+  if(base::isFALSE(is.null(dfold))){
     dfold <<- .readfile(filepathold, folderold)
     cat(paste0("Old file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
   }

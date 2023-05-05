@@ -11,11 +11,11 @@ ReadFile <- function(file = NULL,
                      modus = "KH", 
                      folder = "QC"){
   
-  if(isFALSE(modus %in% c("KH", "NH"))) {
+  if(base::isFALSE(modus %in% c("KH", "NH"))) {
     stop("`modus` must be either 'KH' or 'NH'")
   }
   
-  if(isFALSE(any(grepl("^\\d{4}$", folder), 
+  if(base::isFALSE(any(grepl("^\\d{4}$", folder), 
                  folder == "DATERT", 
                  folder == "QC"))) {
     stop("`folder` must be either 4 digits, 'QC', or 'DATERT'")

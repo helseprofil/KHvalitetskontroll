@@ -180,7 +180,7 @@
   # For rows where SPVFLAGG != 0, the generated column is set to NA_real_
   # Add the value to commonvals to generate _new/_old/_diff/_reldiff columns
   for(i in c("TELLER", "NEVNER")){
-    if(i %in% names(data2) & isFALSE(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
+    if(i %in% names(data2) & base::isFALSE(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
       comparenew[, (i) := get(paste0(i, "_uprikk"))]
       comparenew[SPVFLAGG != 0, (i) := NA_real_]
       commonvals <- c(commonvals, i)
@@ -274,7 +274,7 @@ FormatData <- function(data1 = dfnew,
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
   
-  if(isFALSE(is.null(dumps))){
+  if(base::isFALSE(is.null(dumps))){
     .CreateFolders(profileyear = profileyear,
                    kubename = kubename)
   }
@@ -299,7 +299,7 @@ FormatData <- function(data1 = dfnew,
   }
   
   # Summary of dimensions and values, if data2 provided
-  if(isFALSE(is.null(data2))){
+  if(base::isFALSE(is.null(data2))){
   msg_commondims <- dplyr::case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
                               TRUE ~ paste0("\n- Common dimensions found: ", stringr::str_c(.commondims, collapse = ", ")))
   
@@ -321,7 +321,7 @@ FormatData <- function(data1 = dfnew,
   
   # Flag new KUBE (create dfnew_flag)
   cat("STARTS flagging new kube:")
-  if(isFALSE(is.null(data2))){
+  if(base::isFALSE(is.null(data2))){
     cat(msg_commondims)
     cat(msg_newdims)
     cat(msg_commonvals)
@@ -334,7 +334,7 @@ FormatData <- function(data1 = dfnew,
            dims = .dims1,
            vals = .vals1)
   
-  if(isFALSE(is.null(data2))){
+  if(base::isFALSE(is.null(data2))){
   # Flag old KUBE (if data2 provided, create dfold_flag)
   cat("\nSTARTS flagging old kube:")
   cat(msg_commondims)
@@ -372,7 +372,7 @@ FormatData <- function(data1 = dfnew,
   # File dumps
   
   datetagnew <- .GetKubedatetag(data1)
-  datetagold <- data.table::fcase(isFALSE(is.null(data2)), .GetKubedatetag(data2),
+  datetagold <- data.table::fcase(base::isFALSE(is.null(data2)), .GetKubedatetag(data2),
                                   default = "")
   
   ## Create list of required dumps and savenames
@@ -451,7 +451,7 @@ FormatData <- function(data1 = dfnew,
   }
   
   # Set filename
-  if(isFALSE(is.na(savename))){
+  if(base::isFALSE(is.na(savename))){
     filename <- paste0(stringr::str_remove(savename, ".csv"), ".csv")
   } else {
     filename <- paste0(kubename, "_", datetag, "_", type)
@@ -460,12 +460,12 @@ FormatData <- function(data1 = dfnew,
   file <- paste0(dumppath, filename)
   
   # Write file if it doesn't exist, or if overwrite = TRUE
-  if(isTRUE(file.exists(file))){
+  if(base::isTRUE(file.exists(file))){
     cat(paste0("\nFILEDUMP ", filename, " already exists: "))
   } 
   
-  if(isFALSE(file.exists(file)) || isTRUE(overwrite)) {
-    if(isTRUE(file.exists(file))){
+  if(base::isFALSE(file.exists(file)) || base::isTRUE(overwrite)) {
+    if(base::isTRUE(file.exists(file))){
       cat("\n---Overwriting existing filedump...---")
       }
     data.table::fwrite(outdata,
