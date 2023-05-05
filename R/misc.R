@@ -108,12 +108,12 @@ ReadFiles <- function(dfnew = NULL,
              skip_absent = TRUE)
     data.table::setattr(outdata, "newcolnames", names(outdata))
     
-    .orgcolnames <- attributes(outdata)$orgcolnames                 
-    .newcolnames <- attributes(outdata)$newcolnames                 
-    .anynamechange <- data.table::fcase(identical(.orgcolnames, .newcolnames), "no",
-                                        isFALSE(identical(.orgcolnames, .newcolnames)), "yes")
+    .diff <- data.table::fcase(isFALSE(identical(attr(outdata, "orgcolnames"), 
+                                                 attr(outdata, "newcolnames"))), 
+                               "yes",
+                               default = "no")
     
-    data.table::setattr(outdata, "anynamechange", .anynamechange)
+    data.table::setattr(outdata, "colnamediff", .diff)
     
     outdata
   }
@@ -121,6 +121,9 @@ ReadFiles <- function(dfnew = NULL,
   # Read dfnew
   dfnew <<- .readfile(filepathnew, foldernew)
   cat(paste0("New file (dfnew) loaded: ", str_extract(filepathnew, "(?<=PRODUKTER/).*"), "\n"))
+  if(attributes(dfnew)$colnamediff == "yes"){
+    cat("\nfancy message")
+  }
   
   # If provided, read dfold
   if(isFALSE(is.null(dfold))){
