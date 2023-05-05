@@ -74,7 +74,7 @@ ReadFiles <- function(dfnew = NULL,
   }
   
   pathnew <- .findpath(modusnew, foldernew)
-  filenew <- list.files(pathnew, pattern = dfnew)
+  filenew <- list.files(pathnew, pattern = paste0("^",dfnew))
   filepathnew <- file.path(pathnew, filenew)
   
   if(isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
