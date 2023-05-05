@@ -99,6 +99,22 @@ ReadFiles <- function(dfnew = NULL,
     data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
                                                                folder == "DATERT", "ALLVIS",
                                                                stringr::str_detect(folder, "\\d{4}"), "NESSTAR"))
+    
+    # Set attributes orgcolnames, newcolnames, and anynamechange
+    data.table::setattr(outdata, "orgcolnames", names(outdata))
+    setnames(outdata, 
+             old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
+             new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
+             skip_absent = TRUE)
+    data.table::setattr(outdata, "newcolnames", names(outdata))
+    
+    .orgcolnames <- attributes(outdata)$orgcolnames                 
+    .newcolnames <- attributes(outdata)$newcolnames                 
+    .anynamechange <- data.table::fcase(identical(.orgcolnames, .newcolnames), "no",
+                                        isFALSE(identical(.orgcolnames, .newcolnames)), "yes")
+    
+    data.table::setattr(outdata, "anynamechange", .anynamechange)
+    
     outdata
   }
   
