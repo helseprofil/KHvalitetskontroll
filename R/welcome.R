@@ -1,6 +1,7 @@
 # Welcome messages
 
-cat("\nWelcome to KHvalitetskontroll\n", 
+cat("\n\n---\n",
+    "\nWelcome to KHvalitetskontroll!\n", 
     "\n---\n", 
     "\nAvailable USER files:\n",
     "- Kvalitetskontroll_del1.Rmd\n",
@@ -24,10 +25,3 @@ if(exists(".updatemsg")){
 if(exists(".lastupdate")){
   rm(.lastupdate)
 }
-
-
-
-# Check package versions
-cat("\nControlling package versions:\n")
-
-renv::status()
