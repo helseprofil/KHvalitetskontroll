@@ -836,6 +836,7 @@ PrintTimeseries <- function(dims = .TSplotdims,
 #'
 #' @examples
 UnspecifiedBydel <- function(data = dfnew,
+                             minteller_kommune = NULL,
                              maxrows = TRUE){
   
   kommunegeo <- c(301, 1103, 4601, 5001)
@@ -853,21 +854,37 @@ UnspecifiedBydel <- function(data = dfnew,
   .IdentifyColumns(d)
   
   # Remove years with no data on bydel
-  
-  bydelaar <- d[GEO %in% bydelsgeo & SPVFLAGG == 0, .N, by = AAR]$AAR
+  bydelaar <- d[GEO %in% bydelsgeo & SPVFLAGG == 0, unique(AAR)]
   d <- d[AAR %in% bydelaar]
   
   # If no rows left after filtering years, stop and return NULL.
   if(nrow(d) < 1){
-      cat("No rows left in data after removing years < bydel start.\n")
+      cat("No rows left in data after removing years without data on bydel.\n")
       return(invisible(NULL))
     } 
   
-  # Identify dimemsion and value columns
-  vals <- stringr::str_subset(.vals1, "TELLER|NEVNER")
+  # Pick relevant TELLER and NEVNER columns. 
+  # sumX_uprikk > sumX > X
+  tellerval <- data.table::fcase("sumTELLER_uprikk" %in% .vals1, "sumTELLER_uprikk",
+                                 "sumTELLER" %in% .vals1, "sumTELLER",
+                                 "TELLER" %in% .vals1, "TELLER",
+                                 default = NA_character_)
+  nevnerval <- data.table::fcase("sumNEVNER_uprikk" %in% .vals1, "sumNEVNER_uprikk",
+                                 "sumNEVNER" %in% .vals1, "sumNEVNER",
+                                 "NEVNER" %in% .vals1, "NEVNER",
+                                 default = NA_character_)
+  
+  vals <- c(tellerval, nevnerval)
+  
+  if(length(vals) < 1){
+    cat("No TELLER or NEVNER columns found in data, not possible to estimate unspecified bydel.\n")
+    return(invisible(NULL))
+  }
+  
+  outcols <- c(.dims1, vals, "SPVFLAGG")
         
   # Create subset, create geolevel and kommune variable
-  d <- d[GEO %in% c(kommunegeo, bydelsgeo), .SD, .SDcols = c(.dims1, vals, "SPVFLAGG")]
+  d <- d[GEO %in% c(kommunegeo, bydelsgeo), ..outcols]
   d[, ':=' (KOMMUNE = character(),
             GEONIV = "Bydel")]
   d[grep("^301", GEO), KOMMUNE := "Oslo"]
@@ -877,36 +894,43 @@ UnspecifiedBydel <- function(data = dfnew,
   d[GEO < 9999, GEONIV := "Kommune"]
   
   # Identify complete strata within kommune and all dims except GEO
-  d[, sumSPV := sum(SPVFLAGG), by = c("KOMMUNE", 
-                                      stringr::str_subset(.dims1, "GEO", negate = TRUE))]
+  # count number of missing tellerval and nevnerval in each strata
+  d <- data.table::melt(d, measure.vars = c(vals), variable.name = "MALTALL")
+  d[, sumprikk := sum(is.na(value)),
+    by = c("KOMMUNE", 
+           stringr::str_subset(c(.dims1, "MALTALL"), "GEO", negate = TRUE))]
+
   # Only keep complete strata
-  d <- d[sumSPV == 0]
+  d <- d[sumprikk == 0]
   if(nrow(d) < 1){
     cat("No complete strata, not possible to estimate unspecified bydel. Was bydelstart set to the correct year?\n")
     return(invisible(NULL))
   } 
   
-  # sum `vals` columns for kommune and bydel
-  d <- d[, lapply(.SD, sum, na.rm = T), .SDcols = vals, by = c("KOMMUNE", "GEONIV", 
-                                                               stringr::str_subset(.dims1, "GEO", negate = TRUE))]
+  # sum value columns for kommune and bydel, and convert to wide format
+  d <- d[, .(sum = sum(value, na.rm = T)), by = c("KOMMUNE", "GEONIV", "MALTALL",
+                                               stringr::str_subset(.dims1, "GEO", negate = TRUE))]
   
-  # Format table
-  d[, (vals) := lapply(.SD, as.numeric, na.rm = T), .SDcols = vals]
-  d <- data.table::melt(d, measure.vars = c(vals), variable.name = "MALTALL")
-  d <- data.table::dcast(d, ... ~ GEONIV, value.var = "value")
+  d <- data.table::dcast(d, ... ~ GEONIV, value.var = "sum")
   
+  # If minteller provided, exclude rows where MALTALL == tellerval and bydel or kommune < minteller
+  if(is.numeric(minteller_kommune)){
+    d <- d[!(MALTALL == tellerval & Kommune < minteller_kommune)]
+  }
+
   # Estimate unknown bydel
   d[, `UOPPGITT, %` := 100*(1 - Bydel/Kommune)]
   
-  # Convert all dimensions to factor for search function, set order
+  # Convert all dimensions to factor for search function, round numeric columns
   convert <- stringr::str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
   d[, (convert) := lapply(.SD, as.factor), .SDcols = convert]
+  d[Bydel == 0 & Kommune == 0, `UOPPGITT, %` := NA_real_]
   round <- which(sapply(d, is.numeric))
-  d[, (round) := lapply(.SD, round, 1), .SDcols = round]
+  d[, (round) := lapply(.SD, round, 2), .SDcols = round]
   
   # Order according to unspecified bydel
   d <- d[order(-`UOPPGITT, %`)]
-
+  
   ### Consider saving to environment and make file dump, especially when files are too large for HTML-table
   
   # Find number of kommune and maltall
@@ -914,16 +938,16 @@ UnspecifiedBydel <- function(data = dfnew,
   n_maltall <- length(unique(d$MALTALL))
   
   # Print sumary information
-  cat(paste0("Total number of strata with complete bydel: ", nrow(d)/n_maltall))
-  cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])/n_maltall))
-  cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])/n_maltall))
-  cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])/n_maltall))
-  cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])/n_maltall))
+  cat(paste0("Total number of strata with complete bydel (teller + nevner): ", nrow(d)))
+  cat(paste0("\nOslo: ", nrow(d[KOMMUNE == "Oslo"])))
+  cat(paste0("\nBergen: ", nrow(d[KOMMUNE == "Bergen"])))
+  cat(paste0("\nStavanger: ", nrow(d[KOMMUNE == "Stavanger"])))
+  cat(paste0("\nTrondheim: ", nrow(d[KOMMUNE == "Trondheim"])))
   
   # If nrow is > 8 000, show maximum 10 000 observations
   if(maxrows && nrow(d) > 8000){
     
-    # Estimate observations per kommune*maltall to get total < 10 000
+    # Estimate observations per kommune*maltall to get total <= 8000
     n_obs <- floor(8000 / (n_kommune*n_maltall))
     
     cat(paste0("\nTop ", n_obs, " observations shown per MALTALL per KOMMUNE: "))
