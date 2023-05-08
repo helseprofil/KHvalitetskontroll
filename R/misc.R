@@ -27,90 +27,182 @@ ReadFiles <- function(dfnew = NULL,
                       modusold = NULL){
   
   # Check arguments new file
-  if(isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
+  if(base::isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
     stop("dfnew must be provided in the format FILENAME_YYYY-MM-DD-hh-mm")
   }
   
-  if(isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
+  if(base::isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
                  foldernew == "DATERT", 
                  foldernew == "QC"))) {
     stop("`foldernew` must be either 'QC', 'DATERT', or 4 digits")
   }
   
-  if(isFALSE(modusnew %in% c("KH", "NH"))) {
+  if(base::isFALSE(modusnew %in% c("KH", "NH"))) {
     stop("`modusnew` must be either 'KH' or 'NH'")
   }
   
   # Check arguments old file
-  if(isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
+  if(base::isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
                  is.null(dfold)))){
     stop("dfold must be provided in the format FILENAME_YYYY-MM-DD-hh-mm, or NULL")
   }
   
-  if(isFALSE(is.null(dfold))){
+  if(base::isFALSE(is.null(dfold))){
     
-    if(isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
+    if(base::isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
                    folderold == "DATERT", 
                    folderold == "QC"))) {
       stop("When dfold is specified, `folderold` must be either 'QC', 'DATERT', or 4 digits")
     }
     
-    if(isFALSE(any(modusold %in% c("KH", "NH")))) {
+    if(base::isFALSE(any(modusold %in% c("KH", "NH")))) {
       stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
     }
   }
   
   # Check if file(s) exists, if not stop before reading files
-  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
-  
-  .findpath <- function(modus, folder){
-    folder <- as.character(folder)
-    file.path(basepath, 
-              data.table::fcase(modusnew == "KH", "KOMMUNEHELSA",
-                                modusnew == "NH", "NORGESHELSA"),
-              data.table::fcase(folder == "DATERT", paste0(folder, "/csv"),
-                                folder == "QC", folder,
-                                stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR")))
-  }
-  
   pathnew <- .findpath(modusnew, foldernew)
   filenew <- list.files(pathnew, pattern = paste0("^",dfnew))
   filepathnew <- file.path(pathnew, filenew)
   
-  if(isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
+  if(base::isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
     stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
   }
   
-  if(isFALSE(is.null(dfold))){
+  if(base::isFALSE(is.null(dfold))){
     
     pathold <- .findpath(modusold, folderold)
     fileold <- list.files(pathold, pattern = dfold)
     filepathold <- file.path(pathold, fileold)
     
-    if(isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
+    if(base::isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
       stop("dfold not found. Check arguments 'dfold', 'folderold', and 'modusold")
     }
   }
   
-  .readfile <- function(path, folder){
-    
-    outdata <- data.table::fread(path)
-    data.table::setattr(outdata, "Filename", basename(path))
-    data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
-                                                               folder == "DATERT", "ALLVIS",
-                                                               stringr::str_detect(folder, "\\d{4}"), "NESSTAR"))
-    outdata
-  }
-  
-  # Read dfnew
-  dfnew <<- .readfile(filepathnew, foldernew)
+  # Read dfnew and store to global env
+  outdatanew <- .readfile(filepathnew, foldernew)
   cat(paste0("New file (dfnew) loaded: ", str_extract(filepathnew, "(?<=PRODUKTER/).*"), "\n"))
-  
-  # If provided, read dfold
-  if(isFALSE(is.null(dfold))){
-    dfold <<- .readfile(filepathold, folderold)
-    cat(paste0("Old file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
+  if(attr(outdatanew, "colnameinfo")$diff == "yes"){
+    .listcolrename(outdatanew, "dfnew")
   }
+  cat("  dfnew columns: ", names(outdatanew), "\n")
+  dfnew <<- outdatanew
+  
+  # If provided, read dfold and store to global env
+  if(base::isFALSE(is.null(dfold))){
+    outdataold <- .readfile(filepathold, folderold)
+    cat(paste0("\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
+    if(attr(outdataold, "colnameinfo")$diff == "yes"){
+      .listcolrename(outdataold, "dfold")
+    }
+    cat("\n  dfold columns: ", names(outdataold))
+    dfold <<- outdataold
+  }
+}
+
+#' .findpath
+#' 
+#' Helper function to create correct filepath in ReadFiles
+#'
+#' @param modus 
+#' @param folder 
+.findpath <- function(modus, folder){
+  
+  folder <- as.character(folder)
+  
+  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
+  file.path(basepath, 
+            data.table::fcase(modus == "KH", "KOMMUNEHELSA",
+                              modus == "NH", "NORGESHELSA"),
+            data.table::fcase(folder == "DATERT", paste0(folder, "/csv"),
+                              folder == "QC", folder,
+                              stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR")))
+}
+
+#' .readfile
+#'
+#' Helper function to read file and set attributes
+#' @param path 
+#' @param folder 
+.readfile <- function(path, folder){
+  
+  outdata <- data.table::fread(path)
+  data.table::setattr(outdata, "Filename", basename(path))
+  data.table::setattr(outdata, "Filetype", data.table::fcase(folder == "QC", "QC",
+                                                             folder == "DATERT", "ALLVIS",
+                                                             stringr::str_detect(folder, "\\d{4}"), "NESSTAR"))
+  
+  # Rename default columns. Set attribute colnameinfo to document colname changes
+  .orgnames <- names(copy(outdata))
+  
+  .oldcols = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx")
+  .newcols = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS")
+  
+    # Due to encoding problems in R >= 4.2, only add 'utdanningsnivå' for R < 4.2
+    if(as.numeric(R.version$minor) < 2){
+      .oldcols = c(.oldcols, "utdanningsnivå")
+      .newcols = c(.newcols, "UTDANN")
+    }
+  
+  setnames(outdata, 
+           old = .oldcols,
+           new = .newcols,
+           skip_absent = TRUE)
+  .newnames <- names(outdata)
+  
+  .diff <- data.table::fcase(base::any(.orgnames != .newnames), "yes", default = "no")
+  
+  data.table::setattr(outdata, "colnameinfo", list(orgnames = .orgnames,
+                                                   newnames = .newnames,
+                                                   diff = .diff))
+  
+  outdata
+}
+
+#' .listcolrename
+#' Helper function to list column names that are changed while reading file
+#' @param data 
+#' @param prefix 
+.listcolrename <- function(data, prefix){
+  orgcols <- attr(data, "colnameinfo")$orgnames
+  newcols <- attr(data, "colnameinfo")$newnames
+  namechange <- data.table::data.table(orgcols, newcols)[orgcols != newcols]
+  outmsg <- namechange[, change := paste0(orgcols, " ==> ", newcols)][, change]
+  cat("  ", prefix, " columns automatically renamed:", stringr::str_c(paste0("\n    * ", outmsg), collapse = ""), sep = "")
+}
+
+#' RenameColumns
+#' 
+#' wrapper around setnames, also printing a summary of columns manually renamed
+#'
+#' @param data 
+#' @param old 
+#' @param new 
+RenameColumns <- function(data,
+                          old = NULL,
+                          new = NULL){
+  
+  if(base::isTRUE(base::any(is.null(old),
+                             old == "",
+                             is.null(new),
+                             new == ""))){
+    return(invisible(NULL))
+  }
+  
+  if(length(old) != length(new)){
+    stop(paste("The number of names provided to 'old' and 'new' must be equal.\n",
+               length(old), "names provided to 'old', and",
+               length(new), "names provided to 'new.'"))
+  }
+    
+  orgcols <- names(copy(data))
+  setnames(data, old = old, new = new, skip_absent = TRUE)
+  newcols <- names(data)
+  
+  namechange <- data.table::data.table(orgcols, newcols)[orgcols != newcols]
+  outmsg <- namechange[, change := paste0(orgcols, " ==> ", newcols)][, change]
+  cat("\n", deparse(substitute(data)), " columns manually renamed:", stringr::str_c(paste0("\n* ", outmsg), collapse = ""), sep = "")
 }
 
 #' print_dim

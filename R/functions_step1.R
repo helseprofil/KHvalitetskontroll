@@ -321,11 +321,11 @@ CompareFylkeLand <- function(data = dfnew,
   cat("GEOcodes included: ", stringr::str_c(unique(data$GEO), collapse = ", "), "\n")
   
   # Check if both Land and Fylke is present
-  if(isFALSE("Land" %in% data$geolevel)){
+  if(base::isFALSE("Land" %in% data$geolevel)){
     cat("No rows corresponding to Land, comparison not possible")
     return(invisible(NULL))
   }
-  if(isFALSE("Fylke" %in% data$geolevel)){
+  if(base::isFALSE("Fylke" %in% data$geolevel)){
     cat("No rows corresponding to Fylke, comparison not possible")
     return(invisible(NULL))
   }

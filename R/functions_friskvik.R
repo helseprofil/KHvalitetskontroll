@@ -115,7 +115,7 @@ ReadFriskvik <- function(filename = NULL,
   }
   
   # If > 1 kube found and con provided, use ACCESS to extract correct kube name
-  if (length(kube) > 1 && isFALSE(is.null(con))) {
+  if (length(kube) > 1 && base::isFALSE(is.null(con))) {
     friskvikindikator <-
       stringr::str_extract(basename(friskvik),
                   ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
@@ -154,11 +154,11 @@ ReadFriskvik <- function(filename = NULL,
   # Standard dimension filtering, hard coded for 2023 as dimensions not included in FRISKVIK
   friskvikname <- .GetKubename(FRISKVIK)
   
-  if("INNVKAT" %in% .dims2 & isFALSE("INNVKAT" %in% .dims1)){
+  if("INNVKAT" %in% .dims2 & base::isFALSE("INNVKAT" %in% .dims1)){
     KUBE <- KUBE[INNVKAT == 0]
   }
   
-  if("LANDBAK" %in% .dims2 & isFALSE("LANDBAK" %in% .dims1)){
+  if("LANDBAK" %in% .dims2 & base::isFALSE("LANDBAK" %in% .dims1)){
     if(friskvikname %in% c("Innvand_0_17", 
                            "INNVAND_barn")){
       KUBE <- KUBE[LANDBAK == 100]
@@ -167,7 +167,7 @@ ReadFriskvik <- function(filename = NULL,
     }
   }
   
-  if("UTDANN" %in% .dims2 & isFALSE("UTDANN" %in% .dims1)){
+  if("UTDANN" %in% .dims2 & base::isFALSE("UTDANN" %in% .dims1)){
     if(friskvikname %in% c("UTDANNING_NH",
                            "UTDANN_HOY")){
       KUBE <- KUBE[UTDANN == 23]
@@ -220,7 +220,7 @@ CompareFriskvikPrikk <- function(data1 = FRISKVIK,
   data2 <- data2[AAR %in% data1[, unique(AAR)]]
   
   # Compare values censored in FRISKVIK with values censored in KUBE
-  if(isTRUE(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0]))){
+  if(base::isTRUE(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0]))){
       "Yes"
     } else {
       geodiff <- data1[is.na(data1$MEIS) != data2[, SPVFLAGG > 0], GEO]
@@ -243,7 +243,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   
   # Map over value columns in KUBE, find the column(s) matching FRISKVIK$MEIS
   for(i in kubevals){
-    if(isTRUE(all.equal(data1$MEIS, data2[, get(i)]))){
+    if(base::isTRUE(all.equal(data1$MEIS, data2[, get(i)]))){
       matches <- c(matches, i)
     } else {
       different <- c(different, i)
@@ -474,7 +474,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     VALID_COMBINATION <- NA
     
     # If both files are read without error, replace output columns
-    if(isFALSE("try-error" %in% class(tryload))){
+    if(base::isFALSE("try-error" %in% class(tryload))){
       
       Kube_name <- attributes(KUBE)$Filename
       Last_year <- FriskvikLastYear()
@@ -497,24 +497,24 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       kubeindikator <- stringr::str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
       ENHET <- .ReadAccess(.DB, "Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-      if(length(ENHET) == 0 | isTRUE(is.na(ENHET))){
+      if(length(ENHET) == 0 | base::isTRUE(is.na(ENHET))){
         ENHET <- "!!MISSING"
         }
       REFVERDI_VP <- .ReadAccess(.DB, "REFVERDI_VP", "KUBER", kubeindikator)
-      if(length(REFVERDI_VP) == 0 | isTRUE(is.na(REFVERDI_VP))){
+      if(length(REFVERDI_VP) == 0 | base::isTRUE(is.na(REFVERDI_VP))){
         REFVERDI_VP <- "!!MISSING"
       }
       
       isAK <- data.table::fcase(stringr::str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
                     default = FALSE)
       
-      isPD <- data.table::fcase(isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
+      isPD <- data.table::fcase(base::isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
                     default = FALSE)
       
-      isMEIS <- data.table::fcase(isTRUE("MEIS" %in% Matching_kubecol), TRUE,
+      isMEIS <- data.table::fcase(base::isTRUE("MEIS" %in% Matching_kubecol), TRUE,
                       default = FALSE)
       
-      VALID_COMBINATION <- data.table::fcase(all(isAK, isPD, isMEIS) | isFALSE(any(isAK, isPD, isMEIS)), "Yes",
+      VALID_COMBINATION <- data.table::fcase(all(isAK, isPD, isMEIS) | base::isFALSE(any(isAK, isPD, isMEIS)), "Yes",
                                  default =  "No")
     }
     

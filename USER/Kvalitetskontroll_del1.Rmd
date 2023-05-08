@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.9.1 (05.05.2023). 
+Version: 1.9.2 (08.05.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r init, include=FALSE}
@@ -38,6 +38,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # Loads both new file (dfnew), and old file (dfold) for comparison. 
 # dfnew and dfold must be provided as full kubename_datotag
 # foldernew and folderold must be QC, DATERT or 4-digits
+# By default, the following column names are automatically renamed: "antall", "NULL, Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4)
 
 ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
@@ -46,28 +47,25 @@ ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-M
           folderold = 2022, # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
           modusold = "KH") # NULL, or KH or NH
 ```
-```{r colnamechange, echo = F}
-# To chance column names, edit the following code:
 
-# Default list is set for column names which often needs to be changed. Absent column names are skipped. 
-# NB: Norwegian characters in file name may fail if you use R version 4.2. In that case, use column position (numeric) to indicate old name.
+```{r colnamechange, echo = F}
+# OPTIONAL, MANUAL RENAMING OF COLUMN NAMES
+# If dfnew or dfold still contains unwanted column names, which can be checked by names(dfnew) or names(dfold), this can be manually changed by editing `old` and `new` arguments in the the code below:
+
+# NB: Norwegian characters in file name may fail if you use R version 4.2+. In that case, use column position (numeric) to indicate old name (e.g. 1 = first column, be careful to select the correct column!).
 # NB2: the function matches the old and new list by position, so old name #1 is replaced with new name #1 etc. 
 
 # New file
-# To show column names use names(dfnew) in the console
-setnames(dfnew, 
-         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
-         new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
-         skip_absent = TRUE)
+RenameColumns(dfnew, 
+              old = NULL, # NULL, "old name" OR c("old name 1", "old name 2", etc)
+              new = NULL) # NULL, "new name" OR c("new name 1", "new name 2", etc)
 
-# Old file, 
-# To show column names use names(dfold) in the console. 
+# Old file
 # Code is skipped if dfold does not exist, no need to comment/uncomment. 
 if(exists("dfold")){
-setnames(dfold, 
-         old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
-         new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
-         skip_absent = TRUE)
+RenameColumns(dfold, 
+              old = NULL, # NULL, "old name" OR c("old name 1", "old name 2", etc)
+              new = NULL) # NULL, "new name" OR c("new name 1", "new name 2", etc) 
 }
 ```
 
@@ -273,7 +271,7 @@ PrintTimeseries()
 # If savename = NULL, file name will default to the full cube name (incl date tag). You can also manually select the name of the output file. 
 
 # NB: 
-# You must load data files and run the INPUT section before saving the report, to generate all the objects
+# You must load data files before saving the report
 # You must ALSO save the document (Ctrl + S) before saving the report using this function!
 
 SaveReport(profileyear = PROFILEYEAR, 
