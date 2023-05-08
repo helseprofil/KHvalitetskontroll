@@ -33,10 +33,10 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # foldernew and folderold must be QC, DATERT or 4-digits
 # By default, the following column names are automatically renamed: "antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4.2)
 
-ReadFiles(dfnew = "e0_KH_2023-01-12-16-39", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          foldernew = "2023", # QC, DATERT or 4-digit referring to NESSTAR-folder
+ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
           modusnew = "KH", # KH or NH
-          dfold = "e0_KH_2022-01-24-17-25", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           folderold = "2022", # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
           modusold = "KH") # NULL, or KH or NH
 ```
