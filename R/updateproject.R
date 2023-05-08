@@ -12,7 +12,7 @@ if(ask) {
   gert::git_pull()
   
   # Activate renv, read current lockfile after updating
-  source("renv/activate.R")
+  renv::activate()
   
   .updatemsg <- "\nEverything is up to date!\n"
 } else {
