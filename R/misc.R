@@ -86,15 +86,17 @@ ReadFiles <- function(dfnew = NULL,
   if(attr(outdatanew, "colnameinfo")$diff == "yes"){
     .listcolrename(outdatanew, "dfnew")
   }
+  cat("  dfnew columns: ", names(outdatanew), "\n")
   dfnew <<- outdatanew
   
   # If provided, read dfold and store to global env
   if(base::isFALSE(is.null(dfold))){
     outdataold <- .readfile(filepathold, folderold)
-    cat(paste0("Old file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
+    cat(paste0("\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
     if(attr(outdataold, "colnameinfo")$diff == "yes"){
       .listcolrename(outdataold, "dfold")
     }
+    cat("\n  dfold columns: ", names(outdataold))
     dfold <<- outdataold
   }
 }
@@ -133,9 +135,19 @@ ReadFiles <- function(dfnew = NULL,
   
   # Rename default columns. Set attribute colnameinfo to document colname changes
   .orgnames <- names(copy(outdata))
+  
+  .oldcols = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx")
+  .newcols = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS")
+  
+    # Due to encoding problems in R >= 4.2, only add 'utdanningsnivå' for R < 4.2
+    if(as.numeric(R.version$minor) < 2){
+      .oldcols = c(.oldcols, "utdanningsnivå")
+      .newcols = c(.newcols, "UTDANN")
+    }
+  
   setnames(outdata, 
-           old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
-           new = c("TELLER", "RATE", "MEIS", "sumTELLER", "sumNEVNER", "SMR", "MEIS", "UTDANN"),
+           old = .oldcols,
+           new = .newcols,
            skip_absent = TRUE)
   .newnames <- names(outdata)
   
@@ -157,7 +169,7 @@ ReadFiles <- function(dfnew = NULL,
   newcols <- attr(data, "colnameinfo")$newnames
   namechange <- data.table::data.table(orgcols, newcols)[orgcols != newcols]
   outmsg <- namechange[, change := paste0(orgcols, " ==> ", newcols)][, change]
-  cat("\n", prefix, " columns automatically renamed:", stringr::str_c(paste0("\n* ", outmsg), collapse = ""), sep = "")
+  cat("  ", prefix, " columns automatically renamed:", stringr::str_c(paste0("\n    * ", outmsg), collapse = ""), sep = "")
 }
 
 #' RenameColumns
