@@ -61,8 +61,6 @@ ReadFiles <- function(dfnew = NULL,
   }
   
   # Check if file(s) exists, if not stop before reading files
-  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
-  
   pathnew <- .findpath(modusnew, foldernew)
   filenew <- list.files(pathnew, pattern = paste0("^",dfnew))
   filepathnew <- file.path(pathnew, filenew)
@@ -108,10 +106,13 @@ ReadFiles <- function(dfnew = NULL,
 #' @param modus 
 #' @param folder 
 .findpath <- function(modus, folder){
+  
   folder <- as.character(folder)
+  
+  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
   file.path(basepath, 
-            data.table::fcase(modusnew == "KH", "KOMMUNEHELSA",
-                              modusnew == "NH", "NORGESHELSA"),
+            data.table::fcase(modus == "KH", "KOMMUNEHELSA",
+                              modus == "NH", "NORGESHELSA"),
             data.table::fcase(folder == "DATERT", paste0(folder, "/csv"),
                               folder == "QC", folder,
                               stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR")))
@@ -130,7 +131,7 @@ ReadFiles <- function(dfnew = NULL,
                                                              folder == "DATERT", "ALLVIS",
                                                              stringr::str_detect(folder, "\\d{4}"), "NESSTAR"))
   
-  # Set attributes orgcolnames, newcolnames, and anynamechange
+  # Rename default columns. Set attribute colnameinfo to document colname changes
   .orgnames <- names(copy(outdata))
   setnames(outdata, 
            old = c("antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå"),
