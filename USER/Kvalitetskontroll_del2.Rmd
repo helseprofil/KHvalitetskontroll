@@ -119,12 +119,16 @@ PlotTimeDiff(data = compareKUBE)
 ```{r eval = F}
 # Save report (instead of using the knit button)
 # Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(profile year)/KVALITETSKONTROLL/KUBENAVN/
-# Profile year is defined in input
-# If savename = NULL, file name will default to the full cube name (incl date tag)
+# Make sure PROFILEYEAR is correctly defined in INPUT section
+# If the file name becomes too long, you can set shortname = TRUE, and only the datetag will be used as file name, e.g. XXXX-XX-XX-XX-XX_Kvalitetskontroll_del1.html. 
+# If savename = NULL, file name will default to the full cube name (incl date tag). You can also manually select the name of the output file. 
 
-# NB: You must load the data files AND save the source file (Ctrl + S) before creating the HTML report using this function!
+# NB: 
+# You must load data files before saving the report
+# You must ALSO save the document (Ctrl + S) before saving the report using this function!
 
 SaveReport(profileyear = PROFILEYEAR,
            inputfile = "Kvalitetskontroll_del2.Rmd",
+           shortname = FALSE,
            savename = NULL)
 ```

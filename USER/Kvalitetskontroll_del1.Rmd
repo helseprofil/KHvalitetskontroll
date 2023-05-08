@@ -271,7 +271,7 @@ PrintTimeseries()
 # If savename = NULL, file name will default to the full cube name (incl date tag). You can also manually select the name of the output file. 
 
 # NB: 
-# You must load data files and run the INPUT section before saving the report, to generate all the objects
+# You must load data files before saving the report
 # You must ALSO save the document (Ctrl + S) before saving the report using this function!
 
 SaveReport(profileyear = PROFILEYEAR, 
