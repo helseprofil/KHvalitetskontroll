@@ -57,14 +57,14 @@ ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-M
 
 # New file
 RenameColumns(dfnew, 
-              old = NULL, # NULL, "old name" OR c("old name 1", "old name 2", etc)
+              old = NULL, # NULL, "old name" OR c("old name 1", "old name 2", etc), OR column position (numeric)
               new = NULL) # NULL, "new name" OR c("new name 1", "new name 2", etc)
 
 # Old file
 # Code is skipped if dfold does not exist, no need to comment/uncomment. 
 if(exists("dfold")){
 RenameColumns(dfold, 
-              old = NULL, # NULL, "old name" OR c("old name 1", "old name 2", etc)
+              old = NULL, # NULL, "old name" OR c("old name 1", "old name 2", etc), OR column position (numeric)
               new = NULL) # NULL, "new name" OR c("new name 1", "new name 2", etc) 
 }
 ```
