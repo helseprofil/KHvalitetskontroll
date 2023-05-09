@@ -813,6 +813,8 @@ CompareNewOld <- function(data = compareKUBE,
                  HIGHLOW = data.table::fcase(get(.val) < LOW, "Low",
                                  get(.val) > HIGH, "High",
                                  default = NA))] 
+    
+    data.table::setattr(data, "outliercol", .val)
   } else {
     cat("\n- Neither MEIS, RATE, nor SMR available for outlier detection")
   }
