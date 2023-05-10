@@ -24,9 +24,7 @@
                      vals){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
-  # Sorts KUBE according to common and new dimensions
   dfnew_flag <<- data.table::copy(data1)[, `:=` (newrow = 0L)]
-  data.table::setkeyv(dfnew_flag, c(commondims, newdims))
   
   if(is.null(data2)){
     dfnew_flag[, newrow := 1]
@@ -85,9 +83,7 @@
                      vals){
 
   # Initiate flagged version of old KUBE (sets newrow = 0), saves to global env
-  # Sorts KUBE according to common and new dims
   dfold_flag <<- data.table::copy(data2)[, exprow := 0L]
-  data.table::setkeyv(dfold_flag, c(commondims, expdims))
   
   # For common dimensions, flag all rows with expired levels 
   # Loops over common dimensions. Flags previously unflagged rows for expired levels 
@@ -752,6 +748,10 @@ CompareNewOld <- function(data = compareKUBE,
     .weightsdata <- data.table::data.table(GEO = .allgeos, WEIGHTS = .allweights)
   }
   
+  # Sort file according to dims, final sorting on AAR to create y2y-changes
+  keyv <- c(stringr::str_subset(dims, "AAR", negate = TRUE), "AAR")
+  data.table::setkeyv(data, c(keyv))
+  
   # Add GEONIV column
   collapse::settransform(data, 
                          GEONIV = collapse::qF(data.table::fcase(GEO == 0, "L",
@@ -770,9 +770,10 @@ CompareNewOld <- function(data = compareKUBE,
   if(!is.na(.val)){
   
     cat(paste0("\n - Outlier detection based on ", .val, "\n"))
+    data.table::setattr(data, "outliercol", .val)
   
     # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
-    bycols <- c("GEONIV", stringr::str_subset(dims, "GEO|AAR", negate = T))
+    bycols <- c("GEONIV", stringr::str_subset(dims, "GEO|AAR", negate = TRUE))
     g <- collapse::GRP(data, bycols)
     
     # Add WEIGHTS, and set to NULL if all values are missing in a strata
@@ -784,19 +785,19 @@ CompareNewOld <- function(data = compareKUBE,
     data[GEONIV == "H", WEIGHTS := 0]
     w <- data$WEIGHTS
     
-    # Estimate weighted quantiles, and low and high cutoffs
+    # Estimate weighted quantiles, and low and high cutoffs, all values within bycols strata
+    # Can extract into separate helper functions to create cutoff table, merge cutoffs and define outliers.
     cutoffs <- collapse::fmutate(
       g[["groups"]],
-      MIN = collapse::fmin(data[, get(.val)], g = g),
-      wq25 = collapse::fnth(data[, get(.val)], n = 0.25, g = g, w = w, ties = 1),
-      wq50 = collapse::fnth(data[, get(.val)], n = 0.50, g = g, w = w, ties = 1),
-      wq75 = collapse::fnth(data[, get(.val)], n = 0.75, g = g, w = w, ties = 1),
-      MAX = collapse::fmax(data[, get(.val)], g = g),
+      MIN = collapse::fmin(data[[.val]], g = g),
+      wq25 = collapse::fnth(data[[.val]], n = 0.25, g = g, w = w, ties = 1),
+      wq50 = collapse::fnth(data[[.val]], n = 0.50, g = g, w = w, ties = 1),
+      wq75 = collapse::fnth(data[[.val]], n = 0.75, g = g, w = w, ties = 1),
+      MAX = collapse::fmax(data[[.val]], g = g),
       LOW = wq25 - 1.5*(wq75-wq25),
       HIGH = wq75 + 1.5*(wq75-wq25)
       )
     
-    # Merge cutoffs onto data 
     data[cutoffs, `:=` (MIN = i.MIN,
                         wq25 = i.wq25,
                         wq50 = i.wq50,
@@ -806,7 +807,6 @@ CompareNewOld <- function(data = compareKUBE,
                         HIGH = i.HIGH),
                on = bycols]
   
-    # Flag outliers and define HIGHLOW
     data[, `:=` (OUTLIER = data.table::fcase(get(.val) < LOW | get(.val) > HIGH, 1, 
                                  get(.val) >= LOW & get(.val) <= HIGH, 0,
                                  default = NA),
@@ -814,7 +814,48 @@ CompareNewOld <- function(data = compareKUBE,
                                  get(.val) > HIGH, "High",
                                  default = NA))] 
     
-    data.table::setattr(data, "outliercol", .val)
+    # Create y2y variable, group by GEO instead of GEONIV
+    .lagval <- paste0("lag", .val)
+    .changeval <- paste0("change_", .val)
+    change_bycols <- stringr::str_replace(bycols, "GEONIV", "GEO")
+    
+    change_g <- collapse::GRP(data, change_bycols)
+    data[, (.lagval) := collapse::flag(data[, get(.val)], g = change_g)]
+    data[, (.lagval) := zoo::na.locf(get(.lagval), na.rm = FALSE), by = change_bycols]
+    data[, (.changeval) := 100*(get(.val)/get(.lagval)-1)]
+    data[, (.lagval) := NULL]
+    
+    # Estimate weighted quantiles, and low and high cutoffs, all values within y2ybycols strata
+    
+    change_cutoffs <- collapse::fmutate(
+      change_g[["groups"]],
+      change_MIN = collapse::fmin(data[[.changeval]], g = change_g),
+      change_wq25 = collapse::fnth(data[[.changeval]], n = 0.25, g = change_g, w = w, ties = 1),
+      change_wq50 = collapse::fnth(data[[.changeval]], n = 0.50, g = change_g, w = w, ties = 1),
+      change_wq75 = collapse::fnth(data[[.changeval]], n = 0.75, g = change_g, w = w, ties = 1),
+      change_MAX = collapse::fmax(data[[.changeval]], g = change_g),
+      change_LOW = change_wq25 - 1.5*(change_wq75-change_wq25),
+      change_HIGH = change_wq75 + 1.5*(change_wq75-change_wq25)
+    )
+    
+    data[change_cutoffs, `:=` (change_MIN = i.change_MIN,
+                               change_wq25 = i.change_wq25,
+                               change_wq50 = i.change_wq50,
+                               change_wq75  = i.change_wq75,
+                               change_MAX = i.change_MAX,
+                               change_LOW = i.change_LOW,
+                               change_HIGH = i.change_HIGH),
+         on = change_bycols]
+    
+    data[, `:=` (change_OUTLIER = data.table::fcase(get(.changeval) < change_LOW | get(.changeval) > change_HIGH, 1, 
+                                                    get(.changeval) >= change_LOW & get(.changeval) <= change_HIGH, 0,
+                                                    default = NA),
+                 change_HIGHLOW = data.table::fcase(get(.changeval) < change_LOW, "Low",
+                                                    get(.changeval) > change_HIGH, "High",
+                                                    default = NA))]
+    
+    
+    
   } else {
     cat("\n- Neither MEIS, RATE, nor SMR available for outlier detection")
   }
@@ -829,13 +870,33 @@ CompareNewOld <- function(data = compareKUBE,
 #' @param data1 
 #' @param data2 
 #' @param commondims 
-.AddPrevOutlier <- function(data1 = dfnew_flag,
-                            data2 = dfold_flag,
+.AddPrevOutlier <- function(data1,
+                            data2,
                             commondims){
+  
+  if(attr(data1, "outliercol") != attr(data2, "outliercol")){
+    cat("Outlier in new file based on ", attr(data1, "outliercol"), 
+        ", and outlier in old file based on ", attr(data2, "outliercol"),
+        ".\nComparison of outliers not possible...", sep = "")
+    return(invisible(NULL))
+  }
   d <- copy(data1)
-  d[data2, PREV_OUTLIER := i.OUTLIER, on = commondims]
-  d[, NEW_OUTLIER := 0]
+  d[data2, `:=` (PREV_OUTLIER = i.OUTLIER,
+                 change_PREV_OUTLIER = i.change_OUTLIER),
+    on = commondims]
+  
+  collapse::settransform(d,
+                         NEW_OUTLIER = 0,
+                         change_NEW_OUTLIER = 0)
+  
   d[OUTLIER == 1 & (is.na(PREV_OUTLIER) | PREV_OUTLIER == 0), NEW_OUTLIER := 1]
+  d[change_OUTLIER == 1 & (is.na(change_PREV_OUTLIER) | change_PREV_OUTLIER == 0), change_NEW_OUTLIER := 1]
+  
+  # Move all change columns to the end
+  allnames <- names(d)
+  data.table::setcolorder(d, c(stringr::str_subset(allnames, "change_", negate = TRUE),
+                               stringr::str_subset(allnames, "change_", negate = FALSE)))
+  
   d[]
   
 }
