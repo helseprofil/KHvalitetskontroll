@@ -11,6 +11,7 @@ library(ggh4x)
 library(norgeo)
 library(collapse)
 library(data.table)
+library(zoo)
 
 # Solve conflicts
 conflicted::conflict_prefer("filter", "dplyr", quiet = T)
