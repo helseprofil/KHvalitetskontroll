@@ -1,12 +1,64 @@
-## Table of Contents
+## Innhold
 
 - [Innstallasjon](#Innstallasjon)
 - [Oppstart](#Oppstart)
 - [Feilsøking ved oppdaterings- og oppstartsproblemer](#Feilsøking)
 
+/* Styles for floating table of contents */
+#toc {
+  position: fixed;
+  top: 50px;
+  right: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+#toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#toc li {
+  margin: 5px 0;
+}
+
+#toc a {
+  text-decoration: none;
+  color: #333;
+}
+
+#toc a:hover {
+  text-decoration: underline;
+}
+Add the following HTML code to your README.md file where you want the floating table of contents to appear:
+html
+Copy code
+<div id="toc">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><a href="#header1">Header 1</a></li>
+    <li><a href="#header2">Header 2</a></li>
+    <li><a href="#header3">Header 3</a></li>
+  </ul>
+</div>
+
 # KHvalitetskontroll
 
 Funksjoner for Kvalitetskontroll av KH/NH kuber.
+
+<div id="toc">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><a href="#header1">Header 1</a></li>
+    <li><a href="#header2">Header 2</a></li>
+    <li><a href="#header3">Header 3</a></li>
+  </ul>
+</div>
 
 # R versjon
 - Prosjektet er per nå kompatibelt med R versjon 4.1. I versjon 4.2 og nyere er det noen endringer i encoding, som gjør at vi får problemer med norske spesialbokstaver. 
