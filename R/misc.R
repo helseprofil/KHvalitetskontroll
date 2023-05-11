@@ -336,6 +336,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
                                                              ".Rmd$" = "")))
   }
   
+  # Remove kube name from file name if too long
   if(shortname){
     filename <- stringr::str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
   }
