@@ -302,9 +302,15 @@ ComparePrikkTS <- function(data1 = dfnew,
 #'
 #' @examples
 CompareFylkeLand <- function(data = dfnew, 
-                             groupdim = GROUPdims){
+                             groupdim = GROUPdims,
+                             run = CompareGEO){
   
-  compare <- .find_compare(data)
+  if(isFALSE(run)){
+    cat("CompareGEO = FALSE, function inactive")
+    return(invisible(NULL))
+  }
+  
+  compare <- .find_compare(data, "TELLER")
   
   if(is.na(compare)){
     cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
@@ -384,9 +390,15 @@ CompareFylkeLand <- function(data = dfnew,
 #'
 #' @examples
 CompareKommuneFylke <- function(data = dfnew, 
-                                groupdim = GROUPdims){
+                                groupdim = GROUPdims,
+                                run = CompareGEO){
   
-  compare <- .find_compare(data)
+  if(isFALSE(run)){
+    cat("CompareGEO = FALSE, function inactive")
+    return(invisible(NULL))
+  }
+  
+  compare <- .find_compare(data, "TELLER")
   
   if(is.na(compare)){
     cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
@@ -465,9 +477,15 @@ CompareKommuneFylke <- function(data = dfnew,
 #'
 #' @examples
 CompareBydelKommune <- function(data = dfnew, 
-                                groupdim = GROUPdims) {
+                                groupdim = GROUPdims,
+                                run = CompareGEO) {
   
-  compare <- .find_compare(data)
+  if(isFALSE(run)){
+    cat("CompareGEO = FALSE, function inactive")
+    return(invisible(NULL))
+  }
+  
+  compare <- .find_compare(data, "TELLER")
   
   if(is.na(compare)){
     cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
@@ -550,9 +568,15 @@ CompareBydelKommune <- function(data = dfnew,
 #'
 #' @examples
 CompareOslo <- function(data = dfnew, 
-                        groupdim = GROUPdims){
+                        groupdim = GROUPdims,
+                        run = CompareGEO){
   
-  compare <- .find_compare(data)
+  if(isFALSE(run)){
+    cat("CompareGEO = FALSE, function inactive")
+    return(invisible(NULL))
+  }
+  
+  compare <- .find_compare(data, "TELLER")
   
   if(is.na(compare)){
     cat("\nNo sumTELLER(_uprikk) or TELLER present in data, no output generated\n")
@@ -865,14 +889,8 @@ UnspecifiedBydel <- function(data = dfnew,
   
   # Pick relevant TELLER and NEVNER columns. 
   # sumX_uprikk > sumX > X
-  tellerval <- data.table::fcase("sumTELLER_uprikk" %in% .vals1, "sumTELLER_uprikk",
-                                 "sumTELLER" %in% .vals1, "sumTELLER",
-                                 "TELLER" %in% .vals1, "TELLER",
-                                 default = NA_character_)
-  nevnerval <- data.table::fcase("sumNEVNER_uprikk" %in% .vals1, "sumNEVNER_uprikk",
-                                 "sumNEVNER" %in% .vals1, "sumNEVNER",
-                                 "NEVNER" %in% .vals1, "NEVNER",
-                                 default = NA_character_)
+  tellerval <- .find_compare(data, "TELLER") 
+  nevnerval <- .find_compare(data, "NEVNER")
   
   vals <- c(tellerval, nevnerval)
   
@@ -976,9 +994,23 @@ UnspecifiedBydel <- function(data = dfnew,
   
 }
 
-.find_compare <- function(data){
-  data.table::fcase("sumTELLER_uprikk" %in% names(data), "sumTELLER_uprikk",
-                    "sumTELLER" %in% names(data), "sumTELLER",
-                    "TELLER" %in% names(data), "TELLER",
-                    default = NA_character_)
+.find_compare <- function(data,
+                          type){
+  if(type == "TELLER"){
+    val <- data.table::fcase("sumTELLER_uprikk" %in% names(data), "sumTELLER_uprikk",
+                             "sumTELLER" %in% names(data), "sumTELLER",
+                             "TELLER_uprikk" %in% names(data), "TELLER_uprikk",
+                             "TELLER" %in% names(data), "TELLER",
+                             default = NA_character_)
+  }
+  
+  if(type == "NEVNER"){
+    val <- data.table::fcase("sumNEVNER_uprikk" %in% names(data), "sumNEVNER_uprikk",
+                             "sumNEVNER" %in% names(data), "sumNEVNER",
+                             "NEVNER_uprikk" %in% names(data), "NEVNER_uprikk",
+                             "NEVNER" %in% names(data), "NEVNER",
+                             default = NA_character_)  
+  }
+  
+  val
 }
