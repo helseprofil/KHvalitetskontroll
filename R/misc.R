@@ -65,7 +65,10 @@ ReadFiles <- function(dfnew = NULL,
   filenew <- list.files(pathnew, pattern = paste0("^",dfnew))
   filepathnew <- file.path(pathnew, filenew)
   
-  if(base::isFALSE(file.exists(filepathnew) & length(filepathnew) == 1)){
+  if(base::isFALSE(length(filepathnew) == 1 && file.exists(filepathnew))){
+    cat("\nTried to load:", ifelse(length(filepathnew) == 0, 
+                                   "No file found, check name, did you forget 'QC_' or defined the wrong folder or modus?",
+                                   filepathnew))
     stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
   }
   
@@ -75,28 +78,37 @@ ReadFiles <- function(dfnew = NULL,
     fileold <- list.files(pathold, pattern = dfold)
     filepathold <- file.path(pathold, fileold)
     
-    if(base::isFALSE(file.exists(filepathold) & length(filepathold) == 1)){
-      stop("dfold not found. Check arguments 'dfold', 'folderold', and 'modusold")
+    if(base::isFALSE(length(filepathold) == 1 && file.exists(filepathold))){
+      cat("\nTried to load:", ifelse(length(filepathold) == 0, 
+                                     "No file found, check name, did you forget 'QC_' or defined the wrong folder or modus?",
+                                     filepathold))
+      stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
     }
   }
   
   # Read dfnew and store to global env
   outdatanew <- .readfile(filepathnew, foldernew)
-  cat(paste0("New file (dfnew) loaded: ", str_extract(filepathnew, "(?<=PRODUKTER/).*"), "\n"))
+  cat(paste0("New file (dfnew) loaded: ", str_extract(filepathnew, "(?<=PRODUKTER/).*")))
   if(attr(outdatanew, "colnameinfo")$diff == "yes"){
     .listcolrename(outdatanew, "dfnew")
   }
-  cat("  dfnew columns: ", names(outdatanew), "\n")
+  cat("\ndfnew columns: ", names(outdatanew), "\n")
   dfnew <<- outdatanew
+  
+  for(i in c("TELLER", "NEVNER", "sumTELLER", "sumNEVNER")){
+    if(i %in% names(outdatanew)){
+      cat("\nNB! New file contains ", i, ". Is this ok for ALLVIS?", sep = "")
+    }
+  }
   
   # If provided, read dfold and store to global env
   if(base::isFALSE(is.null(dfold))){
     outdataold <- .readfile(filepathold, folderold)
-    cat(paste0("\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*"), "\n"))
+    cat(paste0("\n\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*")))
     if(attr(outdataold, "colnameinfo")$diff == "yes"){
       .listcolrename(outdataold, "dfold")
     }
-    cat("\n  dfold columns: ", names(outdataold))
+    cat("\ndfold columns: ", names(outdataold), "\n")
     dfold <<- outdataold
   }
 }
@@ -324,6 +336,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
                                                              ".Rmd$" = "")))
   }
   
+  # Remove kube name from file name if too long
   if(shortname){
     filename <- stringr::str_extract(filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}.*")
   }
