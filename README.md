@@ -1,45 +1,3 @@
-<div id="toc">
-  <style>
-  #toc {
-  position: fixed;
-  top: 50px;
-  right: 10px;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 5px;
-  max-height: 80vh;
-  overflow-y: auto;
-  }
-  
-  #toc ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  
-  #toc li {
-    margin: 5px 0;
-  }
-  
-  #toc a {
-    text-decoration: none;
-    color: #333;
-  }
-  
-  #toc a:hover {
-    text-decoration: underline;
-  }
-</style>
-  <h2>Innhold</h2>
-  <ul>
-    <li><a href="#installasjon">Installasjon</a></li>
-    <li><a href="#oppstart">Oppstart</a></li>
-    <li><a href="#feilsøking">Feilsøking ved oppdaterings- og oppstartsproblemer</a></li>
-    <li><a href="#rprofil">Kan ikke oppdatere Rprofilen</a></li>
-  </ul>
-</div>
-
 # KHvalitetskontroll
 
 Funksjoner for Kvalitetskontroll av KH/NH kuber.
@@ -47,7 +5,7 @@ Funksjoner for Kvalitetskontroll av KH/NH kuber.
 # R versjon
 - Prosjektet er per nå kompatibelt med R versjon 4.1. I versjon 4.2 og nyere er det noen endringer i encoding, som gjør at vi får problemer med norske spesialbokstaver. 
 
-<h1 id="installasjon">Installasjon</h1>
+# Installasjon
 
 For å installere prosjektet, kjør:
 ```r
@@ -59,15 +17,15 @@ RStudio restarter når prosessen er ferdig, og prosjekt for KHvalitetskontroll �
 Prosjektet lagres her: 
 C:/Users/dittBrukerNavn/helseprofil/KHvalitetskontroll.
 
-<h1 id="oppstart">Oppstart</h1>
+# Oppstart
 
 - Når prosjektet åpnes, vil du få spørsmål om du vil oppdatere til siste versjon. Velger du ja, vil siste versjon av alle filer lastes fra GitHub. Velger du nei, beholder du filene slik de var, slik at du kan ta kopi av endringer du ønsker å beholde.
 - Funksjonene lastes alltid direkte fra GitHub, men du bør alltid ha siste versjon av brukerfilene.
 - Alle filer som skal brukes ligger i mappen `USER`.
 
-<h1 id="feilsøking">Feilsøking ved oppdaterings- og oppstartsproblemer</h1>
+# Feilsøking ved oppdaterings- og oppstartsproblemer
 
-<h2 id="rprofil">Kan ikke oppdatere Rprofilen</h2>
+## Kan ikke oppdatere Rprofilen
 Dersom du har en tidligere versjon installert kan det oppstå problemer ved oppdatering ettersom .Rprofilen er endret i nyere tid. Dette er et script som kjøres ved oppstart, og denne kan ikke oppdateres på samme måte som andre filer. Dette kan løses på en av flere måter:
 
 1. I Terminal-vinduet, skriv: `git pull`, forsøk så å restarte (Ctrl + Shift + F10)
