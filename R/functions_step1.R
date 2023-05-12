@@ -118,29 +118,37 @@ CompareDims <- function(data1 = dfnew,
 #' @export
 #'
 #' @examples
-CheckPrikk <- function(data1 = dfnew,
+CheckPrikk <- function(data = dfnew,
                        val = PRIKKval, 
                        limit = PRIKKlimit){
+  
+  if(is.na(val) || is.na(limit)){
+    cat("PRIKKval and/or PRIKKlimit = NA, no check performed")
+    return(invisible(NULL))
+  }
+  
+  d = copy(data)
+  
+  # Always use _uprikk columns if col not present
+  val <- data.table::fcase(val == "TELLER" & !val %in% names(data) & "TELLER_uprikk" %in% names(data), "TELLER_uprikk",
+                           val == "sumTELLER" & !val %in% names(data) & "sumTELLER_uprikk" %in% names(data), "sumTELLER_uprikk",
+                           val == "NEVNER" & !val %in% names(data) & "NEVNER_uprikk" %in% names(data), "NEVNER_uprikk",
+                           val == "sumNEVNER" & !val %in% names(data) & "sumNEVNER_uprikk" %in% names(data), "sumNEVNER_uprikk",
+                           default = val)
   
   cat(paste0("Controlled column: ", val))
   cat(paste0("\nLimit: ", limit))
   
-  # If val and limit is provided, filter out data
-  if(!is.na(val) && !is.na(limit)){
-    filtered <- data1[data1[[val]] <= limit]
-    
-    if(nrow(filtered) == 0) {
+  # filter out rows where SPVFLAGG == 0, and any val <= limit
+  uncensored <- d[SPVFLAGG == 0 & get(val) <= limit]
+  
+  if(nrow(uncensored) == 0) {
       cat("\nNo values < limit")
-    }
-    
-    if(nrow(filtered) > 0){
-      cat(paste0("\nN values <= limit: ", nrow(filtered)))
+  } else if (nrow(uncensored) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(uncensored)))
       cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
-      num <- which(sapply(filtered, is.numeric))
-      filtered[, (num) := lapply(.SD, round, 2), .SDcols = num]
-      notcensored <<- filtered
+      notcensored <<- uncensored
       View(notcensored)
-    }
   }
 }
 
