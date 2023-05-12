@@ -622,38 +622,46 @@ PlotTimeDiff <- function(data = compareKUBE){
   reldiff <- paste0(val, "_reldiff")
   
   # Create plotdata, add geoniv
-  plotdata <- data[SPVFLAGG_new == 0 & SPVFLAGG_old == 0 & get(diff) != 0][, geoniv := character()]
+  plotdata <- data[SPVFLAGG_new == 0 & SPVFLAGG_old == 0][, geoniv := character()]
   plotdata[GEO == 0, geoniv := "Land"]
   plotdata[GEO > 0 & GEO < 100, ':=' (geoniv = "Fylke")]
   plotdata[GEO > 100 & GEO < 10000, ':=' (geoniv = "Kommune")]
   plotdata[GEO > 10000, ':=' (geoniv = "Bydel")]
   
-  data.table::setnames(plotdata, old = c(diff, reldiff), new = c("Absolute", "Ratio"))
+  plotdata[, `:=` (Absolute = get(diff),
+                   Ratio = get(reldiff))]
   
-  # Reshape data before plotting
+  # Reshape data before plotting, slice out relevant variables
   plotdata <- data.table::melt(plotdata,
-                               measure.vars = c("Absolute", "Ratio"))
+                               measure.vars = c("Absolute", "Ratio"))[, .(AAR, geoniv, variable, value)]
   
   # Plotting function to create one plot per geoniv
-  .plotgeoniv <- function(geofilter){
+  .plotgeoniv <- function(geofilter, 
+                          val,
+                          d){
     
-    d <- plotdata[geoniv == geofilter]
-    
+    d <- d[geoniv == geofilter]
+    rmequal <- copy(d)[!(variable == "Absolute" & value == 0 | variable == "Relative" & value == 1)]
+  
     ggplot(d,
-           mapping = aes(x = AAR, 
-                         y = value)) +
-      geom_boxplot() + 
+           mapping = aes(x = AAR)) +
+      geom_boxplot(data = rmequal, aes(x = AAR, 
+                                       y = value)) + 
       facet_wrap(vars(variable), 
-                 scales = "free") + 
+                 scales = "free_y") + 
       labs(title = geofilter,
            x = "",
            y = val) + 
-      theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
   }
   
   # Create plots
   plots <- purrr::map(unique(plotdata$geoniv),
-                      ~.plotgeoniv(geofilter = .x))
+                      \(x) {
+                      .plotgeoniv(geofilter = x,
+                                  val = val,
+                                  d = plotdata)
+                        })
   
   # Print plots
   purrr::walk(plots, print)
