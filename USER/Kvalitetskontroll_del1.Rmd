@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.9.2 (08.05.2023). 
+Version: 1.9.3 (12.05.2023). 
 
 For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
 ```{r init, include=FALSE}
@@ -84,6 +84,9 @@ PRIKKlimit <<- 12
 # If you only want total numbers, this should be "GROUPdims <<- NULL"
 # Can also be edited directly in the code chunks if you want different grouping
 GROUPdims <<- c("AAR") 
+
+# If you don't want to compare across GEOlevels (Fylke vs Land etc), set this option to FALSE. 
+CompareGEO <<- TRUE
 ```
 
 # 1. Compare columns and dimensions
