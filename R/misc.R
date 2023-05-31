@@ -82,7 +82,7 @@ ReadFiles <- function(dfnew = NULL,
       cat("\nTried to load:", ifelse(length(filepathold) == 0, 
                                      "No file found, check name, did you forget 'QC_' or defined the wrong folder or modus?",
                                      filepathold))
-      stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
+      stop("dfold not found. Check arguments 'dfold', 'folderold', and 'modusold")
     }
   }
   
