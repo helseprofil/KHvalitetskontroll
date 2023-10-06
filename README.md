@@ -13,4 +13,4 @@ Funksjoner for Kvalitetskontroll av KH/NH kuber.
 
 # Installasjon, oppdatering og brukerguider
 
-All informasjon du trenger om prosjektet ligger [her](https://helseprofil.github.io/faq-khvalitetskontroll.html), under menyen "FAQ KHvalitetskontroll". 
+All informasjon du trenger om prosjektet ligger [her](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html), under menyen "FAQ KHvalitetskontroll". 
