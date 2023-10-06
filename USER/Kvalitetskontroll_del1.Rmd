@@ -17,7 +17,7 @@ output:
 
 Version: 1.9.3 (12.05.2023). 
 
-For more info about the quality control, see [here](https://helseprofil.github.io/faq-khvalitetskontroll.html)!
+For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 ```{r init, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)

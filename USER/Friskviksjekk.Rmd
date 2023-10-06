@@ -6,7 +6,7 @@ output: html_document
 ---
 Version: 0.3 (03.03.2023). 
 
-For more info about the quality control, see [here](https://github.com/helseprofil/KHvalitetskontroll)!
+For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 ```{r include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
