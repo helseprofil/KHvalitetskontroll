@@ -31,12 +31,6 @@ ReadFiles <- function(dfnew = NULL,
     stop("dfnew must be provided in the format FILENAME_YYYY-MM-DD-hh-mm")
   }
   
-  if(base::isFALSE(any(stringr::str_detect(foldernew, "^\\d{4}$"), 
-                 foldernew == "DATERT", 
-                 foldernew == "QC"))) {
-    stop("`foldernew` must be either 'QC', 'DATERT', or 4 digits")
-  }
-  
   if(base::isFALSE(modusnew %in% c("KH", "NH"))) {
     stop("`modusnew` must be either 'KH' or 'NH'")
   }
@@ -48,12 +42,6 @@ ReadFiles <- function(dfnew = NULL,
   }
   
   if(base::isFALSE(is.null(dfold))){
-    
-    if(base::isFALSE(any(stringr::str_detect(folderold, "^\\d{4}$"), 
-                   folderold == "DATERT", 
-                   folderold == "QC"))) {
-      stop("When dfold is specified, `folderold` must be either 'QC', 'DATERT', or 4 digits")
-    }
     
     if(base::isFALSE(any(modusold %in% c("KH", "NH")))) {
       stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
@@ -129,7 +117,8 @@ ReadFiles <- function(dfnew = NULL,
                               modus == "NH", "NORGESHELSA"),
             data.table::fcase(folder == "DATERT", paste0(folder, "/csv"),
                               folder == "QC", folder,
-                              stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR")))
+                              stringr::str_detect(folder, "^\\d{4}$"), paste0(modus, as.character(folder), "NESSTAR"),
+                              default = folder))
 }
 
 #' .readfile
