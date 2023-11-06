@@ -6,7 +6,7 @@ renv::restore()
 
 # Load packages
 
-cat("\n...Loading packages and solving conflicts...")
+cat("\n...Loading packages and solving conflicts...\n")
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/load_packages_functions.R")
 cat("\n...done!")
 
