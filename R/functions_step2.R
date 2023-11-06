@@ -475,7 +475,7 @@ FormatData <- function(data1 = dfnew,
 #' .GetKubedatetag
 #'
 .GetKubedatetag <- function(data){
-  stringr::str_extract(attributes(data)$Filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}")
+  stringr::str_extract(attributes(data)$Filename, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
 }
 
 #' How many rows differs for each value column
