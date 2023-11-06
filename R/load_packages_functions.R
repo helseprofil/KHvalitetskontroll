@@ -1,5 +1,6 @@
 # Load packages
 library(conflicted)
+library(zoo)
 library(RODBC)
 library(dplyr)
 library(forcats)
@@ -11,7 +12,6 @@ library(ggh4x)
 library(norgeo)
 library(collapse)
 library(data.table)
-library(zoo)
 
 # Solve conflicts
 conflicted::conflict_prefer("filter", "dplyr", quiet = T)
