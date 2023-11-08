@@ -1,6 +1,6 @@
-.lastupdate <- "12.05.2023"
+.lastupdate <- "08.11.2023"
 
-ask <- utils::askYesNo(paste0("SISTE OPPDATERING AV BRUKERFILER: ", .lastupdate, "\n\nVil du oppdatere?"))
+ask <- utils::askYesNo(paste0("SISTE OPPDATERING AV BRUKERFILER ELLER PAKKEVERSJONER: ", .lastupdate, "\n\nVil du oppdatere?"))
 
 if(ask) {
   cat("\nLooks for updates\n",
