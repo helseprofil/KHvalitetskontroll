@@ -34,10 +34,10 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # By default, the following column names are automatically renamed: "antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4.2)
 
 ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          foldernew = "QC", # QC, DATERT or 4-digit referring to NESSTAR-folder
+          foldernew = "QC", # QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusnew = "KH", # KH or NH
           dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          folderold = "2022", # NULL, or QC, DATERT or 4-digit referring to NESSTAR-folder
+          folderold = "2023", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusold = "KH") # NULL, or KH or NH
 ```
 
@@ -66,7 +66,7 @@ RenameColumns(dfold,
 # UPDATE 18.01.2022: "<-" is replaced with "<<-" to make sure these settings are applied when saving the report. 
 
 # To save files and report in correct folder
-PROFILEYEAR <<- 2023
+PROFILEYEAR <<- 2024
 
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
@@ -90,6 +90,7 @@ DUMPS <<- c("dfnew_flag", "dfold_flag", "compareKUBE")
 # dfold_flag_name
 # compareKUBE_name
 # Example: FormatData(dfnew_flag_name = "mynewkubename", compareKUBE_name = "mycomparekube")
+# By default, outliers (and previous outlier) are flagged. If GEO is different between files, this throws an error. If so, use the argument outlier = FALSE to turn of outlier detection.
 FormatData()
 ```
 

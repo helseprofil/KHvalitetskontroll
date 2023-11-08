@@ -21,7 +21,8 @@
                      commondims,
                      newdims,
                      dims,
-                     vals){
+                     vals,
+                     outlier = TRUE){
   
   # Initiate flagged version of new KUBE (sets newrow = 0), saves to global env
   dfnew_flag <<- data.table::copy(data1)[, `:=` (newrow = 0L)]
@@ -53,9 +54,15 @@
   }
   
   # Flag outliers
+  if(isTRUE(outlier)){
   dfnew_flag <<- .FlagOutlier(data = dfnew_flag,
                               dims = dims,
-                              vals = vals)[]
+                              vals = vals)
+  } else {
+    cat("\n\n- Outliers not flagged in dfnew_flag, as argument outlier = FALSE")
+  }
+  
+  dfnew_flag[]
   
   cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
@@ -80,7 +87,8 @@
                      commondims,
                      expdims,
                      dims,
-                     vals){
+                     vals,
+                     outlier = TRUE){
 
   # Initiate flagged version of old KUBE (sets newrow = 0), saves to global env
   dfold_flag <<- data.table::copy(data2)[, exprow := 0L]
@@ -106,9 +114,15 @@
   } 
   
   # Flag outliers
+  if(isTRUE(outlier)){
   dfold_flag <<- .FlagOutlier(data = dfold_flag,
                               dims = dims,
-                              vals = vals)[]
+                              vals = vals)
+  } else {
+    cat("\n\n- Outliers not flagged in dfold_flag, as argument outlier = FALSE")
+  }
+  
+  dfold_flag[]
   
   cat("\n\n- Flagged version of old KUBE created: dfold_flag\n")
 }
@@ -256,8 +270,9 @@
 #' @param profileyear To save output in the correct folder
 #' @param dfnew_flag_name optional name of filedumps, defaults to NA
 #' @param dfold_flag_name optional name of filedumps, defaults to NA
+#' @param overwrite 
 #' @param compareKUBE_name optional name of filedumps, defaults to NA
-#' @param forcewrite overwrite existing file dumps (relevant if code is updated and output is affected)
+#' @param outlier Flag outliers or not, defaults to TRUE
 FormatData <- function(data1 = dfnew,
                        data2 = dfold,
                        dumps = DUMPS,
@@ -265,7 +280,8 @@ FormatData <- function(data1 = dfnew,
                        dfnew_flag_name = NA,
                        dfold_flag_name = NA,
                        compareKUBE_name = NA,
-                       overwrite = FALSE){
+                       overwrite = FALSE,
+                       outlier = TRUE){
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
@@ -328,7 +344,8 @@ FormatData <- function(data1 = dfnew,
            commondims = .commondims,
            newdims = .newdims,
            dims = .dims1,
-           vals = .vals1)
+           vals = .vals1,
+           outlier = outlier)
   
   if(base::isFALSE(is.null(data2))){
   # Flag old KUBE (if data2 provided, create dfold_flag)
@@ -342,8 +359,10 @@ FormatData <- function(data1 = dfnew,
            commondims = .commondims,
            expdims = .expdims,
            dims = .dims2,
-           vals = .vals2)
+           vals = .vals2,
+           outlier = outlier)
   
+  if(isTRUE(outlier)){
   # Add PREV_OUTLIER and NEW_OUTLIER to dfnew_flag
   cat("\nAdding PREV_OUTLIER to dfnew_flag:")
   
@@ -352,6 +371,9 @@ FormatData <- function(data1 = dfnew,
                                  commondims = .commondims)
   
   cat("\nCOMPLETED flagging and outlier detection!\n")
+    } else {
+  cat("\nCOMPLETED flagging. Ouliers not detected as argument outlier = FALSE\n")  
+  }
   
   cat("\nSTARTS create compareKUBE:")
   
