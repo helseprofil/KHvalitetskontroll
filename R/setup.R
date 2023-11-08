@@ -8,11 +8,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # Load packages
 cat("\n...Loading packages and solving conflicts...\n")
+
+## Make sure all packages in the lockfile is installed and package version correct
+renv::restore(prompt = FALSE)
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/load_packages_functions.R")
 cat("\n...done!")
-
-# Check if all packages are up to date
-renv::status()
 
 # Source welcome messages
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/welcome.R")
