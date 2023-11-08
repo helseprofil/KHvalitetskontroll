@@ -812,20 +812,26 @@
     },
     "norgeo": {
       "Package": "norgeo",
-      "Version": "2.3.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "2.4.2",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "helseprofil",
+      "RemoteRepo": "norgeo",
+      "RemoteRef": "master",
+      "RemoteSha": "10f61815f6f984cb1f0d3eabbe8b5deeee1d12ec",
       "Requirements": [
         "DBI",
         "R",
         "RSQLite",
         "data.table",
         "httr2",
+        "lifecycle",
         "magrittr",
         "odbc",
         "writexl"
       ],
-      "Hash": "4a935290f21ef20cdce3135b6fc35cc7"
+      "Hash": "2bfdb289c10d107955cdd88aa909555f"
     },
     "odbc": {
       "Package": "odbc",
