@@ -12,7 +12,7 @@ ggplot2::theme_update(legend.position = "top",
 
 
 # Set global options
-PROFILEYEAR <- 2023  # For saving in correct folder
+PROFILEYEAR <- 2024  # For saving in correct folder
 DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE") # Default is to create all file dumps
 
 # Identify small/large kommune
