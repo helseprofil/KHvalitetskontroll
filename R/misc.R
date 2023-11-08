@@ -443,3 +443,16 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 .ConnectKHelsa <- function(){
   RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
 }
+
+#' .usebranch
+#' 
+#' Function to use specific branch for testing
+.usebranch <- function(branch){
+  rm(list = lsf.str(all.names = T))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/misc.R"))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_step1.R"))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_step2.R"))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_friskvik.R"))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_interactive.R"))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/globals.R"))
+}
