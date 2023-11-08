@@ -24,7 +24,8 @@ ReadFiles <- function(dfnew = NULL,
                       modusnew = "KH",
                       dfold = NULL,
                       folderold = NULL,
-                      modusold = NULL){
+                      modusold = NULL,
+                      recodeold = FALSE){
   
   # Check arguments new file
   if(base::isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
@@ -60,7 +61,7 @@ ReadFiles <- function(dfnew = NULL,
     stop("dfnew not found. Check arguments 'dfnew', 'foldernew', and 'modusnew")
   }
   
-  if(base::isFALSE(is.null(dfold))){
+  if(!is.null(dfold)){
     
     pathold <- .findpath(modusold, folderold)
     fileold <- list.files(pathold, pattern = dfold)
@@ -90,7 +91,7 @@ ReadFiles <- function(dfnew = NULL,
   }
   
   # If provided, read dfold and store to global env
-  if(base::isFALSE(is.null(dfold))){
+  if(!is.null(dfold)){
     outdataold <- .readfile(filepathold, folderold)
     cat(paste0("\n\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*")))
     if(attr(outdataold, "colnameinfo")$diff == "yes"){
@@ -434,15 +435,38 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
 }
 
+#' .getGeoRecode
+#' 
+#' Reads geo-koder database and generate a correspondance table to recode GEO to current year
+#' Used in ReadFiles when old and new file have different GEOs
+#'
+#' @param year valid geo year
+.getGeoRecode <- function(year){
+  
+  .DB <- .ConnectGeokoder()
+  
+  georecode <- data.table::rbindlist(list(setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM kommune", year))),
+                                          setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM fylke", year)))))
+  
+  RODBC::odbcClose(.DB)
+  
+  georecode[!is.na(oldCode)][]
+  
+}
+
 #' Helper function to connect to KHelsa ACCESS database
 #'
-#' @return
-#' @export
-#'
-#' @examples
 .ConnectKHelsa <- function(){
   RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
 }
+
+#' Helper function to connect to geo-koder ACCESS database
+#'
+.ConnectGeokoder <- function(){
+  RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/raw-khelse/geo-koder.accdb")
+}
+
+
 
 #' .usebranch
 #' 
