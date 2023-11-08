@@ -14,6 +14,8 @@
 #' @param dfold file name including full date tag
 #' @param folderold QC, DATERT or a 4-digit number indicating NESSTAR-folder
 #' @param modusold KH or NH
+#' @param recodeold TRUE/FALSE, should GEO codes in old file be recoded for comparison?
+#' @param recodeyear The year containing valid GEO-codes, defaults to .currentgeo
 #'
 #' @return
 #' @export
@@ -25,27 +27,32 @@ ReadFiles <- function(dfnew = NULL,
                       dfold = NULL,
                       folderold = NULL,
                       modusold = NULL,
-                      recodeold = FALSE){
+                      recodeold = FALSE,
+                      recodeyear = .currentgeo){
   
   # Check arguments new file
-  if(base::isFALSE(stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"))) {
+  if(!stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")) {
     stop("dfnew must be provided in the format FILENAME_YYYY-MM-DD-hh-mm")
   }
   
-  if(base::isFALSE(modusnew %in% c("KH", "NH"))) {
+  if(!modusnew %in% c("KH", "NH")) {
     stop("`modusnew` must be either 'KH' or 'NH'")
   }
   
   # Check arguments old file
-  if(base::isFALSE(any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
-                 is.null(dfold)))){
+  if(!any(stringr::str_detect(dfold, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}"),
+          is.null(dfold))){
     stop("dfold must be provided in the format FILENAME_YYYY-MM-DD-hh-mm, or NULL")
   }
   
-  if(base::isFALSE(is.null(dfold))){
+  if(!is.null(dfold)){
     
-    if(base::isFALSE(any(modusold %in% c("KH", "NH")))) {
+    if(!any(modusold %in% c("KH", "NH"))) {
       stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
+    }
+    
+    if(isTRUE(recodeold) & (!is.numeric(recodeyear) | !nchar(recodeyear) == 4)){
+      stop("when recodeold = TRUE, recodeyear must be specified as a 4-digit number")
     }
   }
   
@@ -54,7 +61,7 @@ ReadFiles <- function(dfnew = NULL,
   filenew <- list.files(pathnew, pattern = paste0("^",dfnew))
   filepathnew <- file.path(pathnew, filenew)
   
-  if(base::isFALSE(length(filepathnew) == 1 && file.exists(filepathnew))){
+  if(!(length(filepathnew) == 1 && file.exists(filepathnew))){
     cat("\nTried to load:", ifelse(length(filepathnew) == 0, 
                                    "No file found, check name, did you forget 'QC_' or defined the wrong folder or modus?",
                                    filepathnew))
@@ -67,7 +74,7 @@ ReadFiles <- function(dfnew = NULL,
     fileold <- list.files(pathold, pattern = dfold)
     filepathold <- file.path(pathold, fileold)
     
-    if(base::isFALSE(length(filepathold) == 1 && file.exists(filepathold))){
+    if(!(length(filepathold) == 1 && file.exists(filepathold))){
       cat("\nTried to load:", ifelse(length(filepathold) == 0, 
                                      "No file found, check name, did you forget 'QC_' or defined the wrong folder or modus?",
                                      filepathold))
@@ -90,7 +97,7 @@ ReadFiles <- function(dfnew = NULL,
     }
   }
   
-  # If provided, read dfold and store to global env
+  # If provided, read dfold and store to global env.Recode GEO if required
   if(!is.null(dfold)){
     outdataold <- .readfile(filepathold, folderold)
     cat(paste0("\n\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*")))
@@ -98,6 +105,12 @@ ReadFiles <- function(dfnew = NULL,
       .listcolrename(outdataold, "dfold")
     }
     cat("\ndfold columns: ", names(outdataold), "\n")
+      
+    if(isTRUE(recodeold)){
+      recodetab <- .getGeoRecode(recodeyear)
+      outdataold <- .doGeoRecode(outdataold, recodetab)
+    }
+    
     dfold <<- outdataold
   }
 }
@@ -445,13 +458,35 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   
   .DB <- .ConnectGeokoder()
   
-  georecode <- data.table::rbindlist(list(setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM kommune", year))),
+  tab <- data.table::rbindlist(list(setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM kommune", year))),
                                           setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM fylke", year)))))
   
   RODBC::odbcClose(.DB)
   
-  georecode[!is.na(oldCode)][]
+  names(tab) <- c("old", "current")
+  tab[!is.na(old) & old != current][]
   
+}
+
+#' .doGeoRecode
+#'
+#' @param data 
+#' @param tab 
+.doGeoRecode <- function(data, tab){
+  
+  recodings <<- (tab[old %in% data$GEO])
+  if(nrow(recodings) > 0){
+    cat(paste0("\n The following codes in ", deparse(substitute(data)), " was recoded:\n"))
+    for(i in (1:nrow(recodings))){
+      cat(paste0(recodings[i, old], " -> ", recodings[i, current], "\n"))
+    }
+  } else {
+    cat(paste0("\n No GEO-codes in ", deparse(substitute(data)), " was recoded.\n"))
+  }
+  d <- copy(data)
+  out <- collapse::join(d, tab, on = c("GEO" = "old"), how = "left", verbose = 0)
+  out[!is.na(current), GEO := current][]
+  out[, current := NULL]
 }
 
 #' Helper function to connect to KHelsa ACCESS database
@@ -465,8 +500,6 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 .ConnectGeokoder <- function(){
   RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/raw-khelse/geo-koder.accdb")
 }
-
-
 
 #' .usebranch
 #' 

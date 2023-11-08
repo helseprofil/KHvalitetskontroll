@@ -14,6 +14,7 @@ ggplot2::theme_update(legend.position = "top",
 # Set global options
 PROFILEYEAR <- 2024  # For saving in correct folder
 DUMPS <- c("dfnew_flag", "dfold_flag", "compareKUBE") # Default is to create all file dumps
+.currentgeo <- 2024 # used for recoding when reading files
 
 # Identify small/large kommune
 
