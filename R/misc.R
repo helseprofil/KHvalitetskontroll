@@ -107,8 +107,7 @@ ReadFiles <- function(dfnew = NULL,
     cat("\ndfold columns: ", names(outdataold), "\n")
       
     if(isTRUE(recodeold)){
-      recodetab <- .getGeoRecode(recodeyear)
-      outdataold <- .doGeoRecode(outdataold, recodetab)
+      outdataold <- .doGeoRecode(outdataold)
     }
     
     dfold <<- outdataold
@@ -404,57 +403,13 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   
 }
 
-#' .SmallLargeKommune
-#'
-#' Loads current BEFOLK_GK file, and separates out small and large kommune
-.SmallLargeKommune <- function(){
-  
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
-                        "PRODUKSJON", 
-                        "PRODUKTER", 
-                        "KUBER",
-                        "KOMMUNEHELSA")
-  
-  thisyear <- file.path(basepath, paste0("KH", PROFILEYEAR, "NESSTAR"))
-  popfile <- list.files(thisyear, pattern = "BEFOLK_GK", full.names = T)
-  
-  # If no file for current profileyear, use file from last year
-  if(length(popfile) == 0){
-    cat(paste0("Population file from ", PROFILEYEAR, " does not exist, file from ", PROFILEYEAR - 1, " is used to identify small and large KOMMUNE"))
-    lastyear <- file.path(basepath, paste0("KH", PROFILEYEAR - 1, "NESSTAR"))
-    popfile <- list.files(lastyear, pattern = "BEFOLK_GK", full.names = T)
-  }
-  
-  # Select the "24aarg" file if present, because this is smaller
-  if(length(popfile) > 1){
-    popfile <-  grep("24aarg", file, value = T)
-  }
-  
-  # Read file and filter out last year
-  pop <- data.table::fread(popfile)
-  .IdentifyColumns(pop)
-  data.table::setkeyv(pop, .dims1)
-  pop <- pop[KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
-  
-  pop[, WEIGHTS := TELLER]
-  .popweights <- pop[, .(GEO, WEIGHTS)]
-  .allgeos <<- .popweights$GEO
-  .allweights <<- .popweights$WEIGHTS
-  
-  # Export lists of large and small kommune
-  .largekommune <<- pop[between(GEO, 99, 9999) & TELLER >= 10000, unique(GEO)]
-  .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
-}
-
-#' .getGeoRecode
+#' .updateGeoRecode
 #' 
 #' Reads geo-koder database and generate a correspondance table to recode GEO to current year
-#' Used in ReadFiles when old and new file have different GEOs
+#' Write file to data/georecode.csv
 #'
 #' @param year valid geo year
-.getGeoRecode <- function(year){
+.updateGeoRecode <- function(year){
   
   .DB <- .ConnectGeokoder()
   
@@ -464,15 +419,25 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   RODBC::odbcClose(.DB)
   
   names(tab) <- c("old", "current")
-  tab[!is.na(old) & old != current][]
+  tab[!is.na(old) & old != current]
   
+  # Save file
+  data.table::fwrite(pop, "./data/georecode.csv", sep = ";")
+}
+
+#' .readGeoRecode
+#' Helper function to dead georecode.csv from github
+#'
+.readGeoRecode <- function(){
+  file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/data/georecode.csv")
+  data.table::fread(file)
 }
 
 #' .doGeoRecode
 #'
 #' @param data 
 #' @param tab 
-.doGeoRecode <- function(data, tab){
+.doGeoRecode <- function(data, tab = .readGeoRecode()){
   
   recodings <<- (tab[old %in% data$GEO])
   if(nrow(recodings) > 0){
@@ -514,7 +479,13 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/globals.R"))
 }
 
-.UpdatePopInfo <- function(popfile, year){
+#' .updatePopInfo
+#' 
+#' Generates popinfo.csv file containing weights and GEOniv including small/large kommune and Helseregion
+#'
+#' @param popfile complete file name of BEFOLK_GK file
+#' @param year referring to NESSTAR-folder
+.updatePopInfo <- function(popfile, year){
   
   # Read file
   basepath <- .findpath("KH", year)
@@ -528,13 +499,19 @@ SaveReport <- function(profileyear = PROFILEYEAR,
                                     GEO < 10000 & WEIGHTS >= 10000, "K",
                                     GEO < 10000 & WEIGHTS < 10000, "k",
                                     GEO >= 10000, "B")]
-  data.table::setattr(pop, "popfile", popfile)
-  data.table::setattr(pop, "year", year)
+  # Add helseregion GEO-codes with WEIGHTS = 0
+  hreg <- data.table(GEO = 81:84,
+                     WEIGHTS = 0,
+                     GEOniv = "H")
+  pop <- data.table::rbindlist(list(pop, hreg))
   # Save file
-  data.table::fwrite(pop, paste0("./data/popinfo", year, ".csv"), sep = ";")
+  data.table::fwrite(pop, "./data/popinfo.csv", sep = ";")
 }
 
-.getPopInfo <- function(year){
-  file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/popinfo", year, ".csv")
+#' .getPopInfo
+#' 
+#' Read popinfo.csv from github
+.readPopInfo <- function(){
+  file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/popinfo.csv")
   data.table::fread(file)
 }

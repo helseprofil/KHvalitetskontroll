@@ -68,3 +68,50 @@ ReadFile <- function(file = NULL,
   
   outdata
 }
+
+#' .SmallLargeKommune
+#' 
+#' Superseeded by .updatePopInfo/.getPopInfo
+#'
+#' Loads current BEFOLK_GK file, and separates out small and large kommune
+.SmallLargeKommune <- function(){
+  
+  basepath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "PRODUKTER", 
+                        "KUBER",
+                        "KOMMUNEHELSA")
+  
+  thisyear <- file.path(basepath, paste0("KH", PROFILEYEAR, "NESSTAR"))
+  popfile <- list.files(thisyear, pattern = "BEFOLK_GK", full.names = T)
+  
+  # If no file for current profileyear, use file from last year
+  if(length(popfile) == 0){
+    cat(paste0("Population file from ", PROFILEYEAR, " does not exist, file from ", PROFILEYEAR - 1, " is used to identify small and large KOMMUNE"))
+    lastyear <- file.path(basepath, paste0("KH", PROFILEYEAR - 1, "NESSTAR"))
+    popfile <- list.files(lastyear, pattern = "BEFOLK_GK", full.names = T)
+  }
+  
+  # Select the "24aarg" file if present, because this is smaller
+  if(length(popfile) > 1){
+    popfile <-  grep("24aarg", file, value = T)
+  }
+  
+  # Read file and filter out last year
+  pop <- data.table::fread(popfile)
+  .IdentifyColumns(pop)
+  data.table::setkeyv(pop, .dims1)
+  pop <- pop[KJONN == 0 & ALDER == "0_120" & AAR == max(AAR)]
+  
+  pop[, WEIGHTS := TELLER]
+  .popweights <- pop[, .(GEO, WEIGHTS)]
+  .allgeos <<- .popweights$GEO
+  .allweights <<- .popweights$WEIGHTS
+  
+  # Export lists of large and small kommune
+  .largekommune <<- pop[between(GEO, 99, 9999) & TELLER >= 10000, unique(GEO)]
+  .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
+}
+

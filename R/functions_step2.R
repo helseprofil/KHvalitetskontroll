@@ -772,29 +772,27 @@ CompareNewOld <- function(data = compareKUBE,
                          dims,
                          vals){
   
-  # Check if weights and lists of small and large kommune exists, and create if not. 
-  if(!all(exists(".weightsdata"), exists(".smallkommune"), exists(".largekommune"))){
-    .SmallLargeKommune()
-    .weightsdata <- data.table::data.table(GEO = .allgeos, WEIGHTS = .allweights)
-  }
-  
   # Sort file according to dims, final sorting on AAR to create y2y-changes
   keyv <- c(stringr::str_subset(dims, "AAR", negate = TRUE), "AAR")
   data.table::setkeyv(data, c(keyv))
   
-  # Add GEONIV column
-  collapse::settransform(data, 
-                         GEONIV = collapse::qF(data.table::fcase(GEO == 0, "L",
-                                                                 GEO %in% 81:84, "H",
-                                                                 GEO < 99, "F",
-                                                                 GEO %in% .largekommune, "K",
-                                                                 GEO %in% .smallkommune, "k",
-                                                                 GEO > 9999, "B"), sort = FALSE))
+  # Check if popinfo exists (weights and geoniv)
+  if(!exists(".popinfo")){
+    .popinfo <- .getPopInfo()
+  }
   
+  # Add WEIGHTS and GEOniv columns from .popinfo
+  data <- collapse::join(data, .popinfo, on = "GEO", how = "left", verbose = 0)
+  
+  # Identify variable for outlier detection
   .val <- data.table::fcase("MEIS" %in% vals, "MEIS",
                             "RATE" %in% vals, "RATE",
                             "SMR" %in% vals, "SMR",
                             default = NA)
+  
+  # For rows with data on .val but no weights (can happen if GEO is recoded to e.g. 99),
+  # weights has to be set to 0 as missing weight is only allowed when value is also missing
+  data[!is.na(get(.val)) & is.na(WEIGHTS), WEIGHTS := 0]
   
   # If MEIS, RATE or SMR is present, estimate grouped, weighted quantiles and detect outliers
   if(!is.na(.val)){
@@ -803,16 +801,11 @@ CompareNewOld <- function(data = compareKUBE,
     data.table::setattr(data, "outliercol", .val)
   
     # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
-    bycols <- c("GEONIV", stringr::str_subset(dims, "GEO|AAR", negate = TRUE))
+    bycols <- c("GEOniv", stringr::str_subset(dims, "GEO|AAR", negate = TRUE))
     g <- collapse::GRP(data, bycols)
     
-    # Add WEIGHTS, and set to NULL if all values are missing in a strata
-    data[.weightsdata, WEIGHTS := i.WEIGHTS, on = "GEO"]
+    # Set WEIGHTS to NA if all values are missing in a strata
     data[, WEIGHTS := if(all(is.na(get(.val)))){ NA_real_ }, by = bycols]
-    
-    # Set weights for helseregion = 0, otherwise fnth fails when weights is missing and data is present
-    # Alternative is to filter out HELSEREGION, but if present it should be kept. 
-    data[GEONIV == "H", WEIGHTS := 0]
     w <- data$WEIGHTS
     
     # Estimate weighted quantiles, and low and high cutoffs, all values within bycols strata
@@ -828,15 +821,8 @@ CompareNewOld <- function(data = compareKUBE,
       HIGH = wq75 + 1.5*(wq75-wq25)
       )
     
-    data[cutoffs, `:=` (MIN = i.MIN,
-                        wq25 = i.wq25,
-                        wq50 = i.wq50,
-                        wq75 = i.wq75,
-                        MAX = i.MAX,
-                        LOW = i.LOW,
-                        HIGH = i.HIGH),
-               on = bycols]
-  
+    data <- join(data, cutoffs, on = bycols, how = "left", overid = 0, verbose = 0)
+    
     data[, `:=` (OUTLIER = data.table::fcase(get(.val) < LOW | get(.val) > HIGH, 1, 
                                  get(.val) >= LOW & get(.val) <= HIGH, 0,
                                  default = NA),
@@ -844,7 +830,7 @@ CompareNewOld <- function(data = compareKUBE,
                                  get(.val) > HIGH, "High",
                                  default = NA))] 
     
-    # Create y2y variable, group by GEO instead of GEONIV
+    # Create y2y variable (% change), group by GEO instead of GEONIV
     .lagval <- paste0("lag", .val)
     .changeval <- paste0("change_", .val)
     change_bycols <- stringr::str_replace(bycols, "GEONIV", "GEO")
@@ -868,14 +854,7 @@ CompareNewOld <- function(data = compareKUBE,
       change_HIGH = change_wq75 + 1.5*(change_wq75-change_wq25)
     )
     
-    data[change_cutoffs, `:=` (change_MIN = i.change_MIN,
-                               change_wq25 = i.change_wq25,
-                               change_wq50 = i.change_wq50,
-                               change_wq75  = i.change_wq75,
-                               change_MAX = i.change_MAX,
-                               change_LOW = i.change_LOW,
-                               change_HIGH = i.change_HIGH),
-         on = change_bycols]
+    data <- join(data, change_cutoffs, on = change_bycols, overid = 0, verbose = 0)
     
     data[, `:=` (change_OUTLIER = data.table::fcase(get(.changeval) < change_LOW | get(.changeval) > change_HIGH, 1, 
                                                     get(.changeval) >= change_LOW & get(.changeval) <= change_HIGH, 0,
