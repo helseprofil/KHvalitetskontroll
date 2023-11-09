@@ -513,3 +513,23 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_interactive.R"))
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/globals.R"))
 }
+
+.UpdatePopWeights <- function(popfile, year){
+  
+  # Read file
+  basepath <- .findpath("KH", year)
+  file <- list.files(basepath, pattern = popfile)
+  pop <- data.table::fread(file.path(basepath, file))
+  # Format file
+  pop <- pop[KJONN == 0 & ALDER == "0_120" & AAR == max(AAR), .(GEO, TELLER)]
+  data.table::setnames(pop, "TELLER", "WEIGHTS")
+  pop[, GEOniv := data.table::fcase(GEO == 0, "L",
+                                    GEO <= 99, "F",
+                                    GEO < 10000 & WEIGHTS >= 10000, "K",
+                                    GEO < 10000 & WEIGHTS < 10000, "k",
+                                    GEO >= 10000, "B")]
+  data.table::setattr(pop, "popfile", popfile)
+  data.table::setattr(pop, "year", year)
+  # Save file
+  data.table::fwrite(pop, "./data/popweights.csv", sep = ";")
+}
