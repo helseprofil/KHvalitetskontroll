@@ -531,5 +531,10 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   data.table::setattr(pop, "popfile", popfile)
   data.table::setattr(pop, "year", year)
   # Save file
-  data.table::fwrite(pop, "./popinfo.csv", sep = ";")
+  data.table::fwrite(pop, paste0("./data/popinfo", year, ".csv"), sep = ";")
+}
+
+.getPopInfo <- function(year){
+  file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/popinfo", year, ".csv")
+  data.table::fread(file)
 }
