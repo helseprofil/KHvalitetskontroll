@@ -14,8 +14,8 @@
 #' @param dfold file name including full date tag
 #' @param folderold QC, DATERT or a 4-digit number indicating NESSTAR-folder
 #' @param modusold KH or NH
-#' @param recodeold TRUE/FALSE, should GEO codes in old file be recoded for comparison?
-#' @param recodeyear The year containing valid GEO-codes, defaults to .currentgeo
+#' @param recodeold TRUE/FALSE, should GEO codes in old file be recoded to current GEO
+#' @param recodenew TRUE/FALSE, should GEO codes in new file be recoded to current GEO
 #'
 #' @return
 #' @export
@@ -28,7 +28,7 @@ ReadFiles <- function(dfnew = NULL,
                       folderold = NULL,
                       modusold = NULL,
                       recodeold = FALSE,
-                      recodeyear = .currentgeo){
+                      recodenew = FALSE){
   
   # Check arguments new file
   if(!stringr::str_detect(dfnew, ".*_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")) {
@@ -89,6 +89,11 @@ ReadFiles <- function(dfnew = NULL,
     .listcolrename(outdatanew, "dfnew")
   }
   cat("\ndfnew columns: ", names(outdatanew), "\n")
+  
+  if(isTRUE(recodenew)){
+    outdatanew <- .doGeoRecode(outdatanew, .georecode)
+  }
+  
   dfnew <<- outdatanew
   
   for(i in c("TELLER", "NEVNER", "sumTELLER", "sumNEVNER")){
@@ -107,9 +112,6 @@ ReadFiles <- function(dfnew = NULL,
     cat("\ndfold columns: ", names(outdataold), "\n")
       
     if(isTRUE(recodeold)){
-      if(!exists(".georecode")){
-        .georecode <- .readGeoRecode()
-      }
       outdataold <- .doGeoRecode(outdataold, .georecode)
     }
     
@@ -409,12 +411,19 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 
 
 #' .doGeoRecode
+#' 
+#' Recode GEO according to georecode.csv
 #'
 #' @param data 
 #' @param tab 
-.doGeoRecode <- function(data, tab = .readGeoRecode()){
+.doGeoRecode <- function(data){
   
-  recodings <<- (tab[old %in% data$GEO])
+  if(!exists(".georecode")){
+    .georecode <- .readGeoRecode()
+  }
+  
+  # Print message describing recodings
+  recodings <<- (.georecode[old %in% data$GEO])
   if(nrow(recodings) > 0){
     cat(paste0("\n The following codes in ", deparse(substitute(data)), " was recoded:\n"))
     for(i in (1:nrow(recodings))){
@@ -424,7 +433,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
     cat(paste0("\n No GEO-codes in ", deparse(substitute(data)), " was recoded.\n"))
   }
   d <- copy(data)
-  out <- collapse::join(d, tab, on = c("GEO" = "old"), how = "left", verbose = 0)
+  out <- collapse::join(d, .georecode, on = c("GEO" = "old"), how = "left", verbose = 0)
   out[!is.na(current), GEO := current][]
   out[, current := NULL]
 }

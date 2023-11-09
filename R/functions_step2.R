@@ -333,7 +333,7 @@ FormatData <- function(data1 = dfnew,
   
   # Flag new KUBE (create dfnew_flag)
   cat("STARTS flagging new kube:")
-  if(base::isFALSE(is.null(data2))){
+  if(!is.null(data2)){
     cat(msg_commondims)
     cat(msg_newdims)
     cat(msg_commonvals)
@@ -347,7 +347,7 @@ FormatData <- function(data1 = dfnew,
            vals = .vals1,
            outlier = outlier)
   
-  if(base::isFALSE(is.null(data2))){
+  if(!is.null(data2)){
   # Flag old KUBE (if data2 provided, create dfold_flag)
   cat("\nSTARTS flagging old kube:")
   cat(msg_commondims)
@@ -390,9 +390,12 @@ FormatData <- function(data1 = dfnew,
   # File dumps
   
   datetagnew <- .GetKubedatetag(data1)
-  datetagold <- data.table::fcase(base::isFALSE(is.null(data2)), .GetKubedatetag(data2),
-                                  default = "")
-  
+  if(!is.null(data2)){
+    datetagold <- .GetKubedatetag(data2)
+  } else {
+    datetagold <- ""
+  }
+
   ## Create list of required dumps and savenames
   reqdumpfiles <- data.table::data.table(dumpfiles = c("dfnew_flag", "dfold_flag", "compareKUBE"), 
                                          savenames = c(dfnew_flag_name, dfold_flag_name, compareKUBE_name))
