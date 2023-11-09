@@ -422,7 +422,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   tab[!is.na(old) & old != current]
   
   # Save file
-  data.table::fwrite(pop, "./data/georecode.csv", sep = ";")
+  data.table::fwrite(tab, "./data/georecode.csv", sep = ";")
 }
 
 #' .readGeoRecode
