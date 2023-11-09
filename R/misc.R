@@ -107,7 +107,10 @@ ReadFiles <- function(dfnew = NULL,
     cat("\ndfold columns: ", names(outdataold), "\n")
       
     if(isTRUE(recodeold)){
-      outdataold <- .doGeoRecode(outdataold)
+      if(!exists(".georecode")){
+        .georecode <- .readGeoRecode()
+      }
+      outdataold <- .doGeoRecode(outdataold, .georecode)
     }
     
     dfold <<- outdataold
@@ -403,35 +406,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   
 }
 
-#' .updateGeoRecode
-#' 
-#' Reads geo-koder database and generate a correspondance table to recode GEO to current year
-#' Write file to data/georecode.csv
-#'
-#' @param year valid geo year
-.updateGeoRecode <- function(year){
-  
-  .DB <- .ConnectGeokoder()
-  
-  tab <- data.table::rbindlist(list(setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM kommune", year))),
-                                          setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM fylke", year)))))
-  
-  RODBC::odbcClose(.DB)
-  
-  names(tab) <- c("old", "current")
-  tab[!is.na(old) & old != current]
-  
-  # Save file
-  data.table::fwrite(tab, "./data/georecode.csv", sep = ";")
-}
 
-#' .readGeoRecode
-#' Helper function to dead georecode.csv from github
-#'
-.readGeoRecode <- function(){
-  file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/dev/data/georecode.csv")
-  data.table::fread(file)
-}
 
 #' .doGeoRecode
 #'
@@ -508,10 +483,40 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   data.table::fwrite(pop, "./data/popinfo.csv", sep = ";")
 }
 
-#' .getPopInfo
+#' .readPopInfo
 #' 
 #' Read popinfo.csv from github
 .readPopInfo <- function(){
   file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/popinfo.csv")
+  data.table::fread(file)
+}
+
+#' .updateGeoRecode
+#' 
+#' Reads geo-koder database and generate a correspondance table to recode GEO to current year
+#' Write file to data/georecode.csv
+#'
+#' @param year valid geo year
+.updateGeoRecode <- function(year){
+  
+  .DB <- .ConnectGeokoder()
+  
+  tab <- data.table::rbindlist(list(setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM kommune", year))),
+                                          setDT(sqlQuery(.DB, paste0("SELECT oldCode, currentCode FROM fylke", year)))))
+  
+  RODBC::odbcClose(.DB)
+  
+  names(tab) <- c("old", "current")
+  tab[!is.na(old) & old != current]
+  
+  # Save file
+  data.table::fwrite(tab, "./data/georecode.csv", sep = ";")
+}
+
+#' .readGeoRecode
+#' Helper function to dead georecode.csv from github
+#'
+.readGeoRecode <- function(){
+  file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/georecode.csv")
   data.table::fread(file)
 }

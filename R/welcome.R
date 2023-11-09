@@ -13,11 +13,15 @@ cat("\n\n---\n",
     "- Friskviksjekk.Rmd\n",
     "  - Functions to compare FRISKVIK vs KUBE\n",
     "\n---\n",
+    "\n- Valid GEO for outlier detection and recoding: 2024\n",
+    "\n---\n",
     if(exists(".updatemsg")) {
       .updatemsg
     },
     "\n---\n")
 
+
+# Remove messages
 if(exists(".updatemsg")){
   rm(.updatemsg)
 }
