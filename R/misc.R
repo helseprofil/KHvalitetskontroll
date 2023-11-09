@@ -514,7 +514,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/globals.R"))
 }
 
-.UpdatePopWeights <- function(popfile, year){
+.UpdatePopInfo <- function(popfile, year){
   
   # Read file
   basepath <- .findpath("KH", year)
@@ -531,5 +531,5 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   data.table::setattr(pop, "popfile", popfile)
   data.table::setattr(pop, "year", year)
   # Save file
-  data.table::fwrite(pop, "./data/popweights.csv", sep = ";")
+  data.table::fwrite(pop, "./popinfo.csv", sep = ";")
 }

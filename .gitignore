@@ -6,6 +6,7 @@
 # Output files
 *.html
 *.csv
+!data/*.csv
 
 # Local files
 USER/Lokale filer, overskrives ikke/
