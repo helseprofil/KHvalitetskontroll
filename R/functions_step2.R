@@ -281,7 +281,7 @@ FormatData <- function(data1 = dfnew,
                        dfold_flag_name = NA,
                        compareKUBE_name = NA,
                        overwrite = FALSE,
-                       outlier = FALSE){
+                       outlier = TRUE){
   
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
