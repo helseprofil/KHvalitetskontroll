@@ -51,9 +51,6 @@ ReadFiles <- function(dfnew = NULL,
       stop("When dfold is specified, `modusold` must be either 'KH' or 'NH'")
     }
     
-    if(isTRUE(recodeold) & (!is.numeric(recodeyear) | !nchar(recodeyear) == 4)){
-      stop("when recodeold = TRUE, recodeyear must be specified as a 4-digit number")
-    }
   }
   
   # Check if file(s) exists, if not stop before reading files
@@ -112,7 +109,7 @@ ReadFiles <- function(dfnew = NULL,
     cat("\ndfold columns: ", names(outdataold), "\n")
       
     if(isTRUE(recodeold)){
-      outdataold <- .doGeoRecode(outdataold, .georecode)
+      outdataold <- .doGeoRecode(outdataold)
     }
     
     dfold <<- outdataold
