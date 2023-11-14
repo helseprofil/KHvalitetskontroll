@@ -836,7 +836,7 @@ CompareNewOld <- function(data = compareKUBE,
     # Create y2y variable (% change), group by GEO instead of GEONIV
     .lagval <- paste0("lag", .val)
     .changeval <- paste0("change_", .val)
-    change_bycols <- stringr::str_replace(bycols, "GEONIV", "GEO")
+    change_bycols <- stringr::str_replace(bycols, "GEOniv", "GEO")
     
     change_g <- collapse::GRP(data, change_bycols)
     data[, (.lagval) := collapse::flag(data[, get(.val)], g = change_g)]
