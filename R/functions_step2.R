@@ -781,7 +781,7 @@ CompareNewOld <- function(data = compareKUBE,
   
   # Check if popinfo exists (weights and geoniv)
   if(!exists(".popinfo")){
-    .popinfo <- .getPopInfo()
+    .popinfo <- .readPopInfo()
   }
   
   # Add WEIGHTS and GEOniv columns from .popinfo
