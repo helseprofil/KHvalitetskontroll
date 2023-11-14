@@ -64,7 +64,7 @@
   
   dfnew_flag[]
   
-  cat("\n\n- Flagged version of new KUBE created: dfnew_flag\n")
+  cat("\n- Flagged version of new KUBE created: dfnew_flag\n")
 }
 
 #' FlagOld
@@ -124,7 +124,7 @@
   
   dfold_flag[]
   
-  cat("\n\n- Flagged version of old KUBE created: dfold_flag\n")
+  cat("\n- Flagged version of old KUBE created: dfold_flag\n")
 }
 
 #' FixDecimals
@@ -286,7 +286,7 @@ FormatData <- function(data1 = dfnew,
   # Create folder structure, if not existing, and set file path for file dumps
   kubename <- .GetKubename(data1)
   
-  if(base::isFALSE(is.null(dumps))){
+  if(!is.null(dumps)){
     .CreateFolders(profileyear = profileyear,
                    kubename = kubename)
   }
@@ -364,7 +364,7 @@ FormatData <- function(data1 = dfnew,
   
   if(isTRUE(outlier)){
   # Add PREV_OUTLIER and NEW_OUTLIER to dfnew_flag
-  cat("\nAdding PREV_OUTLIER to dfnew_flag:")
+  cat("\n- Adding PREV_OUTLIER to dfnew_flag\n")
   
   dfnew_flag <<- .AddPrevOutlier(data1 = dfnew_flag,
                                  data2 = dfold_flag,
@@ -781,7 +781,7 @@ CompareNewOld <- function(data = compareKUBE,
   
   # Check if popinfo exists (weights and geoniv)
   if(!exists(".popinfo")){
-    .popinfo <- .getPopInfo()
+    .popinfo <- .readPopInfo()
   }
   
   # Add WEIGHTS and GEOniv columns from .popinfo
@@ -836,7 +836,7 @@ CompareNewOld <- function(data = compareKUBE,
     # Create y2y variable (% change), group by GEO instead of GEONIV
     .lagval <- paste0("lag", .val)
     .changeval <- paste0("change_", .val)
-    change_bycols <- stringr::str_replace(bycols, "GEONIV", "GEO")
+    change_bycols <- stringr::str_replace(bycols, "GEOniv", "GEO")
     
     change_g <- collapse::GRP(data, change_bycols)
     data[, (.lagval) := collapse::flag(data[, get(.val)], g = change_g)]
@@ -865,13 +865,9 @@ CompareNewOld <- function(data = compareKUBE,
                  change_HIGHLOW = data.table::fcase(get(.changeval) < change_LOW, "Low",
                                                     get(.changeval) > change_HIGH, "High",
                                                     default = NA))]
-    
-    
-    
-  } else {
+    } else {
     cat("\n- Neither MEIS, RATE, nor SMR available for outlier detection")
   }
-  
 }
 
 #' .AddPrevOutlier
@@ -920,71 +916,224 @@ CompareNewOld <- function(data = compareKUBE,
 #' 
 #' 
 #' @param data Dataset flagged for outliers
-#'
-#' @return
-#' @export
-#'
-#' @examples
-PlotOutlier <- function(data){
-
-  # Identify dimension and value columns  
-  .IdentifyColumns(data)
+#' @param onlynew Should only new outliers be indicated on the plot? Default = TRUE
+#' @param change Should plots be based on year-to-year changes. Default = FALSE
+#' @param profileyear default = PROFILEYEAR
+PlotOutlier <- function(data,
+                        onlynew = TRUE,
+                        change = FALSE,
+                        profileyear = PROFILEYEAR){
   
-  if("MEIS" %in% .vals1){
-    val <- "MEIS"
-    cat("\n- MEIS plotted")
-  } else if ("RATE" %in% .vals1){
-    val <- "RATE"
-    cat("\n- RATE plotted")
-  } else if ("SMR" %in% .vals1){
-    val <- "SMR"
-    cat("\n- SMR plotted")
-  } else {
-    cat("\n- None of MEIS, RATE, or SMR available for boxplot")
-    return(invisible(NULL))
+  .CreateFolders(profileyear,kubename)
+  
+  # Extract kubename and create path and base filename
+  kubename <- .GetKubename(data)
+  datetag <- .GetKubedatetag(data)
+  savefolder <- ifelse(change, "BPc", "BP")
+  savebase <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        profileyear,
+                        "KVALITETSKONTROLL",
+                        kubename,
+                        "PLOTT",
+                        savefolder)
+  filenamebase <- paste(kubename,
+                        datetag,
+                        savefolder,
+                        sep = "_")
+  
+  # Remove rows with missing GEOniv (probably 99-codes) and remove unused GEOniv levels. 
+  data <- data[!is.na(GEOniv)][, GEOniv := base::droplevels(GEOniv)]
+  
+  # Identify dimensions, value column, and outliercolumns
+  .IdentifyColumns(data)
+  .val <- attributes(data)$outliercol
+  .outlier <- "OUTLIER"
+  .newoutlier <- "NEW_OUTLIER"
+  
+  if(change){
+    .val <- paste0("change_", .val)
+    .outlier <- paste0("change_", .outlier)
+    .newoutlier <- paste0("change_", .newoutlier)
   }
   
-  bycols <- c("GEONIV", stringr::str_subset(.dims1, "GEO|AAR", negate = T))
+  # Cannot filter only new outliers if not present
+  if(!.newoutlier %in% names(data) & isTRUE(onlynew)){
+    onlynew <- FALSE
+    cat("Column NEW_OUTLIER not present, all present outliers are included")
+  }
   
-  # Estimate N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
-  data[, `:=` (N_obs = sum(!is.na(get(val))),
-               MINABOVELOW = collapse::fmin(get(val)[get(val) >= LOW]),
-               MAXBELOWHIGH = collapse::fmax(get(val)[get(val) <= HIGH])), 
-       keyby = bycols]
+  # Extract data to generate boxplots, including N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
+  bycols <- c("GEOniv", stringr::str_subset(.dims1, "\\bGEO\\b|\\bAAR\\b", negate = T))
+  g <- collapse::GRP(data, c(bycols,
+                             "MIN", "wq25", "wq50", "wq75", "MAX", "LOW", "HIGH"))
   
-  # Extract data to construct boxplots
-  baseplotdata <- collapse::GRP(data, c(bycols, 
-                                        "MIN", 
-                                        "wq25", "wq50", "wq75", 
-                                        "MAX", 
-                                        "LOW", "HIGH", "N_obs", "MINABOVELOW", "MAXBELOWHIGH"))[["groups"]]
+  baseplotdata <- collapse::join(g[["groups"]], 
+                                 data[, .(N_obs = collapse::fsum(!is.na(get(.val))),
+                                          MINABOVELOW = collapse::fmin(get(.val)[get(.val) >= LOW]),
+                                          MAXBELOWHIGH = collapse::fmax(get(.val)[get(.val) <= HIGH])),
+                                      by = bycols],
+                                 overid = 0, verbose = 0)
   
-  # Extract data containing only outliers
-  outlierdata <- data[OUTLIER == 1][, label := paste0(GEO, "'", stringr::str_sub(AAR, -2L, -1L))]
+  # Extract data containing outliers and add label. If onlynew = TRUE, only extract new outliers.
+  if(onlynew){
+    outlierdata <- data[get(.newoutlier) == 1]
+  } else{
+    outlierdata <- data[get(.outlier) == 1]
+  }
+  outlierdata[, label := paste0(GEO, "'", stringr::str_sub(AAR, -2L, -1L))]
+  outlierdata <- outlierdata[, (.SD), .SDcols = c(bycols, .val, "label")]
   
-  # Create vector of boxplot filenames
-  namecols <- stringr::str_subset(bycols, "GEONIV", negate = TRUE)
-  boxplot_names <- collapse::GRP(baseplotdata, namecols)[["groups"]][, do.call(paste, c(.SD, sep = ","))]
+  # Find total number of strata. Split plots into separate files of max 25 plots per file
+  facets <- stringr::str_subset(bycols, "GEOniv", negate = TRUE)
+  filedims <- character()
+  filedims <- c(filedims, .findBoxplotSubset(d = baseplotdata, b = facets))
+  if(length(filedims > 0)){
+  facets <- stringr::str_subset(facets, 
+                                stringr::str_c("^", filedims, "$", collapse = "|"),
+                                negate = TRUE)
+  }
+
+  # Create list of filters for subsetting. 
+  if(length(filedims > 0)){
+    subsets <- GRP(baseplotdata, filedims)[["groups"]]
+    cols <- names(subsets)
+    for(i in cols){
+      subsets[, (i) := paste0(i, "=='", get(i), "'")]
+    }
+    filter <- subsets[, filter := do.call(paste, c(.SD, sep = " & ")), .SDcols = cols][, (filter)]
+  } else {
+    # If fildims = 0, filter = TRUE to select all rows with DT[TRUE] 
+    filter <- "TRUE"
+  }
   
+  # Global plot elements
+  plotby <- c("GEOniv", facets)
+  plotdims <- .allcombs(baseplotdata, plotby)
+  n_strata <- nrow(plotdims[, .N, by = facets])
+  n_rows <- base::ceiling(n_strata/5)
+  title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
+  caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
   
-  baseplotdata[!is.na(wq50) & KJONN == 0 & ALDER == "0_44"] %>% 
-    ggplot(aes(x = forcats::fct_rev(GEONIV),
-               ymin = MINABOVELOW,
-               lower = wq25,
-               middle = wq50,
-               upper = wq75,
-               ymax = MAXBELOWHIGH)) + 
-    scale_x_discrete(drop = F) + 
-    coord_flip() + 
-    facet_wrap(namecols, labeller = labeller(.multi_line = F),scales = "free_x") + 
-    geom_errorbar(width = 0.5) + 
-    geom_boxplot(stat = "identity") 
-    geom_text(data = outlierdata[ALDER == "0_44" & KODEGRUPPE == "Pas_med_hjerneslag" & KJONN == 2],
-               aes(y = get(val), label = label), angle = 45, size = 12/.pt) + 
-    coord_flip()
-  
+  # Generate subsets, filenames, and make/save plot.
+  for(i in filter){
     
-    # En bildefil per plott. Tittel = namecols, inneholder boxplot + tidsserier for alle nye uteliggere
-  
+    # subset baseplotdata and outlierdata
+    bp <- baseplotdata[eval(parse(text = i))][N_obs > 2]
+    ol <- outlierdata[eval(parse(text = i))]
+    
+    # Dynamically generate filename and savepath
+    if(i == "TRUE"){
+      name <- "_alle.png"
+    } else {
+      name <- character()
+      for(i in filedims){
+        name <- paste0(name, "_", unique(bp[[i]]))
+      }
+      name <- paste0(name, ".png")
+    }
+    filename <- paste0(filenamebase, name)
+    savepath <- file.path(savebase, filename)
+    
+    subtitle <- character()
+    for(i in filedims){
+      subtitle <- paste0(subtitle, i, ": ", unique(bp[[i]]), "\n")
+    }
+    # Generate and save plots. 
+    p <- ggplot(data = plotdims,
+                aes(x = GEOniv)) +
+      facet_wrap(facets,
+                 labeller = labeller(.multi_line = F),
+                 scales = "free_x",
+                 ncol = 5) +
+      scale_x_discrete(limits = rev(levels(ol$GEOniv)), 
+                       drop = T) +
+      labs(y = .val,
+           x = NULL,
+           title = title,
+           subtitle = subtitle,
+           caption = caption) +
+      coord_flip() +
+      geom_text(data = ol,
+                aes(y = get(.val),
+                    label = label),
+                angle = 90,
+                size = 8/.pt) +
+      geom_boxplot(
+        data = bp,
+        aes(ymin = MINABOVELOW,
+            lower = wq25,
+            middle = wq50,
+            upper = wq75,
+            ymax = MAXBELOWHIGH),
+        stat = "identity") + 
+      ggh4x::force_panelsizes(cols = unit(8, "cm"),
+                              rows = unit(6, "cm")) +
+      theme(text = element_text(color = "black"),
+            plot.title = element_text(face = "bold", size = 20),
+            plot.subtitle = element_text(size = 16),
+            plot.caption = element_text(size = 16),
+            axis.title = element_text(size = 16),
+            axis.text = element_text(size = 12))
+    
+    ggsave(filename = savepath,
+           plot = p, 
+           device = "png", 
+           dpi = 300,
+           width = 45,
+           height = n_rows*6 + 10,
+           units = "cm")
+  }
 }
 
+#' .findBoxplotSubset
+#'
+#' @param d plotdata
+#' @param b bycols
+.findBoxplotSubset <- function(d,
+                               b){
+  
+  orgstrata <- nrow(d[, .N, by = b])
+  optnfiles <- base::ceiling(orgstrata/25)
+  
+  if(optnfiles == 1){
+    return(NULL)
+  }
+  # Create a reference table containing dim and n levels (this may replace CompareDims(), and called here)
+  ref <- data.table(dim = character(), n = numeric())
+  for(i in b){
+    l <- length(unique(d[[i]]))
+    ref = data.table::rbindlist(list(ref, 
+                                     data.table(dim = i,
+                                                n = l)))
+  }
+  
+  # Generate a table with all combinations of 1, 2, or 3 dimensions
+  combs <- data.table(dim1 = character(), 
+                      dim2 = character(), 
+                      dim3 = character())
+  for(i in 1:3){
+    if(length(b) >= i){
+    x <- data.table(base::t(utils::combn(b, i)))
+    colnames(x) <- paste0("dim", 1:i)
+    combs <- data.table::rbindlist(list(combs, x), fill = TRUE)
+    }
+  }
+  
+  # Add n levels for dim1-3
+  combs[ref, n1 := i.n, on = c("dim1"= "dim")]
+  combs[ref, n2 := i.n, on = c("dim2"= "dim")]
+  combs[ref, n3 := i.n, on = c("dim3"= "dim")]
+  
+  # Replace NA with 1 and calculate product
+  data.table::setnafill(combs, fill = 1, cols = c("n1", "n2", "n3"))
+  combs[, prod := n1*n2*n3]
+  optimal <- combs[prod > optnfiles][which.min(prod)]
+  v <- c(optimal$dim1, optimal$dim2, optimal$dim3)
+  v <- v[!is.na(v)]
+  v
+}

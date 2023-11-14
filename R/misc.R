@@ -88,7 +88,7 @@ ReadFiles <- function(dfnew = NULL,
   cat("\ndfnew columns: ", names(outdatanew), "\n")
   
   if(isTRUE(recodenew)){
-    outdatanew <- .doGeoRecode(outdatanew, .georecode)
+    outdatanew <- .doGeoRecode(outdatanew)
   }
   
   dfnew <<- outdatanew
@@ -221,6 +221,13 @@ RenameColumns <- function(data,
   cat("\n", deparse(substitute(data)), " columns manually renamed:", stringr::str_c(paste0("\n* ", outmsg), collapse = ""), sep = "")
 }
 
+.allcombs <- function(data,
+                      cols){
+  d <- do.call(CJ, base::lapply(cols, function(x) unique(data[[x]])))
+  d <- stats::setNames(d, cols)
+  d
+}
+
 #' print_dim
 #' 
 #' Wrapper around `stringr::str_c()` to print grouping variables
@@ -268,30 +275,25 @@ print_dim <- function(...){
   kubedir <- file.path(kvalkontrolldir, kubename)
   filedumpdir <- file.path(kubedir, "FILDUMPER")
   plotdir <- file.path(kubedir, "PLOTT")
+  bpdir <- file.path(plotdir, "BP")
+  bpcdir <- file.path(plotdir, "BPc")
+  tsdir <- file.path(plotdir, "TS")
+  tldir <- file.path(plotdir, "TL")
   arkivdir <- file.path(kubedir, "ARKIV")
   
-  if(!dir.exists(profileyeardir)){
-    dir.create(profileyeardir)
-  }
+  folders <- c(profileyeardir, 
+               kvalkontrolldir, 
+               kubedir, 
+               filedumpdir, 
+               plotdir, 
+               bpdir, 
+               bpcdir, 
+               tsdir, 
+               tldir, 
+               arkivdir)
   
-  if(!dir.exists(kvalkontrolldir)){
-    dir.create(kvalkontrolldir)
-  }
-  
-  if(!dir.exists(kubedir)){
-    dir.create(kubedir)
-  }
-  
-  if(!dir.exists(filedumpdir)){
-    dir.create(filedumpdir)
-  }
-  
-  if(!dir.exists(plotdir)){
-    dir.create(plotdir)
-  }
-  
-  if(!dir.exists(arkivdir)){
-    dir.create(arkivdir)
+  for(i in folders){
+    if(!dir.exists(i)){dir.create(i)}
   }
 }
 
@@ -494,7 +496,9 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 #' Read popinfo.csv from github
 .readPopInfo <- function(){
   file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/popinfo.csv")
-  data.table::fread(file)
+  d <- data.table::fread(file)
+  d[, GEOniv := factor(GEOniv, levels = c("H", "L", "F", "K", "k", "B"))]
+  d[]
 }
 
 #' .updateGeoRecode
