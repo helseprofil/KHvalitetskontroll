@@ -909,25 +909,23 @@ CompareNewOld <- function(data = compareKUBE,
   
 }
 
-#' PlotOutlier
+#' BoxPlot
 #' 
 #' Creates boxplots to visualize outliers, 
 #' and for each boxplot time series plots of all outliers are also produced
-#' 
 #' 
 #' @param data Dataset flagged for outliers
 #' @param onlynew Should only new outliers be indicated on the plot? Default = TRUE
 #' @param change Should plots be based on year-to-year changes. Default = FALSE
 #' @param profileyear default = PROFILEYEAR
-PlotOutlier <- function(data,
-                        onlynew = TRUE,
-                        change = FALSE,
-                        profileyear = PROFILEYEAR){
-  
-  .CreateFolders(profileyear,kubename)
+BoxPlot <- function(data,
+                    onlynew = TRUE,
+                    change = FALSE,
+                    profileyear = PROFILEYEAR){
   
   # Extract kubename and create path and base filename
   kubename <- .GetKubename(data)
+  .CreateFolders(profileyear,kubename)
   datetag <- .GetKubedatetag(data)
   savefolder <- ifelse(change, "BPc", "BP")
   savebase <- file.path("F:", 
