@@ -847,17 +847,17 @@ CompareNewOld <- function(data = compareKUBE,
     # Estimate weighted quantiles, and low and high cutoffs, all values within y2ybycols strata
     
     change_cutoffs <- collapse::fmutate(
-      change_g[["groups"]],
-      change_MIN = collapse::fmin(data[[.changeval]], g = change_g),
-      change_wq25 = collapse::fnth(data[[.changeval]], n = 0.25, g = change_g, w = w, ties = 1),
-      change_wq50 = collapse::fnth(data[[.changeval]], n = 0.50, g = change_g, w = w, ties = 1),
-      change_wq75 = collapse::fnth(data[[.changeval]], n = 0.75, g = change_g, w = w, ties = 1),
-      change_MAX = collapse::fmax(data[[.changeval]], g = change_g),
+      g[["groups"]],
+      change_MIN = collapse::fmin(data[[.changeval]], g = g),
+      change_wq25 = collapse::fnth(data[[.changeval]], n = 0.25, g = g, w = w, ties = 1),
+      change_wq50 = collapse::fnth(data[[.changeval]], n = 0.50, g = g, w = w, ties = 1),
+      change_wq75 = collapse::fnth(data[[.changeval]], n = 0.75, g = g, w = w, ties = 1),
+      change_MAX = collapse::fmax(data[[.changeval]], g = g),
       change_LOW = change_wq25 - 1.5*(change_wq75-change_wq25),
       change_HIGH = change_wq75 + 1.5*(change_wq75-change_wq25)
     )
     
-    data <- join(data, change_cutoffs, on = change_bycols, overid = 0, verbose = 0)
+    data <- join(data, change_cutoffs, on = bycols, overid = 0, verbose = 0)
     
     data[, `:=` (change_OUTLIER = data.table::fcase(get(.changeval) < change_LOW | get(.changeval) > change_HIGH, 1, 
                                                     get(.changeval) >= change_LOW & get(.changeval) <= change_HIGH, 0,
@@ -952,11 +952,15 @@ BoxPlot <- function(data,
   .val <- attributes(data)$outliercol
   .outlier <- "OUTLIER"
   .newoutlier <- "NEW_OUTLIER"
+  .quantiles <- c("wq25", "wq50", "wq75")
+  .ollimits <- c("LOW", "HIGH")
   
   if(change){
     .val <- paste0("change_", .val)
     .outlier <- paste0("change_", .outlier)
     .newoutlier <- paste0("change_", .newoutlier)
+    .quantiles <- paste0("change_", .plotvalues)
+    .ollimits <- paste0("change_", .ollimits)
   }
   
   # Cannot filter only new outliers if not present
@@ -964,16 +968,16 @@ BoxPlot <- function(data,
     onlynew <- FALSE
     cat("Column NEW_OUTLIER not present, all present outliers are included")
   }
+
   
   # Extract data to generate boxplots, including N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
   bycols <- c("GEOniv", stringr::str_subset(.dims1, "\\bGEO\\b|\\bAAR\\b", negate = T))
-  g <- collapse::GRP(data, c(bycols,
-                             "MIN", "wq25", "wq50", "wq75", "MAX", "LOW", "HIGH"))
+  g <- collapse::GRP(data, c(bycols, .quantiles, .ollimits))
   
   baseplotdata <- collapse::join(g[["groups"]], 
                                  data[, .(N_obs = collapse::fsum(!is.na(get(.val))),
-                                          MINABOVELOW = collapse::fmin(get(.val)[get(.val) >= LOW]),
-                                          MAXBELOWHIGH = collapse::fmax(get(.val)[get(.val) <= HIGH])),
+                                          MINABOVELOW = collapse::fmin(get(.val)[get(.val) >= get(.ollimits[1])]),
+                                          MAXBELOWHIGH = collapse::fmax(get(.val)[get(.val) <= get(.ollimits[2])])),
                                       by = bycols],
                                  overid = 0, verbose = 0)
   
@@ -1064,9 +1068,9 @@ BoxPlot <- function(data,
       geom_boxplot(
         data = bp,
         aes(ymin = MINABOVELOW,
-            lower = wq25,
-            middle = wq50,
-            upper = wq75,
+            lower = get(.quantiles[1]),
+            middle = get(.quantiles[2]),
+            upper = get(.quantiles[3]),
             ymax = MAXBELOWHIGH),
         stat = "identity") + 
       ggh4x::force_panelsizes(cols = unit(8, "cm"),
