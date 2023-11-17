@@ -422,14 +422,19 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   }
   
   # Print message describing recodings
-  recodings <<- (.georecode[old %in% data$GEO])
+  outdataname <- data.table::fcase(deparse(substitute(data)) == "outdatanew", "dfnew",
+                                   deparse(substitute(data)) == "outdataold", "dfold",
+                                   default = deparse(substitute(data)))
+  recodings <- (.georecode[old %in% data$GEO])
+
   if(nrow(recodings) > 0){
-    cat(paste0("\n The following codes in ", deparse(substitute(data)), " was recoded:\n"))
-    for(i in (1:nrow(recodings))){
-      cat(paste0(recodings[i, old], " -> ", recodings[i, current], "\n"))
-    }
+    cat(paste0("\n", nrow(recodings), " GEO-codes in ", outdataname, " were recoded to current GEO-codes\n"))
+      for(i in (1:nrow(recodings))){
+        cat(paste0(recodings[i, old], " -> ", recodings[i, current], "\n"))
+      }
+    assign(paste0("recodings_", outdataname), recodings, envir = .GlobalEnv)
   } else {
-    cat(paste0("\n No GEO-codes in ", deparse(substitute(data)), " was recoded.\n"))
+    cat(paste0("\n-No GEO-codes in ", outdataname, " were recoded.\n"))
   }
   d <- copy(data)
   out <- collapse::join(d, .georecode, on = c("GEO" = "old"), how = "left", verbose = 0)
