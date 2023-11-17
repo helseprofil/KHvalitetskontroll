@@ -918,7 +918,7 @@ CompareNewOld <- function(data = compareKUBE,
 #' @param onlynew Should only new outliers be indicated on the plot? Default = TRUE
 #' @param change Should plots be based on year-to-year changes. Default = FALSE
 #' @param profileyear default = PROFILEYEAR
-BoxPlot <- function(data,
+BoxPlot <- function(data = dfnew_flag,
                     onlynew = TRUE,
                     change = FALSE,
                     profileyear = PROFILEYEAR){
@@ -959,7 +959,7 @@ BoxPlot <- function(data,
     .val <- paste0("change_", .val)
     .outlier <- paste0("change_", .outlier)
     .newoutlier <- paste0("change_", .newoutlier)
-    .quantiles <- paste0("change_", .plotvalues)
+    .quantiles <- paste0("change_", .quantiles)
     .ollimits <- paste0("change_", .ollimits)
   }
   
@@ -1013,13 +1013,15 @@ BoxPlot <- function(data,
     filter <- "TRUE"
   }
   
-  # Global plot elements
+  # Generate global plot elements
   plotby <- c("GEOniv", facets)
   plotdims <- .allcombs(baseplotdata, plotby)
   n_strata <- nrow(plotdims[, .N, by = facets])
   n_rows <- base::ceiling(n_strata/5)
   title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
   caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
+  ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
+  subtitle <- paste0("Variable plotted: ", ylab, "\n")
   
   # Generate subsets, filenames, and make/save plot.
   for(i in filter){
@@ -1028,7 +1030,7 @@ BoxPlot <- function(data,
     bp <- baseplotdata[eval(parse(text = i))][N_obs > 2]
     ol <- outlierdata[eval(parse(text = i))]
     
-    # Dynamically generate filename and savepath
+    # Dynamically generate filename, savepath, and varying plot elements
     if(i == "TRUE"){
       name <- "_alle.png"
     } else {
@@ -1041,10 +1043,10 @@ BoxPlot <- function(data,
     filename <- paste0(filenamebase, name)
     savepath <- file.path(savebase, filename)
     
-    subtitle <- character()
     for(i in filedims){
       subtitle <- paste0(subtitle, i, ": ", unique(bp[[i]]), "\n")
     }
+    
     # Generate and save plots. 
     p <- ggplot(data = plotdims,
                 aes(x = GEOniv)) +
@@ -1054,7 +1056,7 @@ BoxPlot <- function(data,
                  ncol = 5) +
       scale_x_discrete(limits = rev(levels(ol$GEOniv)), 
                        drop = T) +
-      labs(y = .val,
+      labs(y = ylab,
            x = NULL,
            title = title,
            subtitle = subtitle,
