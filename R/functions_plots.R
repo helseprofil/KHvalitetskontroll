@@ -110,7 +110,7 @@ BoxPlot <- function(data = dfnew_flag,
   title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
   caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
   ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
-  subtitle <- paste0("Variable plotted: ", ylab, "\n")
+  
   
   # Generate subsets, filenames, and make/save plot.
   for(i in filter){
@@ -132,6 +132,7 @@ BoxPlot <- function(data = dfnew_flag,
     filename <- paste0(filenamebase, name)
     savepath <- file.path(savebase, filename)
     
+    subtitle <- paste0("Variable plotted: ", ylab, "\n")
     for(i in filedims){
       subtitle <- paste0(subtitle, i, ": ", unique(bp[[i]]), "\n")
     }
