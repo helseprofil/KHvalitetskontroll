@@ -10,7 +10,8 @@
 BoxPlot <- function(data = dfnew_flag,
                     onlynew = TRUE,
                     change = FALSE,
-                    profileyear = PROFILEYEAR){
+                    profileyear = PROFILEYEAR,
+                    data2 = dfold_flag){
   
   # Extract kubename and create path and base filename
   kubename <- .GetKubename(data)
@@ -108,8 +109,12 @@ BoxPlot <- function(data = dfnew_flag,
   n_strata <- nrow(plotdims[, .N, by = facets])
   n_rows <- base::ceiling(n_strata/5)
   title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
-  caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
+  comp <- ifelse(onlynew, attributes(data2)$Filename, NA_character)
+  caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "),
+                    "\nOld file (if only new outliers shown): ", comp)
   ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
+  plotvar <- paste0("Variable plotted: ", ylab)
+  plotvar <- if(onlynew){paste0(plotvar, ", only new outliers indicated")}
   
   
   # Generate subsets, filenames, and make/save plot.
@@ -132,7 +137,7 @@ BoxPlot <- function(data = dfnew_flag,
     filename <- paste0(filenamebase, name)
     savepath <- file.path(savebase, filename)
     
-    subtitle <- paste0("Variable plotted: ", ylab, "\n")
+    subtitle <- paste0(plotvar, "\n")
     for(i in filedims){
       subtitle <- paste0(subtitle, i, ": ", unique(bp[[i]]), "\n")
     }
@@ -174,7 +179,7 @@ BoxPlot <- function(data = dfnew_flag,
             axis.title = element_text(size = 16),
             axis.text = element_text(size = 12))
     
-    ggsave(filename = savepath,
+    ggsave(filename = paste0(savepath, "test.png"),
            plot = p, 
            device = "png", 
            dpi = 300,
