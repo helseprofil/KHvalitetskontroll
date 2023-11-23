@@ -791,6 +791,7 @@ CompareNewOld <- function(data = compareKUBE,
   .val <- data.table::fcase("MEIS" %in% vals, "MEIS",
                             "RATE" %in% vals, "RATE",
                             "SMR" %in% vals, "SMR",
+                            "MALTALL" %in% vals, "MALTALL",
                             default = NA)
   
   # For rows with data on .val but no weights (can happen if GEO is recoded to e.g. 99),
@@ -866,7 +867,7 @@ CompareNewOld <- function(data = compareKUBE,
                                                     get(.changeval) > change_HIGH, "High",
                                                     default = NA))]
     } else {
-    cat("\n- Neither MEIS, RATE, nor SMR available for outlier detection")
+    cat("\n- Neither MEIS, RATE, SMR, nor MALTALL available for outlier detection")
   }
 }
 
