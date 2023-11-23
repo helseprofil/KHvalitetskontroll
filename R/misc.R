@@ -462,6 +462,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/misc.R"))
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_step1.R"))
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_step2.R"))
+  source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_plots.R"))
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_friskvik.R"))
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/functions_interactive.R"))
   source(paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/", branch, "/R/globals.R"))
