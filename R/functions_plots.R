@@ -111,12 +111,14 @@ BoxPlot <- function(data = dfnew_flag,
   title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
   caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
   ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
-  comp <- ifelse(onlynew, attributes(data2)$Filename, NA_character)
+  filenameold <- ifelse(!is.null(data2),
+                        attributes(data2)$Filename,
+                        "not specified")
+  comp <- ifelse(onlynew, filenameold, NA_character)
   plotvar <- paste0("Variable plotted: ", ylab)
   plotvar <- if(onlynew){
     paste0(plotvar, ", only new outliers indicated. Old file: ", comp)
     }
-  
   
   # Generate subsets, filenames, and make/save plot.
   for(i in filter){
