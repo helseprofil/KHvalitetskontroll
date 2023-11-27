@@ -192,6 +192,81 @@ BoxPlot <- function(data = dfnew_flag,
   }
 }
 
+
+#' TimeSeries
+#' 
+#' Creates time-series plots to visualize outliers.The purpose of these plots are to 
+#' evaluate whether an outlier is also unreasonable within its own time series. 
+#' The plots also contain information regarding the underlying numbers (TELLER or sumTELLER), as 
+#' small absolute changes may have a big impact on RATE in small geographical units.
+#' 
+#' Plots are stored in folders PLOTT/BP and PLOTT/BPc
+#'
+#' @param data Dataset flagged for outliers
+#' @param profileyear default = PROFILEYEAR
+#'
+#' @return
+#' @export
+#'
+#' @examples
+TimeSeries <- function(data = dfnew_flag,
+                       profileyear = PROFILEYEAR){
+  
+  kubename <- .GetKubename(data)
+  .CreateFolders(profileyear,kubename)
+  datetag <- .GetKubedatetag(data)
+  savebase <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        profileyear,
+                        "KVALITETSKONTROLL",
+                        kubename,
+                        "PLOTT",
+                        "TS")
+  filenamebase <- paste(kubename,
+                        datetag,
+                        "TS",
+                        sep = "_")
+  
+  # Identify target columns, outlier column, and TELLER column
+  .IdentifyColumns(data)
+  .val <- attributes(data)$outliercol
+  .outlier <- "OUTLIER"
+  .teller <- data.table::fcase("TELLER_uprikk" %in% .vals1, "TELLER_uprikk",
+                               "TELLER" %in% .vals1, "TELLER",
+                               "sumTELLER" %in% .valse1, "sumTELLER",
+                               default = NA_character_)
+  
+  # Find strata containing > 0 outlier, only keep strata with outliers
+  bycols <- stringr::str_subset(.dims1, "\\bAAR\\b", negate = T)
+  data[, n_outlier := sum(get(.outlier), na.rm = T), by = bycols]
+  data <- data[n_outlier > 0]
+  outlierdata <- data[get(.outlier) == 1]
+  
+  # Generate filter to split into files
+  
+  
+  
+  # Loop through filter. generate and save plot
+
+    ggplot(pd, aes(x = AAR,
+                 y = get(.val))) + 
+    facet_wrap(facetcol,
+               labeller = labeller(.multi_line = F),
+               scales = "free_y",
+               ncol = 5) + 
+    geom_point() +
+    geom_line(group = 1) + 
+    geom_point(data = pdo, aes(color = "red", fill = "black", size = 3)) + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
+    
+  
+  
+}
+
 #' .findBoxplotSubset
 #'
 #' @param d plotdata
@@ -240,25 +315,3 @@ BoxPlot <- function(data = dfnew_flag,
   v
 }
 
-#' TimeSeries
-#' 
-#' Creates time-series plots to visualize outliers.The purpose of these plots are to 
-#' evaluate whether an outlier is also unreasonable within its own time series. 
-#' The plots also contain information regarding the underlying numbers (TELLER or sumTELLER), as 
-#' small absolute changes may have a big impact on RATE in small geographical units.
-#' 
-#' Plots are stored in folders PLOTT/BP and PLOTT/BPc
-#'
-#' @param data Dataset flagged for outliers
-#' @param change Should plots be based on year-to-year changes. Default = FALSE
-#' @param profileyear default = PROFILEYEAR
-#'
-#' @return
-#' @export
-#'
-#' @examples
-TimeSeries <- function(data = dfnew_flag,
-                       change = FALSE,
-                       profileyear = PROFILEYEAR){
-  
-}
