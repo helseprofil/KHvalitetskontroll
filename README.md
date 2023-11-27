@@ -9,7 +9,7 @@
 Funksjoner for Kvalitetskontroll av KH/NH kuber.
 
 # R versjon
-- Prosjektet er per nå kompatibelt med R versjon 4.1. I versjon 4.2 og nyere er det noen endringer i encoding, som gjør at vi får problemer med norske spesialbokstaver. 
+- Prosjektet er kompatibelt med R versjon 4.3+
 
 # Installasjon, oppdatering og brukerguider
 
