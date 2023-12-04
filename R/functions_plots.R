@@ -211,6 +211,7 @@ TimeSeries <- function(data = dfnew_flag,
   kubename <- .GetKubename(data)
   .CreateFolders(profileyear,kubename)
   datetag <- .GetKubedatetag(data)
+  savefolder <- ifelse(change, "TSc", "TS")
   savebase <- file.path("F:", 
                         "Forskningsprosjekter", 
                         "PDB 2455 - Helseprofiler og til_",
@@ -221,10 +222,10 @@ TimeSeries <- function(data = dfnew_flag,
                         "KVALITETSKONTROLL",
                         kubename,
                         "PLOTT",
-                        "TS")
+                        savefolder)
   filenamebase <- paste(kubename,
                         datetag,
-                        "tidsserier",
+                        "TS",
                         sep = "_")
  
   # Identify target columns, outlier column, and TELLER column. Create savepath
@@ -241,11 +242,10 @@ TimeSeries <- function(data = dfnew_flag,
     .val <- paste0("change_", .val)
     .outlier <- paste0("change_", .outlier)
     .newoutlier <- paste0("change_", .newoutlier)
-    filename <- paste0(filenamebase, "_y2y_(", format(Sys.time(), "%H%M"), ").pdf")
+    filenamebase <- paste0(filenamebase, "_y2y_(", format(Sys.time(), "%H%M"), ")")
   } else {
-    filename <- paste0(filenamebase, "_(", format(Sys.time(), "%H%M"), ").pdf")
+    filenamebase <- paste0(filenamebase, "_(", format(Sys.time(), "%H%M"), ")")
   }
-  savepath <- file.path(savebase, filename)
   
   # Remove rows with missing data on plot value
   data <- data[!is.na(get(.val))]
@@ -265,16 +265,12 @@ TimeSeries <- function(data = dfnew_flag,
     outlierdata <- data[get(.outlier) == 1]
   }
   
-  # For lines, only keep strata with >= 2 non-missing rows
+  # For lines, only keep strata with >= 2 non-missing rows.
   data[, n_obs := sum(!is.na(get(.val))), by = bycols]
   linedata <- data[n_obs > 1]
   
-  # Generate global plot elements
+  # Add middle-point for labels
   data[, y_middle := 0.5*(max(get(.val), na.rm = T) + min(get(.val), na.rm = T)), by = bycols]
-  ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
-  caption <- paste0("Tellervariabel: ", .teller)
-  n_strata <- nrow(data[, .N, by = bycols])
-  n_pages <- ceiling(n_strata/25)
   
   # Generate filter to save as multiple files, similar to boxplot
   facets <- stringr::str_subset(bycols, "GEO", negate = TRUE)
@@ -294,38 +290,76 @@ TimeSeries <- function(data = dfnew_flag,
     filter <- "TRUE"
   }
   
+  # Generate global plot elements
+  plotby <- c("GEO", facets)
+  ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
+  plotvar <- paste0("Variable plotted: ", ylab)
+  caption <- paste0("Tellervariabel: ", .teller, "\nPlots grouped by: ", paste0(plotby, collapse = ", "))
   
-  # Generate and save plot
-
-    p <- ggplot(data = data, 
-                aes(x = AAR, y = get(.val)))
+  # Generate subsets, filenames, and make/save plot.
+  cat(paste0("Plots printed to KVALITETSKONTROLL/",kubename,"/PLOTT/", savefolder))
+  for(i in filter){
     
+    # Generate subsets
+    d <- data[eval(parse(text = i))]
+    ld <- linedata[eval(parse(text = i))]
     if(exists("newoutlierdata")){
+      nod <- newoutlierdata[eval(parse(text = i))]
+      pod <- prevoutlierdata[eval(parse(text = i))]
+    } else {
+      od <- outlierdata[eval(parse(text = i))]
+    }
+    
+    n_pages <- ceiling(nrow(d[, .N, by = plotby])/25)
+    
+    # Dynamically generate filename, savepath, and varying plot elements
+    if(i == "TRUE"){
+      name <- "_alle.pdf"
+    } else {
+      name <- character()
+      for(i in filedims){
+        name <- paste0(name, "_", unique(d[[i]]))
+      }
+      name <- paste0(name, ".pdf")
+    }
+    filename <- paste0(filenamebase, name)
+    savepath <- file.path(savebase, filename)
+    
+    subtitle <- paste0(plotvar, "\n")
+    for(i in filedims){
+      subtitle <- paste0(subtitle, i, ": ", unique(d[[i]]), "\n")
+    }
+    
+    
+    # Make plot
+    p <- ggplot(data = d, aes(x = AAR, y = get(.val)))
+    
+    if(exists("nod")){
       p <- p + 
-        geom_point(data = newoutlierdata, 
+        geom_point(data = nod, 
                    color = "red", fill = "black", size = 5) + 
-        geom_point(data = prevoutlierdata, 
-                   color = "blue", fill = "black", size = 5)  +
+        geom_point(data = pod, 
+                   color = "blue", fill = "black", size = 5) +
         geom_point()
     } else {
       p <- p + 
-        annotate(data = outlierdata, 
+        annotate(data = od, 
                  color = "red", fill = "black", size = 1) + 
         geom_point()
     }
     
-    # Bare plotte linjer dersom .n > 1
-    
     p <- p + 
-      geom_line(data = linedata, aes(y = get(.val), group = 1)) +
+      geom_line(data = ld, aes(y = get(.val), group = 1)) +
       ggtext::geom_richtext(aes(label = round(get(.teller),0), y = y_middle),
                             hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt) +
       ggh4x::force_panelsizes(cols = unit(8, "cm"),
                               rows = unit(5, "cm")) + 
       labs(y = ylab,
-           caption = caption) + 
+           caption = caption,
+           subtitle = subtitle) + 
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
     
+    # Save plot
     pdf(savepath, width = 18, height = 12)
     for(i in 1:n_pages){
       print(p +
@@ -338,15 +372,8 @@ TimeSeries <- function(data = dfnew_flag,
     }
     dev.off()
     
-    # TESTING
-    # p + 
-    #   ggforce::facet_wrap_paginate(bycols,
-    #                                labeller = labeller(.multi_line = F),
-    #                                scales = "free_y",
-    #                                ncol = 5, 
-    #                                nrow = 5,
-    #                                page = 1)
-  cat(paste0("Plots printed to KVALITETSKONTROLL/",kubename,"/PLOTT/TS/", filename))
+    cat(paste0("\n...", filename))
+  }
 }
 
 #' .findBoxplotSubset

@@ -278,6 +278,7 @@ print_dim <- function(...){
   bpdir <- file.path(plotdir, "BP")
   bpcdir <- file.path(plotdir, "BPc")
   tsdir <- file.path(plotdir, "TS")
+  tscdir <- file.path(plotdir, "TSc")
   tldir <- file.path(plotdir, "TL")
   arkivdir <- file.path(kubedir, "ARKIV")
   
@@ -289,6 +290,7 @@ print_dim <- function(...){
                bpdir, 
                bpcdir, 
                tsdir, 
+               tscdir,
                tldir, 
                arkivdir)
   
