@@ -83,7 +83,7 @@ BoxPlot <- function(data = dfnew_flag,
   # Find total number of strata. Split plots into separate files of max 25 plots per file
   facets <- stringr::str_subset(bycols, "GEOniv", negate = TRUE)
   filedims <- character()
-  filedims <- c(filedims, .findBoxplotSubset(d = baseplotdata, b = facets))
+  filedims <- c(filedims, .findPlotSubset(d = baseplotdata, b = facets))
   if(length(filedims > 0)){
     facets <- stringr::str_subset(facets, 
                                   stringr::str_c("^", filedims, "$", collapse = "|"),
@@ -92,14 +92,9 @@ BoxPlot <- function(data = dfnew_flag,
   
   # Create list of filters for subsetting. 
   if(length(filedims > 0)){
-    subsets <- GRP(baseplotdata, filedims)[["groups"]]
-    cols <- names(subsets)
-    for(i in cols){
-      subsets[, (i) := paste0(i, "=='", get(i), "'")]
-    }
-    filter <- subsets[, filter := do.call(paste, c(.SD, sep = " & ")), .SDcols = cols][, (filter)]
+    filter <- .findPlotFilter(baseplotdata, filedims)
   } else {
-    # If fildims = 0, filter = TRUE to select all rows with DT[TRUE] 
+    # If filedims = 0, filter = TRUE to select all rows with DT[TRUE] 
     filter <- "TRUE"
   }
   
@@ -210,6 +205,7 @@ BoxPlot <- function(data = dfnew_flag,
 #'
 #' @examples
 TimeSeries <- function(data = dfnew_flag,
+                       change = FALSE,
                        profileyear = PROFILEYEAR){
   
   kubename <- .GetKubename(data)
@@ -228,51 +224,137 @@ TimeSeries <- function(data = dfnew_flag,
                         "TS")
   filenamebase <- paste(kubename,
                         datetag,
-                        "TS",
+                        "tidsserier",
                         sep = "_")
-  
-  # Identify target columns, outlier column, and TELLER column
+ 
+  # Identify target columns, outlier column, and TELLER column. Create savepath
   .IdentifyColumns(data)
   .val <- attributes(data)$outliercol
   .outlier <- "OUTLIER"
+  .newoutlier <- "NEW_OUTLIER"
   .teller <- data.table::fcase("TELLER_uprikk" %in% .vals1, "TELLER_uprikk",
                                "TELLER" %in% .vals1, "TELLER",
                                "sumTELLER" %in% .valse1, "sumTELLER",
                                default = NA_character_)
   
+  if(change){
+    .val <- paste0("change_", .val)
+    .outlier <- paste0("change_", .outlier)
+    .newoutlier <- paste0("change_", .newoutlier)
+    filename <- paste0(filenamebase, "_y2y_(", format(Sys.time(), "%H%M"), ").pdf")
+  } else {
+    filename <- paste0(filenamebase, "_(", format(Sys.time(), "%H%M"), ").pdf")
+  }
+  savepath <- file.path(savebase, filename)
+  
+  # Remove rows with missing data on plot value
+  data <- data[!is.na(get(.val))]
+  
   # Find strata containing > 0 outlier, only keep strata with outliers
   bycols <- stringr::str_subset(.dims1, "\\bAAR\\b", negate = T)
   data[, n_outlier := sum(get(.outlier), na.rm = T), by = bycols]
   data <- data[n_outlier > 0]
-  outlierdata <- data[get(.outlier) == 1]
+  # If data on new/prev outlier, reduce data to only strata with new outliers.
+  # split outlierdata to plot as separate colors.
+  if(.newoutlier %in% .vals1){
+    data[, n_new_outlier := sum(get(.newoutlier), na.rm = T), by = bycols]
+    data <- data[n_new_outlier > 0]
+    newoutlierdata <- data[get(.newoutlier) == 1]
+    prevoutlierdata <- data[get(.outlier) == 1 & get(.newoutlier) == 0]
+  } else {
+    outlierdata <- data[get(.outlier) == 1]
+  }
   
-  # Generate filter to split into files
+  # For lines, only keep strata with >= 2 non-missing rows
+  data[, n_obs := sum(!is.na(get(.val))), by = bycols]
+  linedata <- data[n_obs > 1]
+  
+  # Generate global plot elements
+  data[, y_middle := 0.5*(max(get(.val), na.rm = T) + min(get(.val), na.rm = T)), by = bycols]
+  ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
+  caption <- paste0("Tellervariabel: ", .teller)
+  n_strata <- nrow(data[, .N, by = bycols])
+  n_pages <- ceiling(n_strata/25)
+  
+  # Generate filter to save as multiple files, similar to boxplot
+  facets <- stringr::str_subset(bycols, "GEO", negate = TRUE)
+  filedims <- character()
+  filedims <- c(filedims, .findPlotSubset(d = data, b = facets))
+  if(length(filedims > 0)){
+    facets <- stringr::str_subset(facets, 
+                                  stringr::str_c("^", filedims, "$", collapse = "|"),
+                                  negate = TRUE)
+  }
+  
+  # Create list of filters for subsetting. 
+  if(length(filedims > 0)){
+    filter <- .findPlotFilter(data, filedims)
+  } else {
+    # If fildims = 0, filter = TRUE to select all rows with DT[TRUE] 
+    filter <- "TRUE"
+  }
   
   
-  
-  # Loop through filter. generate and save plot
+  # Generate and save plot
 
-    ggplot(pd, aes(x = AAR,
-                 y = get(.val))) + 
-    facet_wrap(facetcol,
-               labeller = labeller(.multi_line = F),
-               scales = "free_y",
-               ncol = 5) + 
-    geom_point() +
-    geom_line(group = 1) + 
-    geom_point(data = pdo, aes(color = "red", fill = "black", size = 3)) + 
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
+    p <- ggplot(data = data, 
+                aes(x = AAR, y = get(.val)))
     
-  
-  
+    if(exists("newoutlierdata")){
+      p <- p + 
+        geom_point(data = newoutlierdata, 
+                   color = "red", fill = "black", size = 5) + 
+        geom_point(data = prevoutlierdata, 
+                   color = "blue", fill = "black", size = 5)  +
+        geom_point()
+    } else {
+      p <- p + 
+        annotate(data = outlierdata, 
+                 color = "red", fill = "black", size = 1) + 
+        geom_point()
+    }
+    
+    # Bare plotte linjer dersom .n > 1
+    
+    p <- p + 
+      geom_line(data = linedata, aes(y = get(.val), group = 1)) +
+      ggtext::geom_richtext(aes(label = round(get(.teller),0), y = y_middle),
+                            hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt) +
+      ggh4x::force_panelsizes(cols = unit(8, "cm"),
+                              rows = unit(5, "cm")) + 
+      labs(y = ylab,
+           caption = caption) + 
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
+    
+    pdf(savepath, width = 18, height = 12)
+    for(i in 1:n_pages){
+      print(p +
+              ggforce::facet_wrap_paginate(bycols,
+                                           labeller = labeller(.multi_line = F),
+                                           scales = "free_y",
+                                           ncol = 5,
+                                           nrow = 5,
+                                           page = i))
+    }
+    dev.off()
+    
+    # TESTING
+    # p + 
+    #   ggforce::facet_wrap_paginate(bycols,
+    #                                labeller = labeller(.multi_line = F),
+    #                                scales = "free_y",
+    #                                ncol = 5, 
+    #                                nrow = 5,
+    #                                page = 1)
+  cat(paste0("Plots printed to KVALITETSKONTROLL/",kubename,"/PLOTT/TS/", filename))
 }
 
 #' .findBoxplotSubset
 #'
 #' @param d plotdata
 #' @param b bycols
-.findBoxplotSubset <- function(d,
-                               b){
+.findPlotSubset <- function(d,
+                            b){
   
   orgstrata <- nrow(d[, .N, by = b])
   optnfiles <- base::ceiling(orgstrata/25)
@@ -315,3 +397,18 @@ TimeSeries <- function(data = dfnew_flag,
   v
 }
 
+#' .findPlotFilter
+#' 
+#' Helper function to filter subset for plotting to different files
+#'
+.findPlotFilter <- function(data,
+                            dims){
+  subsets <- GRP(data, dims)[["groups"]]
+  cols <- names(subsets)
+  for(i in cols){
+    subsets[, (i) := paste0(i, "=='", get(i), "'")]
+  }
+  filter <- subsets[, filter := do.call(paste, c(.SD, sep = " & ")), .SDcols = cols][, (filter)]
+  
+  filter
+}
