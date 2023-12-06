@@ -376,7 +376,7 @@ TimeSeries <- function(data = dfnew_flag,
   }
 }
 
-#' .findBoxplotSubset
+#' .findPlotSubset
 #'
 #' @param d plotdata
 #' @param b bycols

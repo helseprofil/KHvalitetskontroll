@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.4.0 (09.11.2023). 
+Version: 1.4.1 (06.12.2023). 
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 
@@ -116,6 +116,35 @@ CompareDiffRows()
 ## Time trends in diffs
 ```{r fig.width=11}
 PlotTimeDiff()
+```
+
+```{r eval = F}
+# Optional code to generate boxplots and time series plots. Uses dfnew_flag and dfold_flag, so you must run FormatData() first. 
+# BoxPlots are split into files to get <25 plots per page
+# Time series plots plot all strata containing outliers, sorted by GEO-code. New outliers are indicated with red, and old outliers with blue. 
+# Time series plots are split into multi-page PDFs using the same filter as boxplots. 
+
+# Boxplots absolute values, saves to PLOTT/BP
+BoxPlot(data = dfnew_flag,
+        onlynew = TRUE, # TRUE = does not plot outliers that also were outliers last year
+        change = FALSE, # FALSE = Plots absolute values
+        profileyear = PROFILEYEAR)
+
+# Boxplots year-to-yeat, saves to PLOTT/BPc
+Boxplot(data = dfnew_flag,
+        onlynew = TRUE, # TRUE = does not plot outliers that also were outliers last year
+        change = TRUE, # TRUE = plots year-to-year changes
+        profileyear = PROFILEYEAR)
+
+# Time series absolute values, saves to PLOTT/TS
+TimeSeries(data = dfnew_flag,
+           change = FALSE, # FALSE = Plots absolute values
+           profileyear = PROFILEYEAR)
+
+# Time series year-to-year, saves to PLOTT/TSc
+TimeSeries(data = dfnew_flag,
+           change = TRUE, # TRUE = plots year-to-year changes
+           profileyear = PROFILEYEAR)
 ```
 
 
