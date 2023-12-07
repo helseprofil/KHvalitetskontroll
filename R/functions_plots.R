@@ -59,7 +59,6 @@ BoxPlot <- function(data = dfnew_flag,
     cat("Column NEW_OUTLIER not present, all present outliers are included")
   }
   
-  
   # Extract data to generate boxplots, including N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
   bycols <- c("GEOniv", stringr::str_subset(.dims1, "\\bGEO\\b|\\bAAR\\b", negate = T))
   g <- collapse::GRP(data, c(bycols, .quantiles, .ollimits))
@@ -106,10 +105,12 @@ BoxPlot <- function(data = dfnew_flag,
   title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
   caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
   ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
-  filenameold <- ifelse(!is.null(data2),
-                        attributes(data2)$Filename,
-                        "not specified")
-  comp <- ifelse(onlynew, filenameold, NA_character)
+  if(!exists(deparse(substitute(data2)), envir = .GlobalEnv) || is.null(data2)){
+    filenameold <- "not specified"
+  } else {
+    filenameold <- attributes(data2)$Filename
+  }
+  comp <- ifelse(onlynew, filenameold, NA_character_)
   plotvar <- paste0("Variable plotted: ", ylab)
   plotvar <- if(onlynew){
     paste0(plotvar, ", only new outliers indicated. Old file: ", comp)
@@ -177,13 +178,7 @@ BoxPlot <- function(data = dfnew_flag,
             axis.title = element_text(size = 16),
             axis.text = element_text(size = 12))
     
-    ggsave(filename = savepath,
-           plot = p, 
-           device = "png", 
-           dpi = 300,
-           width = 45,
-           height = n_rows*6 + 10,
-           units = "cm")
+    .saveBoxPlot(savepath, p)
   }
 }
 
@@ -207,6 +202,11 @@ BoxPlot <- function(data = dfnew_flag,
 TimeSeries <- function(data = dfnew_flag,
                        change = FALSE,
                        profileyear = PROFILEYEAR){
+  
+  if(data[, length(unique(AAR))] < 2){
+    cat("Whoops! Only one unique AAR in file, time series not possible. No plots generated.")
+    return(invisible(NULL))
+  }
   
   kubename <- .GetKubename(data)
   .CreateFolders(profileyear,kubename)
@@ -235,7 +235,7 @@ TimeSeries <- function(data = dfnew_flag,
   .newoutlier <- "NEW_OUTLIER"
   .teller <- data.table::fcase("TELLER_uprikk" %in% .vals1, "TELLER_uprikk",
                                "TELLER" %in% .vals1, "TELLER",
-                               "sumTELLER" %in% .valse1, "sumTELLER",
+                               "sumTELLER" %in% .vals1, "sumTELLER",
                                default = NA_character_)
   
   if(change){
@@ -330,7 +330,6 @@ TimeSeries <- function(data = dfnew_flag,
       subtitle <- paste0(subtitle, i, ": ", unique(d[[i]]), "\n")
     }
     
-    
     # Make plot
     p <- ggplot(data = d, aes(x = AAR, y = get(.val)))
     
@@ -343,13 +342,17 @@ TimeSeries <- function(data = dfnew_flag,
         geom_point()
     } else {
       p <- p + 
-        annotate(data = od, 
-                 color = "red", fill = "black", size = 1) + 
+        geom_point(data = od, 
+                   color = "red", fill = "black", size = 1) + 
         geom_point()
     }
     
-    p <- p + 
-      geom_line(data = ld, aes(y = get(.val), group = 1)) +
+    if(nrow(ld) > 0){
+      p <- p + 
+        geom_line(data = ld, aes(y = get(.val), group = 1))
+    }
+    
+    p <- p +
       ggtext::geom_richtext(aes(label = round(get(.teller),0), y = y_middle),
                             hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt) +
       ggh4x::force_panelsizes(cols = unit(8, "cm"),
@@ -360,20 +363,35 @@ TimeSeries <- function(data = dfnew_flag,
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
     
     # Save plot
-    pdf(savepath, width = 18, height = 12)
-    for(i in 1:n_pages){
-      print(p +
-              ggforce::facet_wrap_paginate(bycols,
-                                           labeller = labeller(.multi_line = F),
-                                           scales = "free_y",
-                                           ncol = 5,
-                                           nrow = 5,
-                                           page = i))
+    if(file.exists(savepath)){
+      cat("\n", basename(savepath), "already exists")
+    } else {
+      pdf(savepath, width = 18, height = 12)
+      for(i in 1:n_pages){
+        print(p +
+                ggforce::facet_wrap_paginate(bycols,
+                                             labeller = labeller(.multi_line = F),
+                                             scales = "free_y",
+                                             ncol = 5,
+                                             nrow = 5,
+                                             page = i))
+      }
+      dev.off()
+      cat(paste0("\n...", filename))
     }
-    dev.off()
-    
-    cat(paste0("\n...", filename))
   }
+}
+
+TimelineBydel <- function(data = dfnew_flag){
+  
+  d <- data[GEO > 9999]
+  .IdentifyColumns(d)
+  
+  
+  
+  
+  
+  
 }
 
 #' .findPlotSubset
@@ -438,4 +456,21 @@ TimeSeries <- function(data = dfnew_flag,
   filter <- subsets[, filter := do.call(paste, c(.SD, sep = " & ")), .SDcols = cols][, (filter)]
   
   filter
+}
+
+# .SaveBoxplot
+.saveBoxPlot <- function(file,
+                         plot){
+  
+  if(file.exists(file)){
+    cat("\n", basename(file), "already exists")
+  } else {
+    ggsave(filename = file,
+           plot = plot, 
+           device = "png", 
+           dpi = 300,
+           width = 45,
+           height = n_rows*6 + 10,
+           units = "cm")
+  } 
 }
