@@ -33,8 +33,8 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # foldernew and folderold must be QC, DATERT or 4-digits
 # By default, the following column names are automatically renamed: "antall", "Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4.2)
 
-ReadFiles(dfnew = "BARNEVERN_TILTAK_2023-11-02-13-02", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          foldernew = 2024, # QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
+ReadFiles(dfnew = "QC_QALY_KH_2023-12-06-15-13", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          foldernew = "QC", # QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusnew = "KH", # KH or NH
           dfold = NULL, # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           folderold = NULL, # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
@@ -131,7 +131,7 @@ BoxPlot(data = dfnew_flag,
         profileyear = PROFILEYEAR)
 
 # Boxplots year-to-yeat, saves to PLOTT/BPc
-Boxplot(data = dfnew_flag,
+BoxPlot(data = dfnew_flag,
         onlynew = TRUE, # TRUE = does not plot outliers that also were outliers last year
         change = TRUE, # TRUE = plots year-to-year changes
         profileyear = PROFILEYEAR)
