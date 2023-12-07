@@ -7,32 +7,24 @@
 #' @param onlynew Should only new outliers be indicated on the plot? Default = TRUE
 #' @param change Should plots be based on year-to-year changes. Default = FALSE
 #' @param profileyear default = PROFILEYEAR
+#' @param data2 old file, only used 
+#' @param overwrite 
 BoxPlot <- function(data = dfnew_flag,
                     onlynew = TRUE,
                     change = FALSE,
                     profileyear = PROFILEYEAR,
-                    data2 = dfold_flag){
+                    data2 = dfold_flag,
+                    overwrite = FALSE){
+  
+  if(is.null(attr(data, "outliercol"))){
+    cat("Outliercol not detected, does dfnew_flag contain outlier flags?")
+    return(invisible(NULL))
+  }
   
   # Extract kubename and create path and base filename
-  kubename <- .GetKubename(data)
-  .CreateFolders(profileyear,kubename)
-  datetag <- .GetKubedatetag(data)
   savefolder <- ifelse(change, "BPc", "BP")
-  savebase <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
-                        "PRODUKSJON", 
-                        "VALIDERING", 
-                        "NESSTAR_KUBER",
-                        profileyear,
-                        "KVALITETSKONTROLL",
-                        kubename,
-                        "PLOTT",
-                        savefolder)
-  filenamebase <- paste(kubename,
-                        datetag,
-                        savefolder,
-                        sep = "_")
+  savebase <- .getPlotSaveBase(profileyear = profileyear, kubename = .GetKubename(data), savefolder = savefolder)
+  filenamebase <- .getPlotFilenameBase(kubename = .GetKubename(data), datetag = .GetKubedatetag(data), savefolder = savefolder)
   
   # Remove rows with missing GEOniv (probably 99-codes) and remove unused GEOniv levels. 
   data <- data[!is.na(GEOniv)][, GEOniv := base::droplevels(GEOniv)]
@@ -79,23 +71,16 @@ BoxPlot <- function(data = dfnew_flag,
   outlierdata[, label := paste0(GEO, "'", stringr::str_sub(AAR, -2L, -1L))]
   outlierdata <- outlierdata[, (.SD), .SDcols = c(bycols, .val, "label")]
   
-  # Find total number of strata. Split plots into separate files of max 25 plots per file
+  # Generate filter to save as multiple files with max 25 panels per page
   facets <- stringr::str_subset(bycols, "GEOniv", negate = TRUE)
   filedims <- character()
-  filedims <- c(filedims, .findPlotSubset(d = baseplotdata, b = facets))
+  filedims <- c(filedims, .findPlotSubset(d = baseplotdata, b = facets, s = 25))
   if(length(filedims > 0)){
     facets <- stringr::str_subset(facets, 
                                   stringr::str_c("^", filedims, "$", collapse = "|"),
                                   negate = TRUE)
   }
-  
-  # Create list of filters for subsetting. 
-  if(length(filedims > 0)){
-    filter <- .findPlotFilter(baseplotdata, filedims)
-  } else {
-    # If filedims = 0, filter = TRUE to select all rows with DT[TRUE] 
-    filter <- "TRUE"
-  }
+  filter <- .findPlotFilter(baseplotdata, filedims)
   
   # Generate global plot elements
   plotby <- c("GEOniv", facets)
@@ -136,9 +121,9 @@ BoxPlot <- function(data = dfnew_flag,
     filename <- paste0(filenamebase, name)
     savepath <- file.path(savebase, filename)
     
-    subtitle <- paste0(plotvar, "\n")
+    subtitle <- plotvar
     for(i in filedims){
-      subtitle <- paste0(subtitle, i, ": ", unique(bp[[i]]), "\n")
+      subtitle <- paste0(subtitle, "\n", i, ": ", unique(bp[[i]]))
     }
     
     # Generate and save plots. 
@@ -178,10 +163,12 @@ BoxPlot <- function(data = dfnew_flag,
             axis.title = element_text(size = 16),
             axis.text = element_text(size = 12))
     
-    .saveBoxPlot(savepath, p)
+    .saveBoxPlot(file = savepath, 
+                 plot = p, 
+                 rows = n_rows,
+                 overwrite = overwrite)
   }
 }
-
 
 #' TimeSeries
 #' 
@@ -192,7 +179,8 @@ BoxPlot <- function(data = dfnew_flag,
 #' 
 #' Plots are stored in folders PLOTT/BP and PLOTT/BPc
 #'
-#' @param data Dataset flagged for outliers
+#' @param data Dataset flagged for outliers, defaults to dfnew_flag
+#' @param change Should plots be based on year-to-year changes. Default = FALSE
 #' @param profileyear default = PROFILEYEAR
 #'
 #' @return
@@ -208,26 +196,15 @@ TimeSeries <- function(data = dfnew_flag,
     return(invisible(NULL))
   }
   
-  kubename <- .GetKubename(data)
-  .CreateFolders(profileyear,kubename)
-  datetag <- .GetKubedatetag(data)
+  if(is.null(attr(data, "outliercol"))){
+    cat("Outliercol not detected, does dfnew_flag contain outlier flags?")
+    return(invisible(NULL))
+  }
+  
   savefolder <- ifelse(change, "TSc", "TS")
-  savebase <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
-                        "PRODUKSJON", 
-                        "VALIDERING", 
-                        "NESSTAR_KUBER",
-                        profileyear,
-                        "KVALITETSKONTROLL",
-                        kubename,
-                        "PLOTT",
-                        savefolder)
-  filenamebase <- paste(kubename,
-                        datetag,
-                        "TS",
-                        sep = "_")
- 
+  savebase <- .getPlotSaveBase(profileyear = profileyear, kubename = .GetKubename(data), savefolder = savefolder)
+  filenamebase <- .getPlotFilenameBase(kubename = .GetKubename(data), datetag = .GetKubedatetag(data), savefolder = savefolder)
+    
   # Identify target columns, outlier column, and TELLER column. Create savepath
   .IdentifyColumns(data)
   .val <- attributes(data)$outliercol
@@ -250,8 +227,9 @@ TimeSeries <- function(data = dfnew_flag,
   # Remove rows with missing data on plot value
   data <- data[!is.na(get(.val))]
   
-  # Find strata containing > 0 outlier, only keep strata with outliers
   bycols <- stringr::str_subset(.dims1, "\\bAAR\\b", negate = T)
+  
+  # Find strata containing > 0 outlier, only keep strata with outliers
   data[, n_outlier := sum(get(.outlier), na.rm = T), by = bycols]
   data <- data[n_outlier > 0]
   # If data on new/prev outlier, reduce data to only strata with new outliers.
@@ -272,32 +250,25 @@ TimeSeries <- function(data = dfnew_flag,
   # Add middle-point for labels
   data[, y_middle := 0.5*(max(get(.val), na.rm = T) + min(get(.val), na.rm = T)), by = bycols]
   
-  # Generate filter to save as multiple files, similar to boxplot
+  # Generate filter to save as multiple files with max 25 panels per page
   facets <- stringr::str_subset(bycols, "GEO", negate = TRUE)
   filedims <- character()
-  filedims <- c(filedims, .findPlotSubset(d = data, b = facets))
+  filedims <- c(filedims, .findPlotSubset(d = data, b = facets, s = 25))
   if(length(filedims > 0)){
     facets <- stringr::str_subset(facets, 
                                   stringr::str_c("^", filedims, "$", collapse = "|"),
                                   negate = TRUE)
   }
+  filter <- .findPlotFilter(data, filedims)
   
-  # Create list of filters for subsetting. 
-  if(length(filedims > 0)){
-    filter <- .findPlotFilter(data, filedims)
-  } else {
-    # If fildims = 0, filter = TRUE to select all rows with DT[TRUE] 
-    filter <- "TRUE"
-  }
-  
-  # Generate global plot elements
+ # Generate global plot elements
   plotby <- c("GEO", facets)
   ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
   plotvar <- paste0("Variable plotted: ", ylab)
   caption <- paste0("Tellervariabel: ", .teller, "\nPlots grouped by: ", paste0(plotby, collapse = ", "))
   
   # Generate subsets, filenames, and make/save plot.
-  cat(paste0("Plots printed to KVALITETSKONTROLL/",kubename,"/PLOTT/", savefolder))
+  cat(paste0("Plots printed to PLOTT/", savefolder))
   for(i in filter){
     
     # Generate subsets
@@ -382,31 +353,162 @@ TimeSeries <- function(data = dfnew_flag,
   }
 }
 
-TimelineBydel <- function(data = dfnew_flag){
+#' TimelineBydel
+#' 
+#' Plots timelines for each bydel, with the weighted mean timeline for the bydel and kommune superimposed. 
+#' Used to check the validity of data on bydel level. The mean timeline for bydel should approximately match 
+#' the timeline for kommune. 
+#'
+#' @param data 
+#' @param profileyear 
+#' @param overwrite 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+TimelineBydel <- function(data = dfnew_flag,
+                          profileyear = PROFILEYEAR,
+                          overwrite = FALSE){
+
+  savebase <- .getPlotSaveBase(profileyear = profileyear, kubename = .GetKubename(data), savefolder = "TL")
+  filenamebase <- .getPlotFilenameBase(kubename = .GetKubename(data), datetag = .GetKubedatetag(data), "TL")  
   
+  .IdentifyColumns(data)
+  .val <- data.table::fcase("MEIS" %in% .vals1, "MEIS",
+                            "RATE" %in% .vals1, "RATE",
+                            "SMR" %in% .vals1, "SMR",
+                            "MALTALL" %in% .vals1, "MALTALL",
+                            default = NA)
+  data <- data[!is.na(get(.val))]
+  data[, KOMMUNE := data.table::fcase(grepl("^301", GEO), "Oslo",
+                                   grepl("^1103", GEO), "Stavanger",
+                                   grepl("^4601", GEO), "Bergen",
+                                   grepl("^5001", GEO), "Trondheim",
+                                   default = "nonrelevant")]
+  data <- data[KOMMUNE != "nonrelevant"]
+  
+  bycols <- c("KOMMUNE", stringr::str_subset(.dims1, "\\bGEO\\b", negate = T))
+  
+  # Generate filter to save as multiple files with max 4 (x 4) panels per page
+  facets <- stringr::str_subset(bycols, "\\bKOMMUNE\\b|\\bAAR\\b", negate = TRUE)
+  filedims <- character()
+  filedims <- c(filedims, .findPlotSubset(d = data, b = facets, s = 4))
+  if(length(filedims > 0)){
+    facets <- stringr::str_subset(facets, 
+                                  stringr::str_c("^", filedims, "$", collapse = "|"),
+                                  negate = TRUE)
+  }
+  filter <- .findPlotFilter(data, filedims)
+  # Add rows for faceting in plot
+  data[, rows := interaction(mget(facets))]
+  
+  # Split data into bydel/kommune
   d <- data[GEO > 9999]
-  .IdentifyColumns(d)
+  d[, n_geo := .N, by = c("GEO", filedims, "rows")]
+  kd <- data[GEO %in% c(301, 1103, 4601, 5001) & AAR %in% unique(d$AAR)]
   
+  # estimate weighted mean .val for kommune and bydel
+  kg <- collapse::GRP(kd, c(bycols, "rows"))
+  kw <- kd$WEIGHTS
+  kd <- collapse::fmutate(kg[["groups"]],
+                          y = fmean(kd[[.val]], w = kw, g = kg))
+  kd[, type := "Kommune"]
   
+  # estimate weighted mean .val for bydel
+  bg <- collapse::GRP(d, c(bycols, "rows"))
+  bw <- d$WEIGHTS
+  bd <- collapse::fmutate(bg[["groups"]],
+                          y = fmean(d[[.val]], w = bw, g = bg))
+  bd[, type := "Vektet bydel"]
   
+  # Combine trend-data, and remove trends with <= 1 observation
+  trends <- data.table::rbindlist(list(kd, bd))
+  trends[, N := .N, by = c("KOMMUNE", filedims, "rows", "type")]
+  trends <- trends[N > 1]
   
+  # Generate global plot elements
+  caption <- paste0("Plots grouped by: ", stringr::str_c(facets, collapse = ", "))
+  ylab <- .val
+  title <- paste0("File: ", attributes(data)$Filename, ", Date: ", Sys.Date())
+  plotvar <- paste0("Variable plotted: ", ylab)
+  plotdims <- .allcombs(d, c("KOMMUNE", "rows"))
+  n_rows <- nrow(plotdims[, .N, by = rows])
   
-  
+  # Generate subsets, filenames, and make/save plot.
+  for(i in filter){
+    
+    pd <- d[eval(parse(text = i))]
+    td <- trends[eval(parse(text = i))]
+    
+    if(nrow(pd) > 0){
+    # Dynamically generate filename, savepath, and varying plot elements
+    if(i == "TRUE"){
+      name <- "_alle.png"
+    } else {
+      name <- character()
+      for(i in filedims){
+        name <- paste0(name, "_", unique(pd[[i]]))
+      }
+      name <- paste0(name, ".png")
+    }
+    filename <- paste0(filenamebase, name)
+    savepath <- file.path(savebase, filename)
+    
+    subtitle <- plotvar
+    for(i in filedims){
+      subtitle <- paste0(subtitle, "\n", i, ": ", unique(pd[[i]]))
+    }
+
+    # Generate plot
+    p <- ggplot(plotdims) + 
+      facet_grid(cols = vars(KOMMUNE),
+                 rows = vars(rows),
+                 switch = "y") + 
+      labs(title = title,
+           subtitle = subtitle,
+           caption = caption,
+           y = ylab) + 
+      geom_line(data = td,
+                aes(x = AAR, y = y, color = type, group = type), 
+                linewidth = 1.5) + 
+      scale_color_manual(values = c("red", "blue")) + 
+      geom_line(data = pd,
+                aes(x = AAR, y = get(.val), group = GEO), linetype = 2) + 
+      geom_point(data = pd,
+                 aes(x = AAR, y = get(.val)),
+                 size = 3, shape = 1) +
+      guides(color = guide_legend(title = NULL)) + 
+      theme(legend.position = "top")
+      
+    # Save plot
+    .saveTimeLine(file = savepath, 
+                  plot = p, 
+                  rows = n_rows, 
+                  overwrite = overwrite)
+    }
+  }
 }
 
-#' .findPlotSubset
+# Helper functions
+
+#' Find subset of plots 
+#' 
+#' The algorithm select the combination of dimensions yielding the maximum number of panels per page, but less than s
 #'
-#' @param d plotdata
-#' @param b bycols
+#' @param d dataset
+#' @param b all bycols
+#' @param s maximum number of panels per page
 .findPlotSubset <- function(d,
-                            b){
+                            b,
+                            s){
   
   orgstrata <- nrow(d[, .N, by = b])
-  optnfiles <- base::ceiling(orgstrata/25)
   
-  if(optnfiles == 1){
+  if(orgstrata <= s){
     return(NULL)
   }
+  
   # Create a reference table containing dim and n levels (this may replace CompareDims(), and called here)
   ref <- data.table(dim = character(), n = numeric())
   for(i in b){
@@ -416,28 +518,41 @@ TimelineBydel <- function(data = dfnew_flag){
                                                 n = l)))
   }
   
-  # Generate a table with all combinations of 1, 2, or 3 dimensions
-  combs <- data.table(dim1 = character(), 
-                      dim2 = character(), 
-                      dim3 = character())
-  for(i in 1:3){
-    if(length(b) >= i){
+  # Generate a table with all combinations of dimensions
+  combs <- data.table()
+  for(i in seq_along(b)){
       x <- data.table(base::t(utils::combn(b, i)))
       colnames(x) <- paste0("dim", 1:i)
       combs <- data.table::rbindlist(list(combs, x), fill = TRUE)
     }
+  
+  # Add columsn showing n levels for each dimension
+  for(j in seq_along(b)){
+      new <- paste0("n", j)
+      old <- paste0("dim", j)
+      combs[ref, (new) := i.n, on = setNames("dim", old)]
+      }
+  
+  # Replace NA with 1 and calculate n files per combination
+  data.table::setnafill(combs, fill = 1, cols = grep("^n", names(combs)))
+  combs[, files := Reduce("*", .SD), .SDcols = patterns("^n")]
+  
+  # Calculate panels per page
+  incdims <- combs[, do.call(paste, c(.SD, sep = "|")), .SDcols = patterns("^dim")]
+  nondims <- list()
+  for(i in seq_along(incdims)){
+    nondims[[i]] <- str_subset(b, incdims[i], negate = T)
   }
+  nondims <- lapply(nondims, function(x) ref[dim %in% x, n])
+  nondims <- as.integer(lapply(nondims, function(x) if(length(x) > 0) Reduce("*", x) else 1))
+  combs[, panels := nondims]
   
-  # Add n levels for dim1-3
-  combs[ref, n1 := i.n, on = c("dim1"= "dim")]
-  combs[ref, n2 := i.n, on = c("dim2"= "dim")]
-  combs[ref, n3 := i.n, on = c("dim3"= "dim")]
-  
-  # Replace NA with 1 and calculate product
-  data.table::setnafill(combs, fill = 1, cols = c("n1", "n2", "n3"))
-  combs[, prod := n1*n2*n3]
-  optimal <- combs[prod > optnfiles][which.min(prod)]
-  v <- c(optimal$dim1, optimal$dim2, optimal$dim3)
+  # Select optimal combination
+  optimal <- combs[panels <= s][panels == max(panels)]
+  if(nrow(optimal > 1)){
+    optimal <- optimal[1]
+  }
+  v <- unlist(optimal[, .SD, .SDcols = patterns("^dim")], use.names = F)
   v <- v[!is.na(v)]
   v
 }
@@ -448,21 +563,27 @@ TimelineBydel <- function(data = dfnew_flag){
 #'
 .findPlotFilter <- function(data,
                             dims){
-  subsets <- GRP(data, dims)[["groups"]]
-  cols <- names(subsets)
-  for(i in cols){
-    subsets[, (i) := paste0(i, "=='", get(i), "'")]
+  if(length(dims) == 0){
+    filter <- "TRUE"
+  } else {
+    subsets <- GRP(data, dims)[["groups"]]
+    cols <- names(subsets)
+    for(i in cols){
+      subsets[, (i) := paste0(i, "=='", get(i), "'")]
+    }
+    filter <- subsets[, filter := do.call(paste, c(.SD, sep = " & ")), .SDcols = cols][, (filter)]
   }
-  filter <- subsets[, filter := do.call(paste, c(.SD, sep = " & ")), .SDcols = cols][, (filter)]
   
   filter
 }
 
 # .SaveBoxplot
 .saveBoxPlot <- function(file,
-                         plot){
+                         plot,
+                         rows = n_rows,
+                         overwrite = FALSE){
   
-  if(file.exists(file)){
+  if(file.exists(file) & !overwrite){
     cat("\n", basename(file), "already exists")
   } else {
     ggsave(filename = file,
@@ -470,7 +591,51 @@ TimelineBydel <- function(data = dfnew_flag){
            device = "png", 
            dpi = 300,
            width = 45,
-           height = n_rows*6 + 10,
+           height = rows*6 + 10,
            units = "cm")
+    cat("\nSave file: ", basename(file))
   } 
+}
+
+.saveTimeLine <- function(file,
+                          plot,
+                          rows = n_rows,
+                          overwrite = FALSE){
+  if(file.exists(file) & !overwrite){
+    cat("\n", basename(file), "already exists")
+  } else {
+    ggsave(filename = file,
+           plot = plot, 
+           device = "png", 
+           dpi = 300,
+           width = 37,
+           height = rows*6 + 10,
+           units = "cm")
+    cat("\nSave file: ", basename(file))
+  } 
+}
+
+.getPlotSaveBase <- function(profileyear,
+                             kubename,
+                             savefolder){
+  
+  .CreateFolders(profileyear,kubename)
+  
+  file.path("F:", 
+            "Forskningsprosjekter", 
+            "PDB 2455 - Helseprofiler og til_",
+            "PRODUKSJON", 
+            "VALIDERING", 
+            "NESSTAR_KUBER",
+            profileyear,
+            "KVALITETSKONTROLL",
+            kubename,
+            "PLOTT",
+            savefolder)
+}
+
+.getPlotFilenameBase <- function(kubename,
+                                 datetag,
+                                 savefolder){
+  paste(kubename, datetag, savefolder, sep = "_")
 }
