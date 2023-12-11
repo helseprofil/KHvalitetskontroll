@@ -460,7 +460,8 @@ TimelineBydel <- function(data = dfnew_flag){
 
 # .SaveBoxplot
 .saveBoxPlot <- function(file,
-                         plot){
+                         plot,
+                         rows = n_rows){
   
   if(file.exists(file)){
     cat("\n", basename(file), "already exists")
@@ -470,7 +471,7 @@ TimelineBydel <- function(data = dfnew_flag){
            device = "png", 
            dpi = 300,
            width = 45,
-           height = n_rows*6 + 10,
+           height = rows*6 + 10,
            units = "cm")
   } 
 }
