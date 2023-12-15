@@ -189,7 +189,8 @@ BoxPlot <- function(data = dfnew_flag,
 #' @examples
 TimeSeries <- function(data = dfnew_flag,
                        change = FALSE,
-                       profileyear = PROFILEYEAR){
+                       profileyear = PROFILEYEAR,
+                       overwrite = FALSE){
   
   if(data[, length(unique(AAR))] < 2){
     cat("Whoops! Only one unique AAR in file, time series not possible. No plots generated.")
@@ -334,7 +335,7 @@ TimeSeries <- function(data = dfnew_flag,
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
     
     # Save plot
-    if(file.exists(savepath)){
+    if(file.exists(savepath) & !overwrite){
       cat("\n", basename(savepath), "already exists")
     } else {
       pdf(savepath, width = 18, height = 12)
