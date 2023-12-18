@@ -123,28 +123,40 @@ PlotTimeDiff()
 # BoxPlots are split into files to get <25 plots per page
 # Time series plots plot all strata containing outliers, sorted by GEO-code. New outliers are indicated with red, and old outliers with blue. 
 # Time series plots are split into multi-page PDFs using the same filter as boxplots. 
+# TimelineBydel is split into files to get a maximum of 4 x 5 plots per page, one column per kommune
 
 # Boxplots absolute values, saves to PLOTT/BP
 BoxPlot(data = dfnew_flag,
         onlynew = TRUE, # TRUE = does not plot outliers that also were outliers last year
         change = FALSE, # FALSE = Plots absolute values
-        profileyear = PROFILEYEAR)
+        profileyear = PROFILEYEAR,
+        data2 = dfold_flag, #Set to NULL if dfold_flag doesn't exist, only used for label
+        overwrite = FALSE) # Force overwrite if file exist already
 
 # Boxplots year-to-yeat, saves to PLOTT/BPc
 BoxPlot(data = dfnew_flag,
         onlynew = TRUE, # TRUE = does not plot outliers that also were outliers last year
         change = TRUE, # TRUE = plots year-to-year changes
-        profileyear = PROFILEYEAR)
+        profileyear = PROFILEYEAR,
+        data2 = dfold_flag, #Set to NULL if dfold_flag doesn't exist, only used for label
+        overwrite = FALSE) # Force overwrite if file exist already
 
 # Time series absolute values, saves to PLOTT/TS
 TimeSeries(data = dfnew_flag,
            change = FALSE, # FALSE = Plots absolute values
-           profileyear = PROFILEYEAR)
+           profileyear = PROFILEYEAR,
+           overwrite = FALSE) # Force overwrite if file exist already
 
 # Time series year-to-year, saves to PLOTT/TSc
 TimeSeries(data = dfnew_flag,
            change = TRUE, # TRUE = plots year-to-year changes
-           profileyear = PROFILEYEAR)
+           profileyear = PROFILEYEAR,
+           overwrite = FALSE) # Force overwrite if file exist already
+
+# Timelineplot bydel, saves to PLOTT/TL
+TimelineBydel(data = dfnew_flag,
+              profileyear = PROFILEYEAR, 
+              overwrite = FALSE) # Force overwrite if file exist already
 ```
 
 

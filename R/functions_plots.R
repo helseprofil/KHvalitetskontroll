@@ -1,3 +1,35 @@
+
+QCPlots <- function(data = dfnew_flag,
+                    data2 = dfold_flag,
+                    onlynew = TRUE,
+                    change = FALSE,
+                    profileyear = PROFILEYEAR,
+                    overwrite = FALSE){
+  
+  
+  # Boxplot abs
+  cat("\nPlotting boxplots for absolute values")
+  
+  
+  # Boxplot change
+  cat("\nPlotting boxplots for year-to-year change")
+  
+  # Timeseries abs
+  cat("\nPlotting time-series for absolute values")
+  
+  # Timeseries change
+  cat("\nPlotting time-series for year-to-year change")
+  
+  # Timeline
+  
+  cat("\nPlotting timeline bydel")
+  TimelineBydel(data = data,
+                profileyear = profileyear,
+                overwrite = overwrite)
+  
+}
+
+
 #' BoxPlot
 #' 
 #' Creates boxplots to visualize outliers.
@@ -394,7 +426,7 @@ TimelineBydel <- function(data = dfnew_flag,
   # Generate filter to save as multiple files with max 4 (x 4) panels per page
   facets <- stringr::str_subset(bycols, "\\bKOMMUNE\\b|\\bAAR\\b", negate = TRUE)
   filedims <- character()
-  filedims <- c(filedims, .findPlotSubset(d = data, b = facets, s = 4))
+  filedims <- c(filedims, .findPlotSubset(d = data, b = facets, s = 5))
   if(length(filedims > 0)){
     facets <- stringr::str_subset(facets, 
                                   stringr::str_c("^", filedims, "$", collapse = "|"),
