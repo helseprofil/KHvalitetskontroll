@@ -379,7 +379,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   }
   
   .dims1 <<- names(data1)[names(data1) %in% .ALL_DIMENSIONS]
-  .vals1 <<- stringr::str_subset(names(data1), stringr::str_c(.dims1, collapse = "|"), negate = T)
+  .vals1 <<- stringr::str_subset(names(data1), stringr::str_c("\\b",.dims1, "\\b", collapse = "|"), negate = T)
   
   # Create objects relevant for data2
   .dims2 <<- NULL
@@ -392,24 +392,19 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   .expvals <<- NULL
   .commoncols <<- NULL
   
-  
   # If second data is provided, replace objects above
   if(!is.null(data2)){
-    
     .dims2 <<- names(data2)[names(data2) %in% .ALL_DIMENSIONS]
     .vals2 <<- stringr::str_subset(names(data2), stringr::str_c(.dims2, collapse = "|"), negate = T)
     .commondims <<- .dims1[.dims1 %in% .dims2]
-    .newdims <<- stringr::str_subset(.dims1, stringr::str_c("^", .dims2, "$", collapse = "|"), negate = T)
-    .expdims <<- stringr::str_subset(.dims2, stringr::str_c("^", .dims1, "$", collapse = "|"), negate = T)
+    .newdims <<- stringr::str_subset(.dims1, stringr::str_c("\\b", .dims2, "\\b", collapse = "|"), negate = T)
+    .expdims <<- stringr::str_subset(.dims2, stringr::str_c("\\b", .dims1, "\\b", collapse = "|"), negate = T)
     .commonvals <<- .vals1[.vals1 %in% .vals2]
-    .newvals <<- stringr::str_subset(.vals1, stringr::str_c("^", .vals2, "$", collapse = "|"), negate = T)
-    .expvals <<- stringr::str_subset(.vals2, stringr::str_c("^", .vals1, "$", collapse = "|"), negate = T)
+    .newvals <<- stringr::str_subset(.vals1, stringr::str_c("\\b", .vals2, "\\b", collapse = "|"), negate = T)
+    .expvals <<- stringr::str_subset(.vals2, stringr::str_c("\\b", .vals1, "\\b", collapse = "|"), negate = T)
     .commoncols <<- c(.commondims, .commonvals)
   }
-  
 }
-
-
 
 #' .doGeoRecode
 #' 
