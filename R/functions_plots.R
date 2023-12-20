@@ -94,10 +94,16 @@ BoxPlot <- function(data = dfnew_flag,
     .ollimits <- paste0("change_", .ollimits)
   }
   
+  # If change is requested but not present, return here
+  if(change & !.val %in% .vals1){
+    cat("\nChange variable not found in data, year-to-year plot not generated")
+    return(invisible(NULL))
+  }
+  
   # Cannot filter only new outliers if not present
   if(onlynew & !.newoutlier %in% names(data)){
     onlynew <- FALSE
-    cat("Column NEW_OUTLIER not present, all present outliers are included")
+    cat(paste0("Column ", .newoutlier, " not present, all outliers are included"))
   }
   
   # Extract data to generate boxplots, including N observations per strata, and maximum and minimum non-outlier for boxplot whiskers
@@ -277,10 +283,16 @@ TimeSeries <- function(data = dfnew_flag,
     filenamebase <- paste0(filenamebase, "_(", format(Sys.time(), "%H%M"), ")")
   }
   
+  # If change is requested but not present, return here
+  if(change & !.val %in% .vals1){
+    cat("\nChange variable not found in data, year-to-year plot not generated")
+    return(invisible(NULL))
+  }
+  
   # Cannot filter only new outliers if not present
   if(!.newoutlier %in% names(data) & isTRUE(onlynew)){
     onlynew <- FALSE
-    cat("Column NEW_OUTLIER not present, all present outliers are included")
+    cat(paste0("Column ", .newoutlier, " not present, all outliers are included"))
   }
   
   # Remove rows with missing data on plot value
