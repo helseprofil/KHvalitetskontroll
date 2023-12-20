@@ -7,7 +7,7 @@ QCPlots <- function(data = dfnew_flag,
   
   # Boxplot abs
   cat("\nPlotting boxplots for absolute values")
-  Boxplot(data = data,
+  BoxPlot(data = data,
           onlynew = onlynew,
           change = FALSE,
           profileyear = profileyear,
@@ -16,7 +16,7 @@ QCPlots <- function(data = dfnew_flag,
   
   # Boxplot change
   cat("\nPlotting boxplots for year-to-year change")
-  Boxplot(data = data,
+  BoxPlot(data = data,
           onlynew = onlynew,
           change = TRUE,
           profileyear = profileyear,
@@ -110,7 +110,7 @@ BoxPlot <- function(data = dfnew_flag,
                                           MAXBELOWHIGH = collapse::fmax(get(.val)[get(.val) <= get(.ollimits[2])])),
                                       by = bycols],
                                  overid = 0, verbose = 0)
-  baseplotdata[, c("LOW", "HIGH") := NULL]
+  baseplotdata[, c(.ollimits) := NULL]
   
   # Extract data containing outliers and add label. If onlynew = TRUE, only extract new outliers.
   if(onlynew){
