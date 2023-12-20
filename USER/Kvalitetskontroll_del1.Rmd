@@ -46,7 +46,7 @@ ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-M
           dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           folderold = "2023", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusold = "KH", # NULL, or KH or NH
-          recodeold = FALSE, # Should GEO-codes in old files be recoded to comply with current GEO?
+          recodeold = TRUE, # Should GEO-codes in old files be recoded to comply with current GEO?
           recodenew = FALSE) # Should GEO-codes in new files be recoded to comply with current GEO?
 ```
 
@@ -79,7 +79,7 @@ PROFILEYEAR <<- 2024
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
 PRIKKval <<- "sumTELLER"
-PRIKKlimit <<- 12
+PRIKKlimit <<- 8
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
