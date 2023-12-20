@@ -152,12 +152,14 @@ BoxPlot(data = dfnew_flag,
 
 # Time series absolute values, saves to PLOTT/TS
 TimeSeries(data = dfnew_flag,
+           onlynew = TRUE,
            change = FALSE, # FALSE = Plots absolute values
            profileyear = PROFILEYEAR,
            overwrite = FALSE) # Force overwrite if file exist already
 
 # Time series year-to-year, saves to PLOTT/TSc
 TimeSeries(data = dfnew_flag,
+           onlynew = TRUE,
            change = TRUE, # TRUE = plots year-to-year changes
            profileyear = PROFILEYEAR,
            overwrite = FALSE) # Force overwrite if file exist already
