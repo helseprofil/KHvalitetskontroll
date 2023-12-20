@@ -2,31 +2,48 @@
 QCPlots <- function(data = dfnew_flag,
                     data2 = dfold_flag,
                     onlynew = TRUE,
-                    change = FALSE,
                     profileyear = PROFILEYEAR,
                     overwrite = FALSE){
   
-  
   # Boxplot abs
   cat("\nPlotting boxplots for absolute values")
-  
+  Boxplot(data = data,
+          onlynew = onlynew,
+          change = FALSE,
+          profileyear = profileyear,
+          data2 = data2,
+          overwrite = overwrite)
   
   # Boxplot change
   cat("\nPlotting boxplots for year-to-year change")
+  Boxplot(data = data,
+          onlynew = onlynew,
+          change = TRUE,
+          profileyear = profileyear,
+          data2 = data2,
+          overwrite = overwrite)
   
   # Timeseries abs
   cat("\nPlotting time-series for absolute values")
+  TimeSeries(data = data,
+             onlynew = onlynew,
+             change = FALSE,
+             profileyear = profileyear,
+             overwrite = overwrite)
   
   # Timeseries change
   cat("\nPlotting time-series for year-to-year change")
+  TimeSeries(data = data,
+             onlynew = onlynew,
+             change = TRUE,
+             profileyear = profileyear,
+             overwrite = overwrite)
   
   # Timeline
-  
   cat("\nPlotting timeline bydel")
   TimelineBydel(data = data,
                 profileyear = profileyear,
                 overwrite = overwrite)
-  
 }
 
 
@@ -45,7 +62,7 @@ BoxPlot <- function(data = dfnew_flag,
                     onlynew = TRUE,
                     change = FALSE,
                     profileyear = PROFILEYEAR,
-                    data2 = dfold_flag,
+                    data2 = NULL,
                     overwrite = FALSE){
   
   if(is.null(attr(data, "outliercol"))){
@@ -78,7 +95,7 @@ BoxPlot <- function(data = dfnew_flag,
   }
   
   # Cannot filter only new outliers if not present
-  if(!.newoutlier %in% names(data) & isTRUE(onlynew)){
+  if(onlynew & !.newoutlier %in% names(data)){
     onlynew <- FALSE
     cat("Column NEW_OUTLIER not present, all present outliers are included")
   }
@@ -93,6 +110,7 @@ BoxPlot <- function(data = dfnew_flag,
                                           MAXBELOWHIGH = collapse::fmax(get(.val)[get(.val) <= get(.ollimits[2])])),
                                       by = bycols],
                                  overid = 0, verbose = 0)
+  baseplotdata[, c("LOW", "HIGH") := NULL]
   
   # Extract data containing outliers and add label. If onlynew = TRUE, only extract new outliers.
   if(onlynew){
@@ -122,16 +140,16 @@ BoxPlot <- function(data = dfnew_flag,
   title <- paste0("File: ", attributes(baseplotdata)$Filename, ", Date: ", Sys.Date())
   caption <- paste0("Plots grouped by: ", paste0(facets, collapse = ", "))
   ylab <- ifelse(change, paste0(stringr::str_remove(.val, "change_"), ", (% change)"), .val)
-  if(!exists(deparse(substitute(data2)), envir = .GlobalEnv) || is.null(data2)){
-    filenameold <- "not specified"
-  } else {
-    filenameold <- attributes(data2)$Filename
-  }
-  comp <- ifelse(onlynew, filenameold, NA_character_)
   plotvar <- paste0("Variable plotted: ", ylab)
-  plotvar <- if(onlynew){
-    paste0(plotvar, ", only new outliers indicated. Old file: ", comp)
+  
+  if(onlynew){
+    if(!exists(deparse(substitute(data2)), envir = .GlobalEnv) || is.null(data2)){
+      filenameold <- "not specified"
+    } else {
+      filenameold <- attributes(data2)$Filename
     }
+    plotvar <- paste0(plotvar, ", only new outliers indicated. Old file: ", filenameold)
+  }
   
   # Generate subsets, filenames, and make/save plot.
   for(i in filter){
@@ -220,8 +238,10 @@ BoxPlot <- function(data = dfnew_flag,
 #'
 #' @examples
 TimeSeries <- function(data = dfnew_flag,
+                       onlynew = TRUE,
                        change = FALSE,
                        profileyear = PROFILEYEAR,
+                       data2 = NULL,
                        overwrite = FALSE){
   
   if(data[, length(unique(AAR))] < 2){
@@ -257,24 +277,39 @@ TimeSeries <- function(data = dfnew_flag,
     filenamebase <- paste0(filenamebase, "_(", format(Sys.time(), "%H%M"), ")")
   }
   
+  # Cannot filter only new outliers if not present
+  if(!.newoutlier %in% names(data) & isTRUE(onlynew)){
+    onlynew <- FALSE
+    cat("Column NEW_OUTLIER not present, all present outliers are included")
+  }
+  
   # Remove rows with missing data on plot value
   data <- data[!is.na(get(.val))]
-  
   bycols <- stringr::str_subset(.dims1, "\\bAAR\\b", negate = T)
   
   # Find strata containing > 0 outlier, only keep strata with outliers
   data[, n_outlier := sum(get(.outlier), na.rm = T), by = bycols]
   data <- data[n_outlier > 0]
+  
+  # Return here if no strata with outliers exist
+  if(nrow(data) == 0){
+    cat("\nNo strata containing outliers in data, plots not generated")
+    return(invisible(NULL))
+  }
+  
   # If data on new/prev outlier, reduce data to only strata with new outliers.
-  # split outlierdata to plot as separate colors.
-  if(.newoutlier %in% .vals1){
+  if(onlynew){
     data[, n_new_outlier := sum(get(.newoutlier), na.rm = T), by = bycols]
     data <- data[n_new_outlier > 0]
-    newoutlierdata <- data[get(.newoutlier) == 1]
-    prevoutlierdata <- data[get(.outlier) == 1 & get(.newoutlier) == 0]
-  } else {
-    outlierdata <- data[get(.outlier) == 1]
   }
+  
+  # Return here if no strata with new outliers exist
+  if(nrow(data) == 0){
+    cat("\nNo strata containing new outliers in data, plots not generated")
+    return(invisible(NULL))
+  }
+  
+  outlierdata <- data[get(.outlier) == 1]
   
   # For lines, only keep strata with >= 2 non-missing rows.
   data[, n_obs := sum(!is.na(get(.val))), by = bycols]
@@ -300,6 +335,15 @@ TimeSeries <- function(data = dfnew_flag,
   plotvar <- paste0("Variable plotted: ", ylab)
   caption <- paste0("Tellervariabel: ", .teller, "\nPlots grouped by: ", paste0(plotby, collapse = ", "))
   
+  if(onlynew){
+    if(!exists(deparse(substitute(data2)), envir = .GlobalEnv) || is.null(data2)){
+      filenameold <- "not specified"
+    } else {
+      filenameold <- attributes(data2)$Filename
+    }
+    plotvar <- paste0(plotvar, ", only new outliers indicated. Old file: ", filenameold)
+  }
+  
   # Generate subsets, filenames, and make/save plot.
   cat(paste0("Plots printed to PLOTT/", savefolder))
   for(i in filter){
@@ -307,81 +351,76 @@ TimeSeries <- function(data = dfnew_flag,
     # Generate subsets
     d <- data[eval(parse(text = i))]
     ld <- linedata[eval(parse(text = i))]
-    if(exists("newoutlierdata")){
-      nod <- newoutlierdata[eval(parse(text = i))]
-      pod <- prevoutlierdata[eval(parse(text = i))]
-    } else {
-      od <- outlierdata[eval(parse(text = i))]
-    }
+    od <- outlierdata[eval(parse(text = i))]
     
     n_pages <- ceiling(nrow(d[, .N, by = plotby])/25)
     
-    # Dynamically generate filename, savepath, and varying plot elements
-    if(i == "TRUE"){
-      name <- "_alle.pdf"
-    } else {
-      name <- character()
+    if(nrow(d) > 0){
+      # Dynamically generate filename, savepath, and varying plot elements
+      if(i == "TRUE"){
+        name <- "_alle.pdf"
+      } else {
+        name <- character()
+        for(i in filedims){
+          name <- paste0(name, "_", unique(d[[i]]))
+        }
+        name <- paste0(name, ".pdf")
+      }
+      filename <- paste0(filenamebase, name)
+      savepath <- file.path(savebase, filename)
+      
+      subtitle <- paste0(plotvar, "\n")
       for(i in filedims){
-        name <- paste0(name, "_", unique(d[[i]]))
+        subtitle <- paste0(subtitle, i, ": ", unique(d[[i]]), "\n")
       }
-      name <- paste0(name, ".pdf")
-    }
-    filename <- paste0(filenamebase, name)
-    savepath <- file.path(savebase, filename)
-    
-    subtitle <- paste0(plotvar, "\n")
-    for(i in filedims){
-      subtitle <- paste0(subtitle, i, ": ", unique(d[[i]]), "\n")
-    }
-    
-    # Make plot
-    p <- ggplot(data = d, aes(x = AAR, y = get(.val)))
-    
-    if(exists("nod")){
-      p <- p + 
-        geom_point(data = nod, 
-                   color = "red", fill = "black", size = 5) + 
-        geom_point(data = pod, 
-                   color = "blue", fill = "black", size = 5) +
-        geom_point()
-    } else {
-      p <- p + 
-        geom_point(data = od, 
-                   color = "red", fill = "black", size = 1) + 
-        geom_point()
-    }
-    
-    if(nrow(ld) > 0){
-      p <- p + 
-        geom_line(data = ld, aes(y = get(.val), group = 1))
-    }
-    
-    p <- p +
-      ggtext::geom_richtext(aes(label = round(get(.teller),0), y = y_middle),
-                            hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt) +
-      ggh4x::force_panelsizes(cols = unit(8, "cm"),
-                              rows = unit(5, "cm")) + 
-      labs(y = ylab,
-           caption = caption,
-           subtitle = subtitle) + 
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
-    
-    # Save plot
-    if(file.exists(savepath) & !overwrite){
-      cat("\n", basename(savepath), "already exists")
-    } else {
-      pdf(savepath, width = 18, height = 12)
-      for(i in 1:n_pages){
-        print(p +
-                ggforce::facet_wrap_paginate(bycols,
-                                             labeller = labeller(.multi_line = F),
-                                             scales = "free_y",
-                                             ncol = 5,
-                                             nrow = 5,
-                                             page = i))
+      
+      # Make plot
+      p <- ggplot(data = d, aes(x = AAR, y = get(.val)))
+      
+      if(.newoutlier %in% names(od)){
+        p <- p + 
+          geom_point(data = od, aes(color = factor(get(.newoutlier))), size = 5) + 
+          scale_color_manual(values = c("blue", "red"), labels = c("Previous outlier", "New outlier")) + 
+          guides(color = guide_legend(title = NULL)) +
+          geom_point()
+      } else {
+        p <- p + 
+          geom_point(data = od, color = "red", size = 5) + 
+          geom_point()
       }
-      dev.off()
-      cat(paste0("\n...", filename))
+      
+      if(nrow(ld) > 0){
+        p <- p + 
+          geom_line(data = ld, aes(y = get(.val), group = 1))
+      }
+      
+      p <- p +
+        ggtext::geom_richtext(aes(label = round(get(.teller),0), y = y_middle),
+                              hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt) +
+        ggh4x::force_panelsizes(cols = unit(8, "cm"),
+                                rows = unit(5, "cm")) + 
+        labs(y = ylab,
+             caption = caption,
+             subtitle = subtitle) + 
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
+      
+      # Save plot
+      if(file.exists(savepath) & !overwrite){
+        cat("\n", basename(savepath), "already exists")
+      } else {
+        pdf(savepath, width = 18, height = 12)
+        for(i in 1:n_pages){
+          print(p +
+                  ggforce::facet_wrap_paginate(bycols,
+                                               labeller = labeller(.multi_line = F),
+                                               scales = "free_y",
+                                               ncol = 5,
+                                               nrow = 5,
+                                               page = i))
+        }
+        dev.off()
+        cat(paste0("\n...", filename))
+      }
     }
   }
 }
@@ -512,7 +551,8 @@ TimelineBydel <- function(data = dfnew_flag,
                  aes(x = AAR, y = get(.val)),
                  size = 3, shape = 1) +
       guides(color = guide_legend(title = NULL)) + 
-      theme(legend.position = "top")
+      theme(legend.position = "top",
+            axis.text.x = element_text(angle = 90, vjust = 0.5))
       
     # Save plot
     .saveTimeLine(file = savepath, 
@@ -654,7 +694,7 @@ TimelineBydel <- function(data = dfnew_flag,
   
   .CreateFolders(profileyear,kubename)
   
-  file.path("F:", 
+  file.path("F:",
             "Forskningsprosjekter", 
             "PDB 2455 - Helseprofiler og til_",
             "PRODUKSJON", 
