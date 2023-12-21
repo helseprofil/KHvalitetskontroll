@@ -436,7 +436,8 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   d <- copy(data)
   out <- collapse::join(d, .georecode, on = c("GEO" = "old"), how = "left", verbose = 0)
   out[, origgeo := GEO]
-  out[!is.na(current), GEO := current][]
+  out[!is.na(current), GEO := current]
+  out[, current := NULL]
 }
 
 #' Helper function to connect to KHelsa ACCESS database

@@ -29,6 +29,7 @@ CompareCols <- function(data1 = dfnew,
                                   default = paste0("\n-dfnew _uprikk columns: ", stringr::str_c(newuprikk, collapse = ", ")))
   
   expcols <- stringr::str_subset(names(data2), str_c("^", names(data1), "$", collapse = "|"), negate = TRUE)  
+  expcols <- stringr::str_subset(expcols, "origgeo", negate = TRUE)  
   msgexp <- data.table::fcase(length(expcols) == 0, "\n-No expired columns.",
                               default = paste0("\n-Expired columns found: ", stringr::str_c(expcols, collapse = ", ")))
   
@@ -1009,14 +1010,6 @@ UnspecifiedBydel <- function(data = dfnew,
   # Identify unique levels of dim, 
   levels1 <- unique(data1[[dim]])
   levels2 <- unique(data2[[dim]])
-  
-  # If dfold is recoded, compare origgeo instead of GEO
-  # if(dim == "GEO" & "origgeo" %in% names(data2)){
-  #   valid <- data2[!grepl("99$", GEO), unique(GEO)]
-  #   invalid <- data2[grepl("99$", GEO), unique(origgeo)]
-  #   levels2 <- c(valid, invalid)
-  #   cat("\nOBS! Due to geo recoding, the original GEO in dfold compared when GEO-codes recoded to 99\n")
-  # } 
   
   # Identify new or expired levels
   newlevels <- stringr::str_subset(levels1, stringr::str_c("^", levels2, "$", collapse = "|"), negate = TRUE)
