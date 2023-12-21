@@ -548,7 +548,8 @@ TimelineBydel <- function(data = dfnew_flag,
     p <- ggplot(plotdims) + 
       facet_grid(cols = vars(KOMMUNE),
                  rows = vars(rows),
-                 switch = "y") + 
+                 switch = "y",
+                 scales = "free") + 
       labs(title = title,
            subtitle = subtitle,
            caption = caption,
