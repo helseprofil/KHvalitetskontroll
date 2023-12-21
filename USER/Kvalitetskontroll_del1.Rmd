@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.9.5 (09.11.2023). 
+Version: 1.9.6 (21.12.2023). 
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 ```{r init, include=FALSE}
@@ -40,11 +40,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # foldernew and folderold must be QC, DATERT or 4-digits
 # By default, the following column names are automatically renamed: "antall", "NULL, Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4)
 
-ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+ReadFiles(dfnew = "QC_KMI_MFR_GK_2023-12-12-14-19", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           foldernew = "QC", # QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusnew = "KH", # KH or NH
-          dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          folderold = "2023", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
+          dfold = "KMI_MFR_GK_2023-03-27-10-25", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          folderold = "KH2024NESSTAR_pre2024", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusold = "KH", # NULL, or KH or NH
           recodeold = TRUE, # Should GEO-codes in old files be recoded to comply with current GEO?
           recodenew = FALSE) # Should GEO-codes in new files be recoded to comply with current GEO?
@@ -109,6 +109,7 @@ CompareCols()
 - New levels (not found in old KUBE)
 - Expired levels (not found in new KUBE)
 - If only one file, only number of levels per dimension.
+- If dfold is recoded to new GEO, the original codes are compared when they are recoded to 99-codes.
 
 ```{r comparedims}
 CompareDims()

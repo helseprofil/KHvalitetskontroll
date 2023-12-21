@@ -69,8 +69,9 @@ CompareDims <- function(data1 = dfnew,
   
   # Check if any new or expired dimensions are present
   if(length(.expdims) != 0 || length(.newdims) != 0){
-  cat(c("The following dimensions are not present in both files: ", 
-        stringr::str_c(c(.newdims, .expdims), collapse = ", "), "\n"))
+  cat(c("The following dimensions are only present in one file: ", 
+        "\n- dfnew: ", stringr::str_c(.newdims, collapse = ", "), 
+        "\n- dfold: ", stringr::str_c(.expdims, collapse = ", ")), "\n")
   }
   
   CompareDim <- function(data1, 
@@ -80,6 +81,14 @@ CompareDims <- function(data1 = dfnew,
     # Identify unique levels of dim, 
     levels1 <- unique(data1[[dim]])
     levels2 <- unique(data2[[dim]])
+    
+    # If dfold is recoded, compare origgeo instead of GEO
+    if(dim == "GEO" & "origgeo" %in% names(data2)){
+      valid <- data2[!grepl("99$", GEO), unique(GEO)]
+      invalid <- data2[grepl("99$", GEO), unique(origgeo)]
+      levels2 <- c(valid, invalid)
+      cat("\nOBS! Due to geo recoding, the original GEO in dfold compared when GEO-codes recoded to 99\n")
+    } 
     
     # Identify new or expired levels
     newlevels <- stringr::str_subset(levels1, stringr::str_c("^", levels2, "$", collapse = "|"), negate = TRUE)
