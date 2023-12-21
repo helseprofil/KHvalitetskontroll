@@ -56,13 +56,12 @@ CompareDims <- function(data1 = dfnew,
   if(is.null(data2)){
     
     .IdentifyColumns(data1)
-    
-    purrr::map_df(.dims1, 
-                  \(x)
-                  dplyr::tibble("Dimension" = x,
-                          "N (levels)" = length(data1[, unique(get(x))])))
-    
-  } else {
+    out <- purrr::map_df(.dims1, 
+                         \(x)
+                         dplyr::tibble("Dimension" = x,
+                                       "N (levels)" = length(data1[, unique(get(x))])))
+    return(out)
+  } 
   
     # Identify dimension and value columns
   .IdentifyColumns(data1, data2)
@@ -74,43 +73,14 @@ CompareDims <- function(data1 = dfnew,
         "\n- dfold: ", stringr::str_c(.expdims, collapse = ", ")), "\n")
   }
   
-  CompareDim <- function(data1, 
-                         data2, 
-                         dim = NULL){
-    
-    # Identify unique levels of dim, 
-    levels1 <- unique(data1[[dim]])
-    levels2 <- unique(data2[[dim]])
-    
-    # If dfold is recoded, compare origgeo instead of GEO
-    if(dim == "GEO" & "origgeo" %in% names(data2)){
-      valid <- data2[!grepl("99$", GEO), unique(GEO)]
-      invalid <- data2[grepl("99$", GEO), unique(origgeo)]
-      levels2 <- c(valid, invalid)
-      cat("\nOBS! Due to geo recoding, the original GEO in dfold compared when GEO-codes recoded to 99\n")
-    } 
-    
-    # Identify new or expired levels
-    newlevels <- stringr::str_subset(levels1, stringr::str_c("^", levels2, "$", collapse = "|"), negate = TRUE)
-    explevels <- stringr::str_subset(levels2, stringr::str_c("^", levels1, "$", collapse = "|"), negate = TRUE)
-    
-    # Replace with "none" if 0 new/expired levels
-    if(length(newlevels) == 0){
-      newlevels <- "none"
-    } 
-    
-    if(length(explevels) == 0){
-      explevels <- "none"
-    }
+  print(purrr::map_df(.commondims, ~.CompareDim(data1, data2, dim = .x)))
   
-    # Create output
-    dplyr::tibble("Dimension" = dim,
-           "N levels (new)" = length(levels1),
-           "New levels" = stringr::str_c(newlevels, collapse = ", "),
-           "Expired levels" = stringr::str_c(explevels, collapse = ", "))
+  if("origgeo" %in% names(data2) & exists("recodings_dfold")){
+    invalid <- recodings_dfold[grepl("99$", current)]
+    if(nrow(invalid > 0)){
+    cat("\n Due to geo recoding, the following GEO-codes are no longer valid")
+    invalid
     }
-  
-  purrr::map_df(.commondims, ~CompareDim(data1, data2, dim = .x))
   }
   
 }
@@ -1030,4 +1000,40 @@ UnspecifiedBydel <- function(data = dfnew,
   }
   
   val
+}
+
+.CompareDim <- function(data1, 
+                        data2, 
+                        dim = NULL){
+  
+  # Identify unique levels of dim, 
+  levels1 <- unique(data1[[dim]])
+  levels2 <- unique(data2[[dim]])
+  
+  # If dfold is recoded, compare origgeo instead of GEO
+  # if(dim == "GEO" & "origgeo" %in% names(data2)){
+  #   valid <- data2[!grepl("99$", GEO), unique(GEO)]
+  #   invalid <- data2[grepl("99$", GEO), unique(origgeo)]
+  #   levels2 <- c(valid, invalid)
+  #   cat("\nOBS! Due to geo recoding, the original GEO in dfold compared when GEO-codes recoded to 99\n")
+  # } 
+  
+  # Identify new or expired levels
+  newlevels <- stringr::str_subset(levels1, stringr::str_c("^", levels2, "$", collapse = "|"), negate = TRUE)
+  explevels <- stringr::str_subset(levels2, stringr::str_c("^", levels1, "$", collapse = "|"), negate = TRUE)
+  
+  # Replace with "none" if 0 new/expired levels
+  if(length(newlevels) == 0){
+    newlevels <- "none"
+  } 
+  
+  if(length(explevels) == 0){
+    explevels <- "none"
+  }
+  
+  # Create output
+  dplyr::tibble("Dimension" = dim,
+                "N levels (new)" = length(levels1),
+                "New levels" = stringr::str_c(newlevels, collapse = ", "),
+                "Expired levels" = stringr::str_c(explevels, collapse = ", "))
 }
