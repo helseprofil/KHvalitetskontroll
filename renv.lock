@@ -121,14 +121,14 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.11",
+      "Version": "1.0.12",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "methods",
         "utils"
       ],
-      "Hash": "ae6cbbe1492f4de79c45fce06f967ce8"
+      "Hash": "5ea2700d21e038ace58269ecdbeb9ec0"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -523,7 +523,7 @@
     },
     "ggh4x": {
       "Package": "ggh4x",
-      "Version": "0.2.6",
+      "Version": "0.2.7",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -537,7 +537,7 @@
         "stats",
         "vctrs"
       ],
-      "Hash": "e82e0bef5e2db1243060afcb8be499ee"
+      "Hash": "3df287fda9e2b75d6acc5d5c1aa41c80"
     },
     "ggplot2": {
       "Package": "ggplot2",
@@ -581,14 +581,14 @@
     },
     "glue": {
       "Package": "glue",
-      "Version": "1.6.2",
+      "Version": "1.7.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "methods"
       ],
-      "Hash": "4f2596dfb05dac67b9dc558e5c6fba2e"
+      "Hash": "e0b3a53876554bd45879e596cdb10a52"
     },
     "gridtext": {
       "Package": "gridtext",
@@ -926,11 +926,11 @@
       "Version": "2.4.2",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
       "RemoteUsername": "helseprofil",
       "RemoteRepo": "norgeo",
       "RemoteRef": "master",
-      "RemoteSha": "10f61815f6f984cb1f0d3eabbe8b5deeee1d12ec",
+      "RemoteSha": "4c5f341702b51a836e5510c391853608490de339",
+      "RemoteHost": "api.github.com",
       "Requirements": [
         "DBI",
         "R",
@@ -942,7 +942,7 @@
         "odbc",
         "writexl"
       ],
-      "Hash": "2bfdb289c10d107955cdd88aa909555f"
+      "Hash": "86bef7d93452d2b5c263a14a00605197"
     },
     "odbc": {
       "Package": "odbc",
@@ -1078,14 +1078,14 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "1.1.2",
+      "Version": "1.1.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "utils"
       ],
-      "Hash": "50a6dbdc522936ca35afc5e2082ea91b"
+      "Hash": "42548638fae05fd9a9b5f3f437fbbbe2"
     },
     "rmarkdown": {
       "Package": "rmarkdown",
