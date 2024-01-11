@@ -74,8 +74,6 @@ CompareDims <- function(data1 = dfnew,
         "\n- dfold: ", stringr::str_c(.expdims, collapse = ", ")), "\n")
   }
   
-  out <- purrr::map_df(.commondims, ~.CompareDim(data1, data2, dim = .x))
-  
   if("origgeo" %in% names(data2) & exists("recodings_dfold")){
     invalid <- recodings_dfold[grepl("99$", current)]
     if(nrow(invalid > 0)){
@@ -83,8 +81,7 @@ CompareDims <- function(data1 = dfnew,
     }
   }
   
-  print(out)
-  
+  purrr::map_df(.commondims, ~.CompareDim(data1, data2, dim = .x))
 }
 
 #' CheckPrikk
