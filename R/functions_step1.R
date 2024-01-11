@@ -75,15 +75,15 @@ CompareDims <- function(data1 = dfnew,
   }
   
   out <- purrr::map_df(.commondims, ~.CompareDim(data1, data2, dim = .x))
-  print(out)
   
   if("origgeo" %in% names(data2) & exists("recodings_dfold")){
     invalid <- recodings_dfold[grepl("99$", current)]
     if(nrow(invalid > 0)){
-    cat("\n Due to geo recoding, the following GEO-codes are no longer valid")
-    print(invalid)
+    cat("\n Due to geo recoding, the following GEO-codes are no longer valid: ", stringr::str_c(invalid$old, collapse = ", "))
     }
   }
+  
+  print(out)
   
 }
 
