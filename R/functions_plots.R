@@ -390,9 +390,12 @@ TimeSeries <- function(data = dfnew_flag,
       p <- ggplot(data = d, aes(x = AAR, y = get(.val)))
       
       if(.newoutlier %in% names(od)){
+        od[, label := factor(fcase(get(.newoutlier) == 0, "Previous outlier",
+                                   get(.newoutlier) == 1, "New outlier"),
+                             levels = c("Previous outlier", "New outlier"))]
         p <- p + 
-          geom_point(data = od, aes(color = factor(get(.newoutlier))), size = 5) + 
-          scale_color_manual(values = c("blue", "red"), labels = c("Previous outlier", "New outlier")) + 
+          geom_point(data = od, aes(color = label), size = 5) + 
+          scale_color_manual(values = c("blue", "red")) + 
           guides(color = guide_legend(title = NULL)) +
           geom_point()
       } else {
