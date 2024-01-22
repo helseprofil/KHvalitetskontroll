@@ -48,7 +48,7 @@
                 dfnew_flag[get(x) != 0 & newrow == 0,
                            newrow := 1L]
                   })
-    cat("\n- For new dimensions, flagged all rows not representing total numbers as new rows")
+    cat(paste0("\n- For new dimensions, all rows not = 0 flagged as new rows: ", str_c(newdims, collapse = ", ")))
   }
   
   }
