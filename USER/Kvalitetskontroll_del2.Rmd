@@ -77,7 +77,6 @@ DUMPS <<- c("dfnew_flag", "dfold_flag", "compareKUBE")
 
 # Manually add columns (e.g. if missing dimension in old file, causing all rows to be identified as "new")
 # example syntax: dfold[, KJONN := 0] | dfold[, ALDER := "0_120"]
-dfold[, ALDER := "17_17"]
 ```
 
 # Data formatting
