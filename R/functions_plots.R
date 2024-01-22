@@ -3,47 +3,62 @@ QCPlots <- function(data = dfnew_flag,
                     data2 = dfold_flag,
                     onlynew = TRUE,
                     profileyear = PROFILEYEAR,
-                    overwrite = FALSE){
+                    overwrite = FALSE,
+                    BP = TRUE,
+                    BPc = TRUE,
+                    TS = TRUE,
+                    TSc = TRUE,
+                    TK = TRUE){
   
   # Boxplot abs
-  cat("\nPlotting boxplots for absolute values")
-  BoxPlot(data = data,
-          onlynew = onlynew,
-          change = FALSE,
-          profileyear = profileyear,
-          data2 = data2,
-          overwrite = overwrite)
+  if(BP){
+    cat("\nPlotting boxplots for absolute values")
+    BoxPlot(data = data,
+            onlynew = onlynew,
+            change = FALSE,
+            profileyear = profileyear,
+            data2 = data2,
+            overwrite = overwrite)
+  }
   
   # Boxplot change
-  cat("\nPlotting boxplots for year-to-year change")
-  BoxPlot(data = data,
-          onlynew = onlynew,
-          change = TRUE,
-          profileyear = profileyear,
-          data2 = data2,
-          overwrite = overwrite)
+  if(BPc){
+    cat("\nPlotting boxplots for year-to-year change")
+    BoxPlot(data = data,
+            onlynew = onlynew,
+            change = TRUE,
+            profileyear = profileyear,
+            data2 = data2,
+            overwrite = overwrite)
+  }
   
   # Timeseries abs
-  cat("\nPlotting time-series for absolute values")
-  TimeSeries(data = data,
-             onlynew = onlynew,
-             change = FALSE,
-             profileyear = profileyear,
-             overwrite = overwrite)
+  if(TS){
+    cat("\nPlotting time-series for absolute values")
+    TimeSeries(data = data,
+               onlynew = onlynew,
+               change = FALSE,
+               profileyear = profileyear,
+               overwrite = overwrite)
+  }
   
   # Timeseries change
-  cat("\nPlotting time-series for year-to-year change")
-  TimeSeries(data = data,
-             onlynew = onlynew,
-             change = TRUE,
-             profileyear = profileyear,
-             overwrite = overwrite)
+  if(TSc){
+    cat("\nPlotting time-series for year-to-year change")
+    TimeSeries(data = data,
+               onlynew = onlynew,
+               change = TRUE,
+               profileyear = profileyear,
+               overwrite = overwrite)
+  }
   
   # Timeline
-  cat("\nPlotting timeline bydel")
-  TimelineBydel(data = data,
-                profileyear = profileyear,
-                overwrite = overwrite)
+  if(TL){
+    cat("\nPlotting timeline bydel")
+    TimelineBydel(data = data,
+                  profileyear = profileyear,
+                  overwrite = overwrite)
+  }
 }
 
 
