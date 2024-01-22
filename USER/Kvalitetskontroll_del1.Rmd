@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.9.6 (21.12.2023). 
+Version: 1.9.7 (21.01.2024). 
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 ```{r init, include=FALSE}
@@ -23,6 +23,7 @@ For more info about the quality control, see [here](https://helseprofil.github.i
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/load_packages_functions.R")
+
 ```
 
 # COMMENTS
@@ -34,23 +35,23 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # INPUT
 
 **Data files loaded**
-```{r loadfiles}
+```{r loadfiles, echo = T}
 # Loads both new file (dfnew), and old file (dfold) for comparison. 
 # dfnew and dfold must be provided as full kubename_datotag
 # foldernew and folderold must be QC, DATERT or 4-digits
 # By default, the following column names are automatically renamed: "antall", "NULL, Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4)
 
-ReadFiles(dfnew = "QC_KMI_MFR_GK_2023-12-12-14-19", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           foldernew = "QC", # QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusnew = "KH", # KH or NH
-          dfold = "KMI_MFR_GK_2023-03-27-10-25", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          folderold = "KH2024NESSTAR_pre2024", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
+          dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          folderold = "2023", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusold = "KH", # NULL, or KH or NH
           recodeold = TRUE, # Should GEO-codes in old files be recoded to comply with current GEO?
           recodenew = FALSE) # Should GEO-codes in new files be recoded to comply with current GEO?
 ```
 
-```{r colnamechange, echo = F}
+```{r colnamechange, echo = T}
 # OPTIONAL, MANUAL RENAMING OF COLUMN NAMES
 # If dfnew or dfold still contains unwanted column names, which can be checked by names(dfnew) or names(dfold), this can be manually changed by editing `old` and `new` arguments in the the code below:
 
@@ -79,7 +80,7 @@ PROFILEYEAR <<- 2024
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
 PRIKKval <<- "sumTELLER"
-PRIKKlimit <<- 8
+PRIKKlimit <<- 4
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)

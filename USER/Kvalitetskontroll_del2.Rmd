@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.4.2 (20.12.2023). 
+Version: 1.4.3 (22.01.2024). 
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 
@@ -27,7 +27,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # INPUT
 
-```{r loadfiles}
+```{r loadfiles, echo = T}
 # Loads both new file (dfnew), and old file (dfold) for comparison. 
 # dfnew and dfold must be provided as full kubename_datotag
 # foldernew and folderold must be QC, DATERT or 4-digits
@@ -43,7 +43,7 @@ ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-M
           recodenew = FALSE) # Should GEO-codes in new files be recoded to comply with current GEO?
 ```
 
-```{r colnamechange}
+```{r colnamechange, echo = T}
 # OPTIONAL, MANUAL RENAMING OF COLUMN NAMES
 # If dfnew or dfold still contains unwanted column names, which can be checked by names(dfnew) or names(dfold), this can be manually changed by editing `old` and `new` arguments in the the code below:
 
@@ -64,7 +64,7 @@ RenameColumns(dfold,
 }
 ```
 
-```{r}
+```{r, echo = T}
 # UPDATE 18.01.2022: "<-" is replaced with "<<-" to make sure these settings are applied when saving the report. 
 
 # To save files and report in correct folder
@@ -74,6 +74,10 @@ PROFILEYEAR <<- 2024
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
 # For no dumps, replace with "DUMPS <<- NULL"
 DUMPS <<- c("dfnew_flag", "dfold_flag", "compareKUBE")
+
+# Manually add columns (e.g. if missing dimension in old file, causing all rows to be identified as "new")
+# example syntax: dfold[, KJONN := 0] | dfold[, ALDER := "0_120"]
+dfold[, ALDER := "17_17"]
 ```
 
 # Data formatting
