@@ -41,11 +41,11 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 # foldernew and folderold must be QC, DATERT or 4-digits
 # By default, the following column names are automatically renamed: "antall", "NULL, Crude", "Adjusted", "sumteller", "sumnevner", "smr", "FLx", "utdanningsnivå" (only for R version < 4)
 
-ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+ReadFiles(dfnew = "QC_KUHR_2024-01-26-09-55", # FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
           foldernew = "QC", # QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusnew = "KH", # KH or NH
-          dfold = "FILENAME", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
-          folderold = "2023", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
+          dfold = "KUHR_2022-11-23-15-11", # NULL, or FILENAME with full date tag e.g. KUBENAVN_YYYY-MM-DD-hh-dd
+          folderold = "KH2023NESSTAR_PreAllvis", # NULL, or QC, DATERT, 4-digit referring to NESSTAR-folder, or foldername (e.g. "KH2024NESSTAR_pre2024_omkod2024GEO")
           modusold = "KH", # NULL, or KH or NH
           recodeold = TRUE, # Should GEO-codes in old files be recoded to comply with current GEO?
           recodenew = FALSE) # Should GEO-codes in new files be recoded to comply with current GEO?
@@ -80,7 +80,7 @@ PROFILEYEAR <<- 2024
 # Value column for censoring (PRIKKING), and the limit to check against
 # If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
 PRIKKval <<- "sumTELLER"
-PRIKKlimit <<- 4
+PRIKKlimit <<- 12
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)

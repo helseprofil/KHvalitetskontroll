@@ -133,7 +133,12 @@ QCPlots(data = dfnew_flag,
         data2 = dfold_flag,
         onlynew = TRUE,
         profileyear = PROFILEYEAR,
-        overwrite = FALSE)
+        overwrite = FALSE,
+        BP = TRUE,
+        BPc = TRUE,
+        TS = TRUE,
+        TSc = TRUE,
+        TL = TRUE)
 
 # -------------------------------------------------
 
