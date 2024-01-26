@@ -8,7 +8,7 @@ QCPlots <- function(data = dfnew_flag,
                     BPc = TRUE,
                     TS = TRUE,
                     TSc = TRUE,
-                    TK = TRUE){
+                    TL = TRUE){
   
   # Boxplot abs
   if(BP){
