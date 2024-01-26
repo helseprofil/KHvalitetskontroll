@@ -270,8 +270,12 @@ print_dim <- function(...){
                         "VALIDERING", 
                         "NESSTAR_KUBER")
   
-  profileyeardir <- file.path(basepath, profileyear)
-  kvalkontrolldir <- file.path(profileyeardir, "KVALITETSKONTROLL")
+  kvalkontrolldir <- file.path(basepath, profileyear, "KVALITETSKONTROLL")
+  
+  if(!dir.exists(kvalkontrolldir)){
+    dir.create(kvalkontrolldir)
+  }
+  
   kubedir <- file.path(kvalkontrolldir, kubename)
   filedumpdir <- file.path(kubedir, "FILDUMPER")
   plotdir <- file.path(kubedir, "PLOTT")
@@ -280,22 +284,23 @@ print_dim <- function(...){
   tsdir <- file.path(plotdir, "TS")
   tscdir <- file.path(plotdir, "TSc")
   tldir <- file.path(plotdir, "TL")
-  arkivdir <- file.path(kubedir, "ARKIV")
   
-  folders <- c(profileyeardir, 
-               kvalkontrolldir, 
-               kubedir, 
+  folders <- c(kubedir, 
                filedumpdir, 
                plotdir, 
                bpdir, 
                bpcdir, 
                tsdir, 
                tscdir,
-               tldir, 
-               arkivdir)
+               tldir)
   
   for(i in folders){
-    if(!dir.exists(i)){dir.create(i)}
+    if(!dir.exists(i)){
+      dir.create(i)
+    }
+    if(!dir.exists(file.path(i, "arkiv"))){
+      dir.create(file.path(i, "arkiv"), recursive = T)
+    }
   }
 }
 
