@@ -39,6 +39,7 @@ QCPlots <- function(data = dfnew_flag,
                onlynew = onlynew,
                change = FALSE,
                profileyear = profileyear,
+               data2 = data2,
                overwrite = overwrite)
   }
   
@@ -49,6 +50,7 @@ QCPlots <- function(data = dfnew_flag,
                onlynew = onlynew,
                change = TRUE,
                profileyear = profileyear,
+               data2 = data2,
                overwrite = overwrite)
   }
   
