@@ -443,7 +443,7 @@ TimeSeries <- function(data = dfnew_flag,
         pdf(savepath, width = 18, height = 12)
         for(i in 1:n_pages){
           print(p +
-                  ggforce::facet_wrap_paginate(bycols,
+                  ggforce::facet_wrap_paginate(plotby,
                                                labeller = labeller(.multi_line = F),
                                                scales = "free_y",
                                                ncol = 5,
