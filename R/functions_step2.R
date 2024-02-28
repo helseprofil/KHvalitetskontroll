@@ -384,6 +384,8 @@ FormatData <- function(data1 = dfnew,
     
   cat("\n\n-COMPLETED creating compareKUBE\n")
   } else {
+    dfold_flag <<- NULL
+    compareKUBE <<- NULL
     cat("\n\n-No old KUBE to be flagged, compareKUBE not created\n")
   }
   
@@ -515,6 +517,12 @@ FormatData <- function(data1 = dfnew,
 #'
 #' @examples
 CompareDiffRows <- function(data = compareKUBE) {
+  
+  if(is.null(data)){
+    cat("- no compareKUBE present, comparison not possible")
+    return(invisible(NULL))
+  }
+  
   vals <- gsub("_diff", "", names(data)[stringr::str_detect(names(data), "_diff")])
   geoniv <- c("TOTAL", "LAND", "FYLKE", "KOMMUNE", "BYDEL")
   
@@ -629,6 +637,11 @@ CompareDiffRows <- function(data = compareKUBE) {
 #'
 #' @examples
 PlotTimeDiff <- function(data = compareKUBE){
+  
+  if(is.null(data)){
+    cat("- no compareKUBE present, plotting diffs not possible")
+    return(invisible(NULL))
+  }
   
   # Identify value column to plot
   if("MEIS_diff" %in% names(data)){

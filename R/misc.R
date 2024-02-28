@@ -100,7 +100,9 @@ ReadFiles <- function(dfnew = NULL,
   }
   
   # If provided, read dfold and store to global env.Recode GEO if required
-  if(!is.null(dfold)){
+  if(is.null(dfold)){
+    dfold <<- NULL
+  } else {
     outdataold <- .readfile(filepathold, folderold)
     cat(paste0("\n\nOld file (dfold) loaded: ", str_extract(filepathold, "(?<=PRODUKTER/).*")))
     if(attr(outdataold, "colnameinfo")$diff == "yes"){
