@@ -166,7 +166,7 @@ BoxPlot <- function(data = dfnew_flag,
   plotvar <- paste0("Variable plotted: ", ylab)
   
   if(onlynew){
-    if(!exists(deparse(substitute(data2)), envir = .GlobalEnv) || is.null(data2)){
+    if(is.null(data2)){
       filenameold <- "not specified"
     } else {
       filenameold <- attributes(data2)$Filename
@@ -365,7 +365,7 @@ TimeSeries <- function(data = dfnew_flag,
   caption <- paste0("Tellervariabel: ", .teller, "\nPlots grouped by: ", paste0(plotby, collapse = ", "))
   
   if(onlynew){
-    if(!exists(deparse(substitute(data2)), envir = .GlobalEnv) || is.null(data2)){
+    if(is.null(data2)){
       filenameold <- "not specified"
     } else {
       filenameold <- attributes(data2)$Filename
