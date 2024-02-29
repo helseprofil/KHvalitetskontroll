@@ -666,7 +666,7 @@ PlotTimeseries <- function(data = dfnew){
   # Identify dimensions to aggregate or keep total (if containing 0 or only 1 unique value), excluding dim to be plotted
   aggdims <- .TSplotdims
   containtotal <- character()
-  for(i in aggdims){
+  for(i in aggdims[aggdims != "ALDER"]){
     if(0 %in% plotdata[, unique(get(i))] | plotdata[, length(unique(get(i)))] == 1){
       # add to containtotal
       containtotal <- c(containtotal, i)
