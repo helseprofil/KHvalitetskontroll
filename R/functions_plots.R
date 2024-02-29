@@ -426,9 +426,13 @@ TimeSeries <- function(data = dfnew_flag,
           geom_line(data = ld, aes(y = get(.val), group = 1))
       }
       
+      if(!is.na(.teller)){
       p <- p +
         ggtext::geom_richtext(aes(label = round(get(.teller),0), y = y_middle),
-                              hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt) +
+                              hjust = 0.5, angle = 90, alpha = 0.8, size = 8/.pt)
+      }
+      
+      p <- p +
         ggh4x::force_panelsizes(cols = unit(8, "cm"),
                                 rows = unit(5, "cm")) + 
         labs(y = ylab,
