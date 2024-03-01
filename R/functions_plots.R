@@ -412,7 +412,7 @@ TimeSeries <- function(data = dfnew_flag,
                              levels = c("Previous outlier", "New outlier"))]
         p <- p + 
           geom_point(data = od, aes(color = label), size = 5) + 
-          scale_color_manual(values = c("blue", "red")) + 
+          scale_color_manual(values = c("Previous outlier" = "blue", "New outlier" = "red")) + 
           guides(color = guide_legend(title = NULL)) +
           geom_point()
       } else {
