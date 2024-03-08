@@ -75,6 +75,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     # Define output columns
     Friskvik_name <- file
     Kube_name <- NA
+    FRISKVIK_YEAR <- NA
     Last_year <- NA
     Identical_prikk <- NA
     Matching_kubecol <- NA
@@ -89,6 +90,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
     REFVERDI_VP <- NA
     VALID_COMBINATION <- NA
     NESSTAR <- NA
+    Periode_bm <- NA
+    Periode_nn <- NA
     
     # If both files are read without error, replace output columns
     if(!("try-error" %in% class(tryload))){
@@ -102,6 +105,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       Matching_kubecol <- compvals$matches
       Different_kubecol <- compvals$different
       
+      FRISKVIK_YEAR <- .UniqueLevel(FRISKVIK, "AAR")
       ETAB <- .UniqueLevel(FRISKVIK, "ETAB")
       KJONN <- .UniqueLevel(KUBE, "KJONN")
       ALDER <- .UniqueLevel(KUBE, "ALDER")
@@ -114,22 +118,32 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       kubeindikator <- stringr::str_extract(Kube_name, ".*(?=_\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2})")
       
       ENHET <- .ReadAccess(.DB, "Enhet", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-      if(length(ENHET) == 0 | base::isTRUE(is.na(ENHET))){
+      if(length(ENHET) == 0 | is.na(ENHET)){
         ENHET <- "!!MISSING"
       }
-      REFVERDI_VP <- SPEC[Kolonne == "REFVERDI_VP", Innhold]
       
-      if(length(REFVERDI_VP) == 0 | base::isTRUE(is.na(REFVERDI_VP))){
+      Periode_bm <- .ReadAccess(.DB, "Periode_bm", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
+      if(length(ENHET) == 0 | is.na(ENHET)){
+        ENHET <- "!!empty"
+      }
+      
+      Periode_nn <- .ReadAccess(.DB, "Periode_nn", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
+      if(length(ENHET) == 0 | is.na(ENHET)){
+        ENHET <- "!!empty"
+      }
+
+      REFVERDI_VP <- SPEC[Kolonne == "REFVERDI_VP", Innhold]
+      if(length(REFVERDI_VP) == 0 | is.na(REFVERDI_VP)){
         REFVERDI_VP <- "!!MISSING from SPECS-file"
       }
       
       isAK <- data.table::fcase(stringr::str_detect(ENHET, "\\([ak,]+\\)"), TRUE,
                                 default = FALSE)
       
-      isPD <- data.table::fcase(base::isTRUE(REFVERDI_VP %in% c("P", "D")), TRUE,
+      isPD <- data.table::fcase(REFVERDI_VP %in% c("P", "D"), TRUE,
                                 default = FALSE)
       
-      isMEIS <- data.table::fcase(base::isTRUE("MEIS" %in% Matching_kubecol), TRUE,
+      isMEIS <- data.table::fcase("MEIS" %in% Matching_kubecol, TRUE,
                                   default = FALSE)
       
       VALID_COMBINATION <- data.table::fcase(all(isAK, isPD, isMEIS) | !(any(isAK, isPD, isMEIS)), "Yes",
@@ -150,7 +164,10 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       KUBE_UTDANN = UTDANN,
       KUBE_INNVKAT = INNVKAT,
       KUBE_LANDBAK = LANDBAK,
+      `FRISKVIK_YEAR(S)` = FRISKVIK_YEAR,
       Last_year = Last_year,
+      Periode_bm = Periode_bm,
+      Periode_nn = Periode_nn,
       Identical_prikk = Identical_prikk,
       Matching_kubecol = Matching_kubecol,
       Different_kubecol = Different_kubecol,
@@ -166,7 +183,8 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   # Write result
   data.table::fwrite(output,
                      file = savename,
-                     sep = ";")
+                     sep = ";", 
+                     encoding = "latin1")
   
   # Close ACCESS connection
   RODBC::odbcClose(.DB)
@@ -394,7 +412,9 @@ FriskvikLastYear <- function(data1 = FRISKVIK,
                              data2 = KUBE){
   
   if(length(data1[, unique(AAR)]) > 1){
-    out <- "> 1 year in FRISKVIK"
+    lastyear <- max(data1[, unique(AAR)])
+    out <- data.table::fcase(lastyear == max(data2[, unique(AAR)]), "Yes",
+                             default = "No")
   } else if(data1[, unique(AAR)] == max(data2[, unique(AAR)])){
     out <- "Yes"
   } else {
@@ -411,7 +431,7 @@ CompareFriskvikPrikk <- function(data1 = FRISKVIK,
   data2 <- data2[AAR %in% data1[, unique(AAR)]]
   
   # Compare values censored in FRISKVIK with values censored in KUBE
-  if(base::isTRUE(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0]))){
+  if(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0])){
       "Yes"
     } else {
       geodiff <- data1[is.na(data1$MEIS) != data2[, SPVFLAGG > 0], GEO]
@@ -434,7 +454,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   
   # Map over value columns in KUBE, find the column(s) matching FRISKVIK$MEIS
   for(i in kubevals){
-    if(base::isTRUE(all.equal(data1$MEIS, data2[, get(i)]))){
+    if(all.equal(data1$MEIS, data2[, get(i)])){
       matches <- c(matches, i)
     } else {
       different <- c(different, i)
@@ -517,11 +537,6 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
 #'
 #' @param KUBE 
 #' @param profile 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 isNESSTAR <- function(file,
                       year){
   
@@ -539,15 +554,19 @@ isNESSTAR <- function(file,
   attributes(KUBE)$Filename %in% list.files(nesstarpath, pattern = ".csv")
 }
 
+CheckPeriod <- function(con, 
+                        indicatorname){
+  
+  period_bm <-  .ReadAccess(con, "periode_bm", "FRISKVIK", indicatorname, "FHP", "K", 2024)
+  period_nn <-  .ReadAccess(con, "periode_nn", "FRISKVIK", indicatorname, "FHP", "K", 2024)
+  
+  
+}
+
 #' Helper function to extract unique levels of dimension columns
 #'
 #' @param data 
 #' @param dim 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 .UniqueLevel <- function(data = KUBE, 
                         dim = NULL){
   
@@ -567,11 +586,6 @@ isNESSTAR <- function(file,
 #' @param profile only for FRISKVIK, refer to `PROFILTYPE`` ("FHP", "OVP")
 #' @param geolevel only for FRISKVIK, refer to `MODUS` ("B", "K", "F")
 #' @param profileyear only for FRISKVIK, refer to `AARGANG` 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 .ReadAccess <- function(con,
                         targetcol,
                         table,
