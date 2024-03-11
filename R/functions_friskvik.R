@@ -183,8 +183,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   # Write result
   data.table::fwrite(output,
                      file = savename,
-                     sep = ";", 
-                     encoding = "latin1")
+                     sep = ";")
   
   # Close ACCESS connection
   RODBC::odbcClose(.DB)
@@ -431,7 +430,7 @@ CompareFriskvikPrikk <- function(data1 = FRISKVIK,
   data2 <- data2[AAR %in% data1[, unique(AAR)]]
   
   # Compare values censored in FRISKVIK with values censored in KUBE
-  if(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0])){
+  if(isTRUE(all.equal(is.na(data1$MEIS), data2[, SPVFLAGG > 0]))){
       "Yes"
     } else {
       geodiff <- data1[is.na(data1$MEIS) != data2[, SPVFLAGG > 0], GEO]
@@ -454,7 +453,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
   
   # Map over value columns in KUBE, find the column(s) matching FRISKVIK$MEIS
   for(i in kubevals){
-    if(all.equal(data1$MEIS, data2[, get(i)])){
+    if(isTRUE(all.equal(data1$MEIS, data2[, get(i)]))){
       matches <- c(matches, i)
     } else {
       different <- c(different, i)
