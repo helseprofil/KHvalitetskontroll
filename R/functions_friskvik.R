@@ -147,7 +147,7 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
                                   default = FALSE)
       
       VALID_COMBINATION <- data.table::fcase(all(isAK, isPD, isMEIS) | !(any(isAK, isPD, isMEIS)), "Yes",
-                                             default =  "No")
+                                             default =  "!!No!!")
       
       NESSTAR <- isNESSTAR(KUBE, profileyear)
     }
@@ -301,14 +301,11 @@ ReadFriskvik <- function(filename = NULL,
     
     pattern <- stringr::str_extract(friskvikfile, "\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}")
     
-    kube <- list.files(kubepath_kh, pattern = pattern, full.names = T)
-    specfile <- list.files(specpath_kh, pattern = pattern, full.names = T)
-    
-    if(length(kube) == 0){
-      kube <- list.files(kubepath_nh, pattern = pattern, full.names = T)
-      specfile <- list.files(specpath_nh, pattern = pattern, full.names = T)
-    }
-    
+    kube <- c(list.files(kubepath_kh, pattern = pattern, full.names = T),
+              list.files(kubepath_nh, pattern = pattern, full.names = T))
+    specfile <- c(list.files(specpath_kh, pattern = pattern, full.names = T),
+                  list.files(specpath_nh, pattern = pattern, full.names = T))
+
   } else {
     kube <- file.path(basepath, kubefile)
     specfile <- NULL
@@ -413,11 +410,11 @@ FriskvikLastYear <- function(data1 = FRISKVIK,
   if(length(data1[, unique(AAR)]) > 1){
     lastyear <- max(data1[, unique(AAR)])
     out <- data.table::fcase(lastyear == max(data2[, unique(AAR)]), "Yes",
-                             default = "No")
+                             default = "!!NO!!")
   } else if(data1[, unique(AAR)] == max(data2[, unique(AAR)])){
     out <- "Yes"
   } else {
-    out <- "No"
+    out <- "!!NO!!"
   }
   
   out
