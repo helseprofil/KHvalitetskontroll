@@ -190,15 +190,15 @@
   # For rows where SPVFLAGG != 0, the generated column is set to NA_real_
   # Add the value to commonvals to generate _new/_old/_diff/_reldiff columns
   for(i in c("TELLER", "NEVNER", "sumTELLER", "sumNEVNER", "RATE.n")){
-    if(i %in% names(data2) & base::isFALSE(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
+    if(i %in% names(data2) & !(i %in% names(comparenew)) & paste0(i, "_uprikk") %in% names(comparenew)){
       comparenew[, (i) := get(paste0(i, "_uprikk"))]
       comparenew[SPVFLAGG != 0, (i) := NA_real_]
       commonvals <- c(commonvals, i)
     }
   }
 
-  # Remove new rows, select common columns and values
-  comparenew <- comparenew[newrow == 0, c(..commondims, ..commonvals)]
+  # Select common dimensions and value columns
+  comparenew <- comparenew[, mget(c(commondims, commonvals, "newrow"))]
   # Add suffix to value columns
   commonvals_new <- paste0(commonvals, "_new")
   data.table::setnames(comparenew, commonvals, commonvals_new)
@@ -207,16 +207,16 @@
   cat("\n- Formats old KUBE")
   cat("\n  - Remove expired rows, select common dimensions and values")
   compareold <- data.table::copy(data2)
-  # Remove new rows, select common columns and values
+  # Remove expired rows, select common columns and values
   compareold <- compareold[exprow == 0, c(..commondims, ..commonvals)]
   # Add suffix to value columns
   commonvals_old <- paste0(commonvals, "_old")
   data.table::setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
-  compareKUBE <- comparenew[compareold, on = commondims] 
+  compareKUBE <- collapse::join(comparenew, compareold, on = commondims, how = "left", verbose = 0) 
   
-  colorder <- commondims
+  colorder <- c(commondims, "newrow")
   for(i in commonvals){
     colorder <- c(colorder, paste0(i, c("_new", "_old")))
   }
@@ -311,7 +311,7 @@ FormatData <- function(data1 = dfnew,
   }
   
   # Summary of dimensions and values, if data2 provided
-  if(base::isFALSE(is.null(data2))){
+  if(!is.null(data2)){
   msg_commondims <- dplyr::case_when(length(.commondims) == 0 ~ "\n- No common dimensions found",
                               TRUE ~ paste0("\n- Common dimensions found: ", stringr::str_c(.commondims, collapse = ", ")))
   
