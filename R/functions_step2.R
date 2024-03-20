@@ -54,7 +54,7 @@
   }
   
   # Flag outliers
-  if(isTRUE(outlier)){
+  if(outlier){
   dfnew_flag <<- .FlagOutlier(data = dfnew_flag,
                               dims = dims,
                               vals = vals)
@@ -114,7 +114,7 @@
   } 
   
   # Flag outliers
-  if(isTRUE(outlier)){
+  if(outlier){
   dfold_flag <<- .FlagOutlier(data = dfold_flag,
                               dims = dims,
                               vals = vals)
@@ -214,7 +214,7 @@
   data.table::setnames(compareold, commonvals, commonvals_old)
   
   # Create comparedata
-  compareKUBE <- collapse::join(comparenew, compareold, on = commondims, how = "left", verbose = 0) 
+  compareKUBE <- collapse::join(comparenew, compareold, on = commondims, how = "left", verbose = 0, overid = 0) 
   
   colorder <- c(commondims, "newrow")
   for(i in commonvals){
@@ -362,7 +362,7 @@ FormatData <- function(data1 = dfnew,
            vals = .vals2,
            outlier = outlier)
   
-  if(isTRUE(outlier)){
+  if(outlier){
   # Add PREV_OUTLIER and NEW_OUTLIER to dfnew_flag
   cat("\n- Adding PREV_OUTLIER to dfnew_flag\n")
   
@@ -419,7 +419,6 @@ FormatData <- function(data1 = dfnew,
                  .SaveFiledump(filedump = x,
                                savename = y,
                                dumppath = dumppath,
-                               kubename = kubename,
                                datetagnew = datetagnew,
                                datetagold = datetagold,
                                overwrite = overwrite)
@@ -447,34 +446,31 @@ FormatData <- function(data1 = dfnew,
 .SaveFiledump <- function(filedump,
                           savename,
                           dumppath,
-                          kubename,
                           datetagnew,
                           datetagold, 
                           overwrite){
   
   if(filedump == "dfnew_flag"){
     outdata <- copy(dfnew_flag)
+    kubename <- .GetKubename(dfnew_flag)
     datetag <- datetagnew
     type <- "(new)_FLAGGED.csv"
   } else if(filedump == "dfold_flag"){
     outdata <- copy(dfold_flag)
+    kubename <- .GetKubename(dfold_flag)
     datetag <- datetagold
     type <- "(old)_FLAGGED.csv"
   } else if(filedump == "compareKUBE"){
     outdata <- copy(compareKUBE)
-    datetag <- data.table::fcase(.GetKubename(dfnew_flag) == .GetKubename(dfold_flag), paste0(datetagnew, 
-                                                                                              "_vs_", 
-                                                                                              datetagold),
-                                 .GetKubename(dfnew_flag) != .GetKubename(dfold_flag), paste0(datetagnew, 
-                                                                                              "_vs_", 
-                                                                                              .GetKubename(dfold_flag), 
-                                                                                              "_", 
-                                                                                              datetagold))
+    kubename <- .GetKubename(dfnew_flag)
+    kubenameold <- .GetKubename(dfold_flag)
+    datetag <- data.table::fcase(kubename == kubenameold, paste0(datetagnew, "_vs_", datetagold),
+                                 kubename != kubenameold, paste0(datetagnew, "_vs_", kubenameold, "_", datetagold))
     type <- "COMPARE.csv"
   }
   
   # Set filename
-  if(base::isFALSE(is.na(savename))){
+  if(!is.na(savename)){
     filename <- paste0(stringr::str_remove(savename, ".csv"), ".csv")
   } else {
     filename <- paste0(kubename, "_", datetag, "_", type)
@@ -483,12 +479,12 @@ FormatData <- function(data1 = dfnew,
   file <- paste0(dumppath, filename)
   
   # Write file if it doesn't exist, or if overwrite = TRUE
-  if(base::isTRUE(file.exists(file))){
+  if(file.exists(file)){
     cat(paste0("\nFILEDUMP ", filename, " already exists: "))
   } 
   
-  if(base::isFALSE(file.exists(file)) || base::isTRUE(overwrite)) {
-    if(base::isTRUE(file.exists(file))){
+  if(!file.exists(file) || overwrite) {
+    if(file.exists(file)){
       cat("\n---Overwriting existing filedump...---")
       }
     data.table::fwrite(outdata,
