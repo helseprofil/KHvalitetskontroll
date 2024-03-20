@@ -25,4 +25,4 @@ ReadFiles(dfnew = "QC_KUHR_2023-12-08-12-43",
           recodenew = FALSE)
 
 # Create flagged files
-FormatData()
+FormatData(dumps = NULL)
