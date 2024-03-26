@@ -115,3 +115,75 @@ ReadFile <- function(file = NULL,
   .smallkommune <<- pop[between(GEO, 99, 9999) & TELLER < 10000, unique(GEO)]
 }
 
+#' Compare new and old value
+#' 
+#' Prints one table per value column, highlighting the absolute and relative 
+#' difference between the new and the old file. 
+#' 
+#' Produces an R object per value column for differing rows
+#' 
+#' Superseeded by comparekube
+#'
+#' @param data defaults to compareKUBE
+#' @param profileyear 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+CompareNewOld <- function(data = compareKUBE,
+                          profileyear = PROFILEYEAR){
+  
+  if(!exists(".ALL_DIMENSIONS")) {
+    source("https://raw.githubusercontent.com/helseprofil/misc/main/alldimensions.R")
+    .ALL_DIMENSIONS <- ALL_DIMENSIONS
+    rm(ALL_DIMENSIONS)
+  }
+  
+  # Identify existing dimensions
+  dims <- names(data)[names(data) %in% .ALL_DIMENSIONS]
+  vals <- gsub("_new", "", names(data)[str_detect(names(data), "_new")])
+  
+  # Get filepath for filedumps
+  kubename <- .GetKubename(data1)
+  .CreateFolders(profileyear = profileyear,
+                 kubename = kubename)
+  
+  dumppath <- file.path("F:", 
+                        "Forskningsprosjekter", 
+                        "PDB 2455 - Helseprofiler og til_",
+                        "PRODUKSJON", 
+                        "VALIDERING", 
+                        "NESSTAR_KUBER",
+                        profileyear,
+                        "KVALITETSKONTROLL",
+                        kubename,
+                        "FILDUMPER",
+                        "/")
+  
+  .CompareValue <- function(data,
+                            dims,
+                            val,
+                            dumppath = dumppath){
+    
+    new <- paste0(val, "_new")
+    old <- paste0(val, "_old")
+    
+    # Filter out rows where *_new != *_old
+    data <- data[data[[new]] != data[[old]]]
+    
+    # Create Absolute and Relative difference
+    
+    data <- data[, ':=' (Absolute = data[[new]]-data[[old]],
+                         Relative = round(data[[new]]/data[[old]], 3))]
+    data.table::setcolorder(data, c(dims, new, old, "Absolute", "Relative"))
+    
+  }
+  
+  tables <- purrr::map(vals, 
+                       ~.CompareValue(data = data,
+                                      dims = dims,
+                                      val = .x))
+  
+  purrr::walk(tables, print)
+}
