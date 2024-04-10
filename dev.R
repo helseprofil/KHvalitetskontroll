@@ -5,11 +5,11 @@ DUMPS <- NULL
 # Example data files
 
 # HKR 2024 vs 2023
-ReadFiles(dfnew = "QC_HKR_2023-11-21-12-01",
+ReadFiles(dfnew = "QC_HKR_2024-02-01-12-42",
           foldernew = "QC",
           modusnew = "KH",
-          dfold = "HKR_2022-12-14-12-18",
-          folderold = "KH2023NESSTAR_PreAllvis",
+          dfold = "HKR_2023-09-20-14-52",
+          folderold = "DATERT",
           modusold = "KH",
           recodeold = TRUE,
           recodenew = FALSE)

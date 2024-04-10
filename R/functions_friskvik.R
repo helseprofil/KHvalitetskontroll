@@ -123,13 +123,13 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
       }
       
       Periode_bm <- .ReadAccess(.DB, "Periode_bm", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-      if(length(ENHET) == 0 | is.na(ENHET)){
-        ENHET <- "!!empty"
+      if(length(Periode_bm) == 0 | is.na(Periode_bm)){
+        Periode_bm <- "!!empty"
       }
       
       Periode_nn <- .ReadAccess(.DB, "Periode_nn", "FRISKVIK", friskvikindikator, profile, geolevel, profileyear)
-      if(length(ENHET) == 0 | is.na(ENHET)){
-        ENHET <- "!!empty"
+      if(length(Periode_nn) == 0 | is.na(Periode_nn)){
+        Periode_nn <- "!!empty"
       }
 
       REFVERDI_VP <- SPEC[Kolonne == "REFVERDI_VP", Innhold]

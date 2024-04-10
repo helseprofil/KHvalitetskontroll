@@ -1,4 +1,4 @@
-.lastupdate <- "20.03.2024"
+.lastupdate <- "10.04.2024"
 
 ask <- utils::askYesNo(paste0("SISTE OPPDATERING AV BRUKERFILER ELLER PAKKEVERSJONER: ", .lastupdate, "\n\nVil du oppdatere?"))
 

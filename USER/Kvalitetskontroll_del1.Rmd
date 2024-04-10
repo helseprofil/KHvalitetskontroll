@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 1.9.7 (21.01.2024). 
+Version: 1.9.8 (10.04.2024). 
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 ```{r init, include=FALSE}
@@ -23,7 +23,6 @@ For more info about the quality control, see [here](https://helseprofil.github.i
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/load_packages_functions.R")
-
 ```
 
 # COMMENTS
@@ -76,11 +75,6 @@ RenameColumns(dfold,
 ```{r input, echo = T}
 # To save files and report in correct folder
 PROFILEYEAR <<- 2024
-
-# Value column for censoring (PRIKKING), and the limit to check against
-# If no limit is set, the value of these can be NA (missing): "PRIKKval <<- NA", "PRIKKlimit <<- NA"
-PRIKKval <<- "sumTELLER"
-PRIKKlimit <<- 12
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
