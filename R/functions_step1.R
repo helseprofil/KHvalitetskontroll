@@ -86,47 +86,84 @@ CompareDims <- function(data1 = dfnew,
 
 #' CheckPrikk
 #' 
-#' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. If any number below the limit is detected, all rows containing unacceptable values are returned for inspection. 
+#' Check if all values below the censoring limit has been removed. If ok, the function returns a confirmation. 
+#' The censoring limits are fetched from Access. 
+#' If any observation below or equal to the limit is detected, all rows containing unacceptable values are returned for inspection. 
 #'
 #' @param data1 New KUBE, defaults to dfnew 
-#' @param dim Dimension you want to check, defaults to sumTELLER
-#' @param limit Censor limit, the highest unacceptable value of dim. Defaults to `PRIKKlimit`, defined in input section of the Rmarkdown file. 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-CheckPrikk <- function(data = dfnew,
-                       val = PRIKKval, 
-                       limit = PRIKKlimit){
+CheckPrikk <- function(data = dfnew){
   
-  if(is.na(val) || is.na(limit)){
-    cat("PRIKKval and/or PRIKKlimit = NA, no check performed")
+  kube <- .GetKubename(data)
+  .IdentifyColumns(data)
+  strata <- .dims1[grep("AAR", .dims1, invert = T)]
+  
+  # Fetch limits from ACCESS
+  .DB <- .ConnectKHelsa()
+  Stata_PRIKK_T <- .ReadAccess(.DB, "Stata_PRIKK_T", "KUBER", kube)
+  Stata_PRIKK_N <- .ReadAccess(.DB, "Stata_PRIKK_N", "KUBER", kube)
+  PRIKK_T <- .ReadAccess(.DB, "PRIKK_T", "KUBER", kube)
+  PRIKK_N <- .ReadAccess(.DB, "PRIKK_N", "KUBER", kube)
+  odbcCloseAll()
+  
+  # Select Stata_PRIKK > PRIKK limit if present
+  limit_t <- data.table::fifelse(is.na(Stata_PRIKK_T), PRIKK_T, Stata_PRIKK_T)
+  limit_n <- data.table::fifelse(is.na(Stata_PRIKK_N), PRIKK_N, Stata_PRIKK_N)
+  
+  if(all(is.na(limit_t), is.na(limit_n))){
+    cat("No censor limits available in Access, no check performed")
     return(invisible(NULL))
   }
   
-  d = copy(data)
+  # Select _uprikk > sumXXX if present
+  val_t <- data.table::fcase("sumTELLER_uprikk" %in% .vals1, "sumTELLER_uprikk",
+                             "sumTELLER" %in% .vals1, "sumTELLER",
+                             "TELLER" %in% .vals1, "TELLER",
+                             default = NA_character_)
+  val_n <- data.table::fcase("sumNEVNER_uprikk"  %in% .vals1, "sumNEVNER_uprikk", 
+                             "sumNEVNER" %in% .vals1, "sumNEVNER",
+                             "NEVNER" %in% .vals1, "NEVNER",
+                             default = NA_character_)
   
-  # Always use _uprikk columns if col not present
-  val <- data.table::fcase(val == "TELLER" & !val %in% names(data) & "TELLER_uprikk" %in% names(data), "TELLER_uprikk",
-                           val == "sumTELLER" & !val %in% names(data) & "sumTELLER_uprikk" %in% names(data), "sumTELLER_uprikk",
-                           val == "NEVNER" & !val %in% names(data) & "NEVNER_uprikk" %in% names(data), "NEVNER_uprikk",
-                           val == "sumNEVNER" & !val %in% names(data) & "sumNEVNER_uprikk" %in% names(data), "sumNEVNER_uprikk",
-                           default = val)
+  if(all(is.na(val_t), is.na(val_n))){
+    cat("sumTELLER and sumNEVNER not available, no check performed")
+    return(invisible(NULL))
+  }
   
-  cat(paste0("Controlled column: ", val))
-  cat(paste0("\nLimit: ", limit))
-  
-  # filter out rows where SPVFLAGG == 0, and any val <= limit
-  uncensored <- d[SPVFLAGG == 0 & get(val) <= limit]
-  
-  if(nrow(uncensored) == 0) {
+  # Check censoring on TELLER
+  if(is.na(val_t)){
+    cat("sumTELLER/TELLER not available, censoring on teller not performed")
+  } else {
+    cat(paste0("TELLER variable controlled: ", val_t))
+    cat(paste0("\nCriteria: No values <= ", limit_t))
+    
+    uncensored_t <- data[SPVFLAGG == 0 & get(val_t) <= limit_t]
+    if(nrow(uncensored_t) == 0) {
       cat("\nNo values < limit")
-  } else if (nrow(uncensored) > 0){
-      cat(paste0("\nN values <= limit: ", nrow(uncensored)))
-      cat(paste0("\nView all rows with ", val, " <= ", limit, " with View(notcensored)"))
-      notcensored <<- uncensored
-      View(notcensored)
+    } else if (nrow(uncensored_t) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(uncensored_t)))
+      cat(paste0("\nView all rows with ", val_t, " <= ", limit_t, " with View(notcensored_t)"))
+      notcensored_t <<- uncensored_t
+      View(notcensored_t)
+    }
+  }
+  
+  # Check censoring on NEVNER
+  cat("\n---")
+  if(is.na(val_n)){
+    cat(paste0("\nsumNEVNER/NEVNER not available, censoring on nevner not performed"))
+  } else {
+    cat(paste0("\nNEVNER variable controlled: ", val_n))
+    cat(paste0("\nCriteria: No values <= ", limit_n))
+    
+    uncensored_n <- data[SPVFLAGG == 0 & get(val_n) <= limit_n]
+    if(nrow(uncensored_n) == 0) {
+      cat("\nNo values < limit")
+    } else if (nrow(uncensored_n) > 0){
+      cat(paste0("\nN values <= limit: ", nrow(uncensored_n)))
+      cat(paste0("\nView all rows with ", val_n, " <= ", limit_n, " with View(notcensored_n)"))
+      notcensored_n <<- uncensored_n
+      View(notcensored_n)
+    }
   }
 }
 
