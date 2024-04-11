@@ -114,12 +114,17 @@ CompareDims()
 
 ## 2A. Are all values below the limit censored?
 
--   Checks whether all values of `r PRIKKval` <= `r PRIKKlimit`
+-   Checks whether all values of TELLER and NEVNER is < the censor limits
 -   If everything is ok, the function returns a confirmation.
--   If some values at or below PRIKKlimit is present, the corresponding rows are printed for inspection in a separate window.
+-   If some values at or below the limit is present, the corresponding rows are printed for inspection in a separate window.
 
 ```{r checkprikk}
-CheckPrikk()
+# The function fetches censor limits from ACCESS. If the KUBE is produced outside the system, the variables and limits can be provided directly by changing the arguments below, see examples. 
+# Usually these arguments can be NULL.
+CheckPrikk(tellerval = NULL, # e.g "sumTELLER_uprikk" (character)
+           tellerlimit = NULL, # e.g. 4 (numeric)
+           nevnerval = NULL, # e.g. "sumNEVNER_uprikk" (character)
+           nevnerlimit = NULL) # e.g 9 (numeric)
 ```
 
 ## 2B. Compare number of censored observations
