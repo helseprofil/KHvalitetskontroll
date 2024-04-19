@@ -23,7 +23,6 @@
       invisible(system("git fetch origin main"))
       invisible(system("git reset --hard origin/main"))
       invisible(system("git pull"))
-      renv::activate()
     } else {
       message("\nSkipping update, your packages and user files might be outdated")
     }
