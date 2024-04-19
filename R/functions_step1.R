@@ -90,48 +90,87 @@ CompareDims <- function(data1 = dfnew,
 #' The censoring limits are fetched from Access. 
 #' If any observation below or equal to the limit is detected, all rows containing unacceptable values are returned for inspection. 
 #'
-#' @param data1 New KUBE, defaults to dfnew 
-CheckPrikk <- function(data = dfnew){
+#' @param data 
+#' @param val_t variable representing the numerator 
+#' @param limit_t censor limit for numerator
+#' @param val_n variable representing the denominator
+#' @param limit_n censor limit for denominator
+CheckPrikk <- function(data = dfnew,
+                       tellerval = NULL,
+                       tellerlimit = NULL,
+                       nevnerval = NULL,
+                       nevnerlimit = NULL){
   
   kube <- .GetKubename(data)
   .IdentifyColumns(data)
   strata <- .dims1[grep("AAR", .dims1, invert = T)]
   
-  # Fetch limits from ACCESS
-  .DB <- .ConnectKHelsa()
-  Stata_PRIKK_T <- .ReadAccess(.DB, "Stata_PRIKK_T", "KUBER", kube)
-  Stata_PRIKK_N <- .ReadAccess(.DB, "Stata_PRIKK_N", "KUBER", kube)
-  PRIKK_T <- .ReadAccess(.DB, "PRIKK_T", "KUBER", kube)
-  PRIKK_N <- .ReadAccess(.DB, "PRIKK_N", "KUBER", kube)
-  odbcCloseAll()
-  
-  # Select Stata_PRIKK > PRIKK limit if present
-  limit_t <- data.table::fifelse(is.na(Stata_PRIKK_T), PRIKK_T, Stata_PRIKK_T)
-  limit_n <- data.table::fifelse(is.na(Stata_PRIKK_N), PRIKK_N, Stata_PRIKK_N)
-  
-  if(all(is.na(limit_t), is.na(limit_n))){
-    cat("No censor limits available in Access, no check performed")
-    return(invisible(NULL))
-  }
-  
-  # Select _uprikk > sumXXX if present
-  val_t <- data.table::fcase("sumTELLER_uprikk" %in% .vals1, "sumTELLER_uprikk",
-                             "sumTELLER" %in% .vals1, "sumTELLER",
-                             "TELLER" %in% .vals1, "TELLER",
-                             default = NA_character_)
-  val_n <- data.table::fcase("sumNEVNER_uprikk"  %in% .vals1, "sumNEVNER_uprikk", 
-                             "sumNEVNER" %in% .vals1, "sumNEVNER",
-                             "NEVNER" %in% .vals1, "NEVNER",
-                             default = NA_character_)
-  
-  if(all(is.na(val_t), is.na(val_n))){
-    cat("sumTELLER and sumNEVNER not available, no check performed")
-    return(invisible(NULL))
-  }
+  # Fetch limits from ACCESS (default) or from arguments
+  if(all(is.null(tellerval), is.null(tellerlimit), is.null(nevnerval), is.null(nevnerlimit))){
+      .DB <- .ConnectKHelsa()
+      if (length(.ReadAccess(.DB, "KUBE_NAVN", "KUBER", kube)) != 1) {
+        stop("KUBE not found in ACCESS::KUBER, or duplicated rows (KUBE_NAVN). Please provide arguments val_t, limit_t, val_n, limit_n directly")
+      }
+      Stata_PRIKK_T <- .ReadAccess(.DB, "Stata_PRIKK_T", "KUBER", kube)
+      Stata_PRIKK_N <- .ReadAccess(.DB, "Stata_PRIKK_N", "KUBER", kube)
+      PRIKK_T <- .ReadAccess(.DB, "PRIKK_T", "KUBER", kube)
+      PRIKK_N <- .ReadAccess(.DB, "PRIKK_N", "KUBER", kube)
+      odbcCloseAll()
+    
+      # Select Stata_PRIKK > PRIKK limit if present
+      limit_t <- data.table::fifelse(is.na(Stata_PRIKK_T), PRIKK_T, Stata_PRIKK_T)
+      limit_n <- data.table::fifelse(is.na(Stata_PRIKK_N), PRIKK_N, Stata_PRIKK_N)
+      
+        if(all(is.na(limit_t), is.na(limit_n))) {
+          cat("No censor limits available in Access, no check performed. Is the KUBE not censored?")
+          return(invisible(NULL))
+        }
+      
+      # Select _uprikk > sumXXX if present
+      val_t <- data.table::fcase("sumTELLER_uprikk" %in% .vals1, "sumTELLER_uprikk",
+                                 "sumTELLER" %in% .vals1, "sumTELLER",
+                                 "TELLER" %in% .vals1, "TELLER",
+                                 default = NA_character_)
+      val_n <- data.table::fcase("sumNEVNER_uprikk"  %in% .vals1, "sumNEVNER_uprikk",
+                                 "sumNEVNER" %in% .vals1, "sumNEVNER",
+                                 "NEVNER" %in% .vals1, "NEVNER",
+                                 default = NA_character_)
+      
+        if(all(is.na(val_t), is.na(val_n))) {
+          cat("sumTELLER and sumNEVNER not available, no check performed")
+          return(invisible(NULL))
+        }
+      
+    } else {
+      
+      # Check arguments consistency (both must be present, correct format, and column must exist)
+      if((!is.null(tellerval) & is.null(tellerlimit)) || (is.null(tellerval)  & !is.null(tellerlimit))){
+        stop("tellerval (character) and tellerlimit (numeric) must both be specified or NULL")
+      } 
+      if(!all(is.null(tellerval), is.null(tellerlimit)) && (!is.character(tellerval) | !is.numeric(tellerlimit))){
+        stop("tellerval must be character and tellerlimit must be numeric")
+      }
+      if(!is.null(tellerval) && tellerval %notin% .vals1){
+        stop("tellerval not found in data file, check spelling, should it be _uprikk?")
+      }
+      if(!is.null(nevnerval) & is.null(nevnerlimit) || is.null(nevnerval) & !is.null(nevnerlimit)){
+          stop("nevnerval (character) and nevnerlimit (numeric) must both be specified or NULL")
+      }
+      if(!all(is.null(nevnerval), is.null(nevnerlimit)) && (!is.character(nevnerval) | !is.numeric(nevnerlimit))){
+        stop("nevnerval must be character and nevnerlimit must be numeric")
+      }
+      if(!is.null(nevnerval) && nevnerval %notin% .vals1){
+        stop("nevnerval not found in data file, check spelling, should it be _uprikk?")
+      }
+      val_t <- tellerval
+      limit_t <- tellerlimit
+      val_n <- nevnerval
+      limit_n <- nevnerlimit
+    }
   
   # Check censoring on TELLER
-  if(is.na(val_t)){
-    cat("sumTELLER/TELLER not available, censoring on teller not performed")
+  if(isTRUE(is.na(val_t)) | is.null(val_t)){
+    cat("sumTELLER/TELLER not available or provided, censoring on teller not checked")
   } else {
     cat(paste0("TELLER variable controlled: ", val_t))
     cat(paste0("\nCriteria: No values <= ", limit_t))
@@ -149,8 +188,8 @@ CheckPrikk <- function(data = dfnew){
   
   # Check censoring on NEVNER
   cat("\n---")
-  if(is.na(val_n)){
-    cat(paste0("\nsumNEVNER/NEVNER not available, censoring on nevner not performed"))
+  if(isTRUE(is.na(val_n)) | is.null(val_n)){
+    cat(paste0("\nsumNEVNER/NEVNER not available or provided, censoring on nevner not checked"))
   } else {
     cat(paste0("\nNEVNER variable controlled: ", val_n))
     cat(paste0("\nCriteria: No values <= ", limit_n))
