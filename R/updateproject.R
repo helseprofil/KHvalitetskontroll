@@ -11,7 +11,8 @@
   b <- system("git branch --show-current", intern = TRUE)
   
   if(b != "main"){
-    message("\nYou are on the branch '", b, "'.\nKeep on the good dev work or switch to the main branch `system(git checkout main)` to continue with quality control!")
+    message("\nYou are on the branch '", b, 
+            "'.\nKeep on the good dev work or switch to the main branch `system(git checkout main)` to continue with quality control!")
     return(invisible(NULL))
   } 
   
@@ -19,6 +20,7 @@
   
   if(lu == loc){
     message("\nPackages and user files are up to date, you are ready to go!")
+    return(invisible(NULL))
   }
   
   # Update all files if on master branch and updates available
@@ -26,6 +28,7 @@
     choice <- menu(choices = c("Yes", "No"),
                    title = paste0("\nPackages or USER files updates available!!",
                                   "\nLast updated on: ", lu,
+                                  "\nYour local version last updated on: ", loc,
                                   "\nUpdate files (recommended)?"))
     
     if(choice == 1){
