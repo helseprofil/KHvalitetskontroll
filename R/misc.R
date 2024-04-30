@@ -541,3 +541,14 @@ SaveReport <- function(profileyear = PROFILEYEAR,
   file <- paste0("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/data/georecode.csv")
   data.table::fread(file)
 }
+
+#' Switch to main branch and force update to current status of main branch
+Reset_KHvalitetskontroll <- function(){
+  message("Switch to main branch")
+  invisible(system("git checkout main"))
+  message("Fetching latest GitHub version and update project")
+  invisible(system("git fetch origin main"))
+  invisible(system("git reset --hard origin/main"))
+  invisible(system("git pull"))
+  message("Done, restart RStudio to activate changes")
+}
