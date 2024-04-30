@@ -1,9 +1,13 @@
 # Change according to when the user files or packages were last updated
-.lastupdate <- "30.04.2024"
+.lastupdate <- "30.04.2024b"
 
 # Find latest local update date
 .localupdate <- grep(".lastupdate <-", readLines("R/updateproject.R", n = 3), value = T)
 .localupdate <- sub(".*(\\d{2}.\\d{2}.\\d{4}).*", "\\1", .localupdate)
+
+if(length(.localupdate) == 0){
+  .localupdate <- "unknown"
+}
 
 .updateproject <- function(lu, loc){
   
@@ -18,7 +22,7 @@
   
   message("\nYou are on the main branch")
   
-  if(lu == loc){
+  if(isTRUE(lu == loc)){
     message("\nPackages and user files are up to date, you are ready to go!")
     return(invisible(NULL))
   }
@@ -26,10 +30,10 @@
   # Update all files if on master branch and updates available
   if(lu != loc){
     choice <- menu(choices = c("Yes", "No"),
-                   title = paste0("\nPackages or USER files updates available!!",
-                                  "\nLast updated on: ", lu,
-                                  "\nYour local version last updated on: ", loc,
-                                  "\nUpdate files (recommended)?"))
+                   title = paste0("\nUpdates available for packages or USER files!!",
+                                  "\n\nLast version on GitHub: ", lu,
+                                  "\nYour local version: ", loc,
+                                  "\n\nUpdate files (recommended)?"))
     
     if(choice == 1){
       message("\nFetching updates...")
