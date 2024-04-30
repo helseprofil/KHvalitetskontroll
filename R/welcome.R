@@ -14,18 +14,13 @@ cat("\n\n---\n",
     "  - Functions to compare FRISKVIK vs KUBE\n",
     "\n---\n",
     "\n- Valid GEO for outlier detection and recoding: 2024\n",
-    "\n---\n",
-    if(exists(".updatemsg")) {
-      .updatemsg
-    },
     "\n---\n")
 
 
-# Remove messages
-if(exists(".updatemsg")){
-  rm(.updatemsg)
-}
-
-if(exists(".lastupdate")){
-  rm(.lastupdate)
+# Remove messages and unneccessary objects
+rmobj <- c(".lastupdate", ".localupdate")
+for(i in rmobj){
+  if(exists(i)){
+    rm(list = i)
+  }
 }
