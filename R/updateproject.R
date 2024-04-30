@@ -17,6 +17,10 @@
   
   message("\nYou are on the main branch")
   
+  if(lu == loc){
+    message("\nPackages and user files are up to date, you are ready to go!")
+  }
+  
   # Update all files if on master branch and updates available
   if(lu != loc){
     choice <- menu(choices = c("Yes", "No"),
@@ -30,7 +34,7 @@
       invisible(system("git reset --hard origin/main"))
       invisible(system("git pull"))
     } else {
-      message("\nSkipping updates, your packages and USER files might be outdated")
+      message("\nSkipping updates, your packages and USER files might be outdated.")
     }
   }
 }
