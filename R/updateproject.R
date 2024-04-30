@@ -27,8 +27,8 @@
   if(lu != loc){
     choice <- menu(choices = c("Yes", "No"),
                    title = paste0("\nPackages or USER files updates available!!",
-                                  "\nLast updated on: ", lu,
-                                  "\nYour local version last updated on: ", loc,
+                                  "\nLast version on GitHub: ", lu,
+                                  "\nYour local version: ", loc,
                                   "\nUpdate files (recommended)?"))
     
     if(choice == 1){
