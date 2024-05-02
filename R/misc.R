@@ -128,7 +128,7 @@ ReadFiles <- function(dfnew = NULL,
   
   folder <- as.character(folder)
   
-  basepath <- file.path("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/KUBER")
+  basepath <- file.path("O:/Prosjekt/FHP/PRODUKSJON/PRODUKTER/KUBER")
   file.path(basepath, 
             data.table::fcase(modus == "KH", "KOMMUNEHELSA",
                               modus == "NH", "NORGESHELSA"),
@@ -265,9 +265,7 @@ print_dim <- function(...){
 .CreateFolders <- function(profileyear,
                            kubename){
   
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  basepath <- file.path("O:/Prosjekt/FHP",
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "NESSTAR_KUBER")
@@ -329,9 +327,7 @@ SaveReport <- function(profileyear = PROFILEYEAR,
                  kubename = kubename)
   
   # define path to save file
-  filepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  filepath <- file.path("O:/Prosjekt/FHP",
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "NESSTAR_KUBER",
@@ -450,13 +446,13 @@ SaveReport <- function(profileyear = PROFILEYEAR,
 #' Helper function to connect to KHelsa ACCESS database
 #'
 .ConnectKHelsa <- function(){
-  RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/KHELSA.mdb")
+  RODBC::odbcConnectAccess2007("O:/Prosjekt/FHP/PRODUKSJON/STYRING/KHELSA.mdb")
 }
 
 #' Helper function to connect to geo-koder ACCESS database
 #'
 .ConnectGeokoder <- function(){
-  RODBC::odbcConnectAccess2007("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/STYRING/raw-khelse/geo-koder.accdb")
+  RODBC::odbcConnectAccess2007("O:/Prosjekt/FHP/PRODUKSJON/STYRING/raw-khelse/geo-koder.accdb")
 }
 
 #' .usebranch

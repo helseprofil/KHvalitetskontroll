@@ -731,9 +731,7 @@ TimelineBydel <- function(data = dfnew_flag,
   
   .CreateFolders(profileyear,kubename)
   
-  file.path("F:",
-            "Forskningsprosjekter", 
-            "PDB 2455 - Helseprofiler og til_",
+  file.path("O:/Prosjekt/FHP",
             "PRODUKSJON", 
             "VALIDERING", 
             "NESSTAR_KUBER",

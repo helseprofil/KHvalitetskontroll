@@ -35,9 +35,7 @@ ReadFile <- function(file = NULL,
                              TRUE ~ paste0(modus, folder, "NESSTAR"))
   
   path <- file.path(
-    "F:",
-    "Forskningsprosjekter",
-    "PDB 2455 - Helseprofiler og til_",
+    "O:/Prosjekt/FHP",
     "PRODUKSJON",
     "PRODUKTER",
     "KUBER",
@@ -76,9 +74,7 @@ ReadFile <- function(file = NULL,
 #' Loads current BEFOLK_GK file, and separates out small and large kommune
 .SmallLargeKommune <- function(){
   
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  basepath <- file.path("O:/Prosjekt/FHP",
                         "PRODUKSJON", 
                         "PRODUKTER", 
                         "KUBER",
@@ -149,9 +145,7 @@ CompareNewOld <- function(data = compareKUBE,
   .CreateFolders(profileyear = profileyear,
                  kubename = kubename)
   
-  dumppath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  dumppath <- file.path("O:/Prosjekt/FHP",
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "NESSTAR_KUBER",
