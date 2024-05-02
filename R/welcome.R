@@ -24,3 +24,6 @@ for(i in rmobj){
     rm(list = i)
   }
 }
+
+if(exists("rmobj")) rm(rmobj)
+if(exists("i")) rm(i)
