@@ -1,9 +1,12 @@
 # Change according to when the user files or packages were last updated
-.lastupdate <- "30.04.2024b"
+.lastupdate <- "08.05.2024"
 
 # Find latest local update date
+.localupdate <- character()
+if(file.exists("R/updateproject.R")){
 .localupdate <- grep(".lastupdate <-", readLines("R/updateproject.R", n = 3), value = T)
-.localupdate <- sub(".*(\\d{2}.\\d{2}.\\d{4}).*", "\\1", .localupdate)
+.localupdate <- sub(".*\"(.*)\".*", "\\1", .localupdate)
+}
 
 if(length(.localupdate) == 0){
   .localupdate <- "unknown"
