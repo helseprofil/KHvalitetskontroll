@@ -4,7 +4,7 @@ author: ""
 date: "Report generated: `r Sys.Date()`"
 output: html_document
 ---
-Version: 0.3 (03.03.2023). 
+Version: 2024.05.14
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
 ```{r include=FALSE}
@@ -12,6 +12,8 @@ For more info about the quality control, see [here](https://helseprofil.github.i
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/setup.R")
+# uncomment the next line if using HDIR PC
+# .usebranch("HDIR")
 ```
 
 # Generate full report from most recent GODKJENT folder
