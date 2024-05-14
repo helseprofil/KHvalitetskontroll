@@ -15,14 +15,16 @@ output:
 }
 </style>
 
-Version: 1.9.8 (10.04.2024). 
+Version: 2024.05.14
 
-For more info about the quality control, see [here](https://helseprofil.github.io/manual/faq-khvalitetskontroll.html)!
+For more info about the quality control, see [here](https://helseprofil.github.io/manual/khvalitetskontroll.html)!
 ```{r init, include=FALSE}
 # Global settings, do not change
 knitr::opts_chunk$set(cache = F, echo = F)
 # Only run if functions are not already loaded. 
 source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/load_packages_functions.R")
+# uncomment the next line if using HDIR PC
+# .usebranch("HDIR")
 ```
 
 # COMMENTS
