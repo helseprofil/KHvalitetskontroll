@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 2024.05.14
+Version: 2024.05.29
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/khvalitetskontroll.html)!
 ```{r init, include=FALSE}
@@ -76,7 +76,7 @@ RenameColumns(dfold,
 **Input parameters: **
 ```{r input, echo = T}
 # To save files and report in correct folder
-PROFILEYEAR <<- 2024
+PROFILEYEAR <<- 2025
 
 # For grouping output, entered as c("dim1", "dim2", etc).
 # Applies to comparisons of censored observations (2B), and between GEOlevels (3A-D)
