@@ -262,7 +262,7 @@ ComparePrikk <- function(data1 = dfnew,
       options = list(
         columnDefs = list(list(
           targets =  stringr::str_subset(names(output), 
-                                         stringr::str_c(bycols, collapse = "|"), 
+                                         stringr::str_c("^", bycols, "$", collapse = "|"), 
                                          negate = TRUE),
           searchable = FALSE
         )),
@@ -293,7 +293,7 @@ ComparePrikkTS <- function(data1 = dfnew,
     data <- data.table::copy(data1)
     
     # Identify grouping dimensions
-    groupdims <- stringr::str_subset(.dims1, "AAR", negate = TRUE)
+    groupdims <- stringr::str_subset(.dims1, "^AAR$", negate = TRUE)
     
     # Calculate n censored observations, 
     data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
@@ -314,7 +314,7 @@ ComparePrikkTS <- function(data1 = dfnew,
                                        data.table::copy(data2)[, .SD, .SDcols = .commoncols][, KUBE := "Old"]))
   
   # Identify grouping dimensions
-  groupdims <- stringr::str_subset(c(.commondims, "KUBE"), "AAR", negate = TRUE)
+  groupdims <- stringr::str_subset(c(.commondims, "KUBE"), "^AAR$", negate = TRUE)
   
   # Calculate n censored observations, 
   data[, FLAGG := 0][SPVFLAGG != 0, FLAGG := 1]
@@ -720,9 +720,9 @@ PlotTimeseries <- function(data = dfnew){
   .IdentifyColumns(plotdata)
   
   # Identify all dimensions in the file, plotdims (- GEO and AAR) and plotvals (- RATE.n and SPVFLAGG)
-  .TSplotdims <<- stringr::str_subset(.dims1, "GEO|AAR", negate = TRUE)
+  .TSplotdims <<- stringr::str_subset(.dims1, "^(GEO|AAR)$", negate = TRUE)
   .TSplotvals <<- stringr::str_subset(names(plotdata),
-                                      stringr::str_c(c(.dims1, "RATE.n", "SPVFLAGG"), collapse = "|"),
+                                      stringr::str_c("^", c(.dims1, "RATE.n", "SPVFLAGG"), "$", collapse = "|"),
                                       negate = TRUE)
   
   # Find plotheight for HTML report
@@ -747,7 +747,7 @@ PlotTimeseries <- function(data = dfnew){
       # add to containtotal
       containtotal <- c(containtotal, i)
       # remove from aggdims
-      aggdims <- stringr::str_subset(aggdims, i, negate = T) 
+      aggdims <- stringr::str_subset(aggdims, paste0("^", i, "$"), negate = T) 
     }
   }
   
@@ -762,7 +762,7 @@ PlotTimeseries <- function(data = dfnew){
   
     if(ALDERtot_tf){
       containtotal <- c(containtotal, "ALDER")
-      aggdims <- stringr::str_subset(aggdims, "ALDER", negate = TRUE)
+      aggdims <- stringr::str_subset(aggdims, "^ALDER$", negate = TRUE)
     } 
   }
   
@@ -810,8 +810,8 @@ PlotTimeseries <- function(data = dfnew){
                      ALDERtot){
   
   # Exclude dim from containtotal/aggdims
-  aggdims <- stringr::str_subset(aggdims, dim, negate = TRUE)
-  containtotal <- stringr::str_subset(containtotal, dim, negate = TRUE)
+  aggdims <- stringr::str_subset(aggdims, paste0("^", dim, "$"), negate = TRUE)
+  containtotal <- stringr::str_subset(containtotal, paste0("^", dim, "$"), negate = TRUE)
   
   # Copy plotdata
   d <- data.table::copy(plotdata)
@@ -835,7 +835,7 @@ PlotTimeseries <- function(data = dfnew){
   for(i in aggdims){
     
     # Group by all existing standard dimensions
-    groupcols <- stringr::str_subset(dimexist, i, negate = TRUE)
+    groupcols <- stringr::str_subset(dimexist, paste0("^", i, "$"), negate = TRUE)
     d[, (avgcols) := lapply(.SD, mean, na.rm = T), .SDcols = avgcols, by = groupcols]
     d[, (sumcols) := lapply(.SD, sum, na.rm = T), .SDcols = sumcols, by = groupcols]
     if(!is.character(d[[i]])){
@@ -978,7 +978,7 @@ UnspecifiedBydel <- function(data = dfnew,
   d <- data.table::melt(d, measure.vars = c(vals), variable.name = "MALTALL")
   d[, sumprikk := sum(is.na(value)),
     by = c("KOMMUNE", 
-           stringr::str_subset(c(.dims1, "MALTALL"), "GEO", negate = TRUE))]
+           stringr::str_subset(c(.dims1, "MALTALL"), "^GEO$", negate = TRUE))]
 
   # Only keep complete strata
   d <- d[sumprikk == 0]
@@ -989,7 +989,7 @@ UnspecifiedBydel <- function(data = dfnew,
   
   # sum value columns for kommune and bydel, and convert to wide format
   d <- d[, .(sum = sum(value, na.rm = T)), by = c("KOMMUNE", "GEONIV", "MALTALL",
-                                               stringr::str_subset(.dims1, "GEO", negate = TRUE))]
+                                               stringr::str_subset(.dims1, "^GEO$", negate = TRUE))]
   
   d <- data.table::dcast(d, ... ~ GEONIV, value.var = "sum")
   
@@ -1002,7 +1002,7 @@ UnspecifiedBydel <- function(data = dfnew,
   d[, `UOPPGITT, %` := 100*(1 - Bydel/Kommune)]
   
   # Convert all dimensions to factor for search function, round numeric columns
-  convert <- stringr::str_subset(names(d), str_c(c(.dims1, "KOMMUNE", "MALTALL"), collapse = "|"))
+  convert <- stringr::str_subset(names(d), str_c("^", c(.dims1, "KOMMUNE", "MALTALL"), "$", collapse = "|"))
   d[, (convert) := lapply(.SD, as.factor), .SDcols = convert]
   d[Bydel == 0 & Kommune == 0, `UOPPGITT, %` := NA_real_]
   round <- which(sapply(d, is.numeric))
@@ -1038,7 +1038,7 @@ UnspecifiedBydel <- function(data = dfnew,
   # Set column order output
   data.table::setcolorder(d,
                           c("KOMMUNE",
-                            stringr::str_subset(.dims1, "GEO", negate = TRUE),
+                            stringr::str_subset(.dims1, "^GEO$", negate = TRUE),
                             "MALTALL",
                             "Kommune",
                             "Bydel"))

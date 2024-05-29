@@ -141,7 +141,7 @@
                          commonvals){
   
   reldiffcols <- stringr::str_subset(names(data), "_reldiff")
-  valcols <- stringr::str_subset(names(data), stringr::str_c(commonvals, collapse = "|")) |> 
+  valcols <- stringr::str_subset(names(data), stringr::str_c("^", commonvals, "$", collapse = "|")) |> 
     stringr::str_subset("_reldiff", negate = TRUE)
   
   round0 <- stringr::str_subset(valcols, "^RATE.n_new$|^RATE.n_old$|SPVFLAGG")
@@ -714,7 +714,7 @@ PlotTimeDiff <- function(data = compareKUBE){
                          vals){
   
   # Sort file according to dims, final sorting on AAR to create y2y-changes
-  keyv <- c(stringr::str_subset(dims, "AAR", negate = TRUE), "AAR")
+  keyv <- c(stringr::str_subset(dims, "^AAR$", negate = TRUE), "AAR")
   data.table::setkeyv(data, c(keyv))
   
   # Check if popinfo exists (weights and geoniv)
@@ -743,7 +743,7 @@ PlotTimeDiff <- function(data = compareKUBE){
     data.table::setattr(data, "outliercol", .val)
   
     # Set bycols (geoniv and all dims except GEO/AAR), and create collapse grouping object
-    bycols <- c("GEOniv", stringr::str_subset(dims, "GEO|AAR", negate = TRUE))
+    bycols <- c("GEOniv", stringr::str_subset(dims, "^(GEO|AAR)$", negate = TRUE))
     g <- collapse::GRP(data, bycols)
     
     # Set WEIGHTS to NA if all values are missing in a strata
