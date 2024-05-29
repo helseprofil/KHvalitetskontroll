@@ -310,8 +310,8 @@ ComparePrikkTS <- function(data1 = dfnew,
   .IdentifyColumns(data1, data2)
   
   # Combine data
-    data <- data.table::rbindlist(list(data.table::copy(data1)[, .SD, .SDcols = .commoncols][, KUBE := "New"],
-                                       data.table::copy(data2)[, .SD, .SDcols = .commoncols][, KUBE := "Old"]))
+  data <- data.table::rbindlist(list(data.table::copy(data1)[GEO != 99, .SD, .SDcols = .commoncols][, KUBE := "New"],
+                                     data.table::copy(data2)[GEO != 99, .SD, .SDcols = .commoncols][, KUBE := "Old"]))
   
   # Identify grouping dimensions
   groupdims <- stringr::str_subset(c(.commondims, "KUBE"), "^AAR$", negate = TRUE)
