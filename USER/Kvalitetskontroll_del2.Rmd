@@ -15,7 +15,7 @@ output:
 }
 </style>
 
-Version: 2024.05.14
+Version: 2024.05.29
 
 For more info about the quality control, see [here](https://helseprofil.github.io/manual/khvalitetskontroll.html)!
 
@@ -71,7 +71,7 @@ RenameColumns(dfold,
 # UPDATE 18.01.2022: "<-" is replaced with "<<-" to make sure these settings are applied when saving the report. 
 
 # To save files and report in correct folder
-PROFILEYEAR <<- 2024
+PROFILEYEAR <<- 2025
 
 # To save .csv-files of the flagged KUBEs, and/or the combined compareKUBE, use this option
 # Available options: "dfnew_flag", "dfold_flag", and "compareKUBE"
