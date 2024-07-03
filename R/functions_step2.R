@@ -291,9 +291,7 @@ FormatData <- function(data1 = dfnew,
                    kubename = kubename)
   }
   
-  dumppath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  dumppath <- file.path("O:/Prosjekt/FHP",
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "NESSTAR_KUBER",

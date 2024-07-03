@@ -18,7 +18,7 @@ source("https://raw.githubusercontent.com/helseprofil/KHvalitetskontroll/main/R/
 
 # Generate full report from most recent GODKJENT folder
 
-- This function generates a report saved to `F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/VALIDERING/FRISKVIK_vs_KUBE/XXXX(profileyear)/`
+- This function generates a report saved to `O:/Prosjekt/FHP/PRODUKSJON/VALIDERING/FRISKVIK_vs_KUBE/XXXX(profileyear)/`
 - Specify profile ("FHP" or "OVP"), geolevel ("B", "K", or "F"), and profileyear.
 - Some files are not handled by the system, e.g. if more kube files with the same date tag exists, or if column names are not standard. These must be checked manually.
 

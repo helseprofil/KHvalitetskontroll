@@ -38,9 +38,9 @@ CheckFriskvik <- function(profile = c("FHP", "OVP"),
   friskvikfiles <- list.files(friskvikpath, pattern = ".csv")
   
   # Create savepath and report name
-  savepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  savepath <- file.path("O:", 
+                        "Prosjekt", 
+                        "FHP",
                         "PRODUKSJON", 
                         "VALIDERING", 
                         "FRISKVIK_vs_KUBE")
@@ -248,9 +248,9 @@ ReadFriskvik <- function(filename = NULL,
                                         profileyear = profileyear)
   }
   
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  basepath <- file.path("O:",
+                        "Prosjekt",
+                        "FHP",
                         "PRODUKSJON", 
                         "PRODUKTER", 
                         "KUBER")
@@ -494,9 +494,7 @@ CompareFriskvikVal <- function(data1 = FRISKVIK,
     stop("friskvikyear must be a 4 digit number")
   }
   
-  basepath <- file.path("F:", 
-                        "Forskningsprosjekter", 
-                        "PDB 2455 - Helseprofiler og til_",
+  basepath <- file.path("O:/Prosjekt/FHP", 
                         "PRODUKSJON", 
                         "PRODUKTER", 
                         "KUBER")
@@ -539,9 +537,7 @@ isNESSTAR <- function(file,
   nesstar <- data.table::fcase(grepl("KOMMUNEHELSA", attributes(KUBE)$Kubepath), paste0("KOMMUNEHELSA/KH", year, "NESSTAR"),
                                grepl("NORGESHELSA", attributes(KUBE)$Kubepath), paste0("NORGESHELSA/NH", year, "NESSTAR"))
   
-  nesstarpath <- file.path("F:", 
-                           "Forskningsprosjekter", 
-                           "PDB 2455 - Helseprofiler og til_",
+  nesstarpath <- file.path("O:/Prosjekt/FHP",
                            "PRODUKSJON", 
                            "PRODUKTER", 
                            "KUBER",

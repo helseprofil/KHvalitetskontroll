@@ -273,7 +273,7 @@ PrintTimeseries()
 
 ```{r eval = F}
 # Save report (instead of using the knit button)
-# Run code to save HTML-report to F:/...PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(profile year)/KVALITETSKONTROLL/KUBENAVN/
+# Run code to save HTML-report to O:/Prosjekt/FHP/PRODUKSJON/VALIDERING/NESSTAR_KUBER/9999(profile year)/KVALITETSKONTROLL/KUBENAVN/
 # Make sure PROFILEYEAR is correctly defined in INPUT section
 # If the file name becomes too long, you can set shortname = TRUE, and only the datetag will be used as file name, e.g. XXXX-XX-XX-XX-XX_Kvalitetskontroll_del1.html. 
 # If savename = NULL, file name will default to the full cube name (incl date tag). You can also manually select the name of the output file. 
