@@ -37,11 +37,11 @@ data <- ReadFiles(dfnew = "FILENAME", # FILENAME with full date tag e.g. KUBENAV
                   modusold = NULL) # NULL, or KH or NH
 
 # Other CSV files
-data <- fread("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/ORGDATA/SSB/ENEFHIB/ORG/2023/ENEFHIB.csv")
+data <- fread("O:/Prosjekt/FHP/PRODUKSJON/ORGDATA/SSB/ENEFHIB/ORG/2023/ENEFHIB.csv")
 
 # .Rda-files
 
-data <- readRDS("F:/Forskningsprosjekter/PDB 2455 - Helseprofiler og til_/PRODUKSJON/PRODUKTER/MELLOMPROD/R/STABLAORG/DATERT/TRANGBODDHET_2022-11-07-18-38.rds")
+data <- readRDS("O:/Prosjekt/FHP/PRODUKSJON/PRODUKTER/MELLOMPROD/R/STABLAORG/DATERT/TRANGBODDHET_2022-11-07-18-38.rds")
 
 
 ```
