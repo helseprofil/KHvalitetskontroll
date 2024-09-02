@@ -1,5 +1,5 @@
 # Change according to when the user files or packages were last updated
-.lastupdate <- "29.07.2024"
+.lastupdate <- "2024.09.02"
 
 # Find latest local update date
 .localupdate <- character()
